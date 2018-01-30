@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -43,7 +43,7 @@ public:
     EigenVector(EigenVector const& src) = default;
 
     /// return a vector length
-    IndexType size() const { return _vec.size(); }
+    IndexType size() const { return static_cast<IndexType>(_vec.size()); }
 
     /// return a start index of the active data range
     IndexType getRangeBegin() const { return 0;}
@@ -93,7 +93,8 @@ public:
     template<class T_SUBVEC>
     void add(const std::vector<IndexType> &pos, const T_SUBVEC &sub_vec)
     {
-        for (std::size_t i=0; i<pos.size(); ++i) {
+        auto const length = pos.size();
+        for (std::size_t i=0; i<length; ++i) {
             add(pos[i], sub_vec[i]);
         }
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -74,7 +74,8 @@ void ConvergenceCriterionPerComponentDeltaX::setDOFTable(
     _dof_table = &dof_table;
     _mesh = &mesh;
 
-    if (_dof_table->getNumberOfComponents() != _abstols.size())
+    if (_dof_table->getNumberOfComponents() !=
+        static_cast<int>(_abstols.size()))
         OGS_FATAL(
             "The number of components in the DOF table and the number of "
             "tolerances given do not match.");

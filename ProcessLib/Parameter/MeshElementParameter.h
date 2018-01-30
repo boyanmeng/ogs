@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,7 +32,7 @@ struct MeshElementParameter final : public Parameter<T> {
 
     bool isTimeDependent() const override { return false; }
 
-    unsigned getNumberOfComponents() const override
+    int getNumberOfComponents() const override
     {
         return _property.getNumberOfComponents();
     }
@@ -43,7 +43,8 @@ struct MeshElementParameter final : public Parameter<T> {
         auto const e = pos.getElementID();
         assert(e);
         auto const num_comp = _property.getNumberOfComponents();
-        for (std::size_t c=0; c<num_comp; ++c) {
+        for (int c = 0; c < num_comp; ++c)
+        {
             _cache[c] = _property.getComponent(*e, c);
         }
         return _cache;

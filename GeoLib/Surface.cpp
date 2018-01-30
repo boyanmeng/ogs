@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -94,9 +94,10 @@ const Triangle* Surface::operator[](std::size_t i) const
     return _sfc_triangles[i];
 }
 
-bool Surface::isPntInBoundingVolume(MathLib::Point3d const& pnt) const
+bool Surface::isPntInBoundingVolume(MathLib::Point3d const& pnt,
+                                    double eps) const
 {
-    return _bounding_volume->containsPoint(pnt);
+    return _bounding_volume->containsPoint(pnt, eps);
 }
 
 bool Surface::isPntInSfc(MathLib::Point3d const& pnt, double eps) const

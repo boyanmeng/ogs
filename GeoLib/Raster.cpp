@@ -5,7 +5,7 @@
  * @brief Implementation of the GeoLib::Raster class.
  *
  * @copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -85,7 +85,8 @@ Raster* Raster::getRasterFromSurface(Surface const& sfc, double cell_size, doubl
         }
     }
 
-    RasterHeader header = {std::size_t(n_cols), std::size_t(n_rows), MathLib::Point3d(ll), cell_size, static_cast<double>(-9999)};
+    RasterHeader header = { std::size_t(n_cols),  std::size_t(n_rows), 1,
+        MathLib::Point3d(ll), cell_size, static_cast<double>(-9999) };
     return new Raster(header, z_vals, z_vals+n_cols*n_rows);
 }
 

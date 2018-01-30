@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,7 +30,6 @@ namespace LIE
 {
 namespace SmallDeformation
 {
-
 template <typename ShapeFunction, typename IntegrationMethod,
           int DisplacementDim>
 class SmallDeformationLocalAssemblerMatrixNearFracture
@@ -50,9 +49,10 @@ public:
     using NodalDisplacementVectorType =
         typename BMatricesType::NodalForceVectorType;
 
-    SmallDeformationLocalAssemblerMatrixNearFracture(SmallDeformationLocalAssemblerMatrixNearFracture const&) =
-        delete;
-    SmallDeformationLocalAssemblerMatrixNearFracture(SmallDeformationLocalAssemblerMatrixNearFracture&&) = delete;
+    SmallDeformationLocalAssemblerMatrixNearFracture(
+        SmallDeformationLocalAssemblerMatrixNearFracture const&) = delete;
+    SmallDeformationLocalAssemblerMatrixNearFracture(
+        SmallDeformationLocalAssemblerMatrixNearFracture&&) = delete;
 
     SmallDeformationLocalAssemblerMatrixNearFracture(
         MeshLib::Element const& e,
@@ -73,11 +73,10 @@ public:
             "implemented.");
     }
 
-    void assembleWithJacobian(
-        double const t,
-        Eigen::VectorXd const& local_u,
-        Eigen::VectorXd& local_b,
-        Eigen::MatrixXd& local_J) override;
+    void assembleWithJacobian(double const t,
+                              Eigen::VectorXd const& local_u,
+                              Eigen::VectorXd& local_b,
+                              Eigen::MatrixXd& local_J) override;
 
     void preTimestepConcrete(std::vector<double> const& /*local_x*/,
                              double const /*t*/,
@@ -222,11 +221,16 @@ private:
         cache.clear();
         cache.reserve(_ip_data.size());
 
-        for (auto const& ip_data : _ip_data) {
-            if (component < 3)  // xx, yy, zz components
+        for (auto const& ip_data : _ip_data)
+        {
+            if (component < 3)
+            {  // xx, yy, zz components
                 cache.push_back(ip_data._sigma[component]);
-            else    // mixed xy, yz, xz components
+            }
+            else
+            {  // mixed xy, yz, xz components
                 cache.push_back(ip_data._sigma[component] / std::sqrt(2));
+            }
         }
 
         return cache;
@@ -240,10 +244,14 @@ private:
 
         for (auto const& ip_data : _ip_data)
         {
-            if (component < 3)  // xx, yy, zz components
+            if (component < 3)
+            {  // xx, yy, zz components
                 cache.push_back(ip_data._eps[component]);
-            else  // mixed xy, yz, xz components
+            }
+            else
+            {  // mixed xy, yz, xz components
                 cache.push_back(ip_data._eps[component] / std::sqrt(2));
+            }
         }
 
         return cache;

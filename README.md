@@ -4,8 +4,7 @@ OpenGeoSys 6
 [![Tag](https://img.shields.io/github/tag/ufz/ogs.svg?style=flat-square)](https://github.com/ufz/ogs/releases)
 [![BSD License (modified)](http://img.shields.io/badge/license-BSD-blue.svg?style=flat-square)](https://github.com/ufz/ogs/blob/master/LICENSE.txt)
 [![Build Status](https://jenkins.opengeosys.org/buildStatus/icon?job=ufz/ogs/master)](https://jenkins.opengeosys.org/job/ufz/job/ogs/job/master)
-[![Travis](https://img.shields.io/travis/ufz/ogs.svg?style=flat-square)](https://travis-ci.org/ufz/ogs)
-[![DOI](https://zenodo.org/badge/1701384.svg)](https://zenodo.org/badge/latestdoi/1701384)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1145843.svg)](https://doi.org/10.5281/zenodo.1145843)
 
 [OpenGeoSys][ogs] (OGS) is a scientific open source project for the development of
 numerical methods for the simulation of thermo-hydro-mechanical-chemical
@@ -30,7 +29,6 @@ functionality from OGS-5.
 - Check your code against our [styleguide](http://ufz.github.io/styleguide/cppguide.xml)
 - Have a look at the [source code documentation][docs]
 - For the actual build status see the [Jenkins-CI server][jenkins-ci]
-- Actual Travis build status: [![Build Status](https://travis-ci.org/ufz/ogs.png)](https://travis-ci.org/ufz/ogs)
 
 ## License ##
 

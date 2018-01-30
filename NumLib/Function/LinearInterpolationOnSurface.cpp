@@ -3,7 +3,7 @@
  * \date   2014-03-18
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -42,7 +42,7 @@ LinearInterpolationOnSurface::LinearInterpolationOnSurface(
 
 double LinearInterpolationOnSurface::operator()(const MathLib::Point3d& pnt) const
 {
-    if (!_sfc.isPntInBoundingVolume(pnt))
+    if (!_sfc.isPntInBoundingVolume(pnt, 0))
         return _default_value;
     auto* tri = _sfc.findTriangle(pnt);
     if (tri == nullptr)

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,13 +36,12 @@ struct IntegrationPointDataMatrix final
     typename BMatricesType::KelvinVectorType _eps, _eps_prev;
 
     MaterialLib::Solids::MechanicsBase<DisplacementDim>& _solid_material;
-    std::unique_ptr<
-        typename MaterialLib::Solids::MechanicsBase<DisplacementDim>::MaterialStateVariables>
+    std::unique_ptr<typename MaterialLib::Solids::MechanicsBase<
+        DisplacementDim>::MaterialStateVariables>
         _material_state_variables;
 
     typename BMatricesType::KelvinMatrixType _C;
-    double _detJ;
-    double _integralMeasure;
+    double integration_weight;
 
     typename ShapeMatricesType::NodalRowVectorType N;
     typename ShapeMatricesType::GlobalDimNodalMatrixType dNdx;

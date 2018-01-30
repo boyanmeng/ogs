@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 
 namespace ProcessLib
@@ -91,19 +92,7 @@ struct LocalAssemblerInterface
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
         std::vector<double>& cache) const = 0;
 
-    virtual std::vector<double> const& getIntPtDarcyVelocityX(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const = 0;
-
-    virtual std::vector<double> const& getIntPtDarcyVelocityY(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const = 0;
-
-    virtual std::vector<double> const& getIntPtDarcyVelocityZ(
+    virtual std::vector<double> const& getIntPtDarcyVelocity(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,

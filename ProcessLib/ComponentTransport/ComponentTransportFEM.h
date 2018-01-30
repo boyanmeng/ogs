@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -181,7 +181,7 @@ public:
             // porosity model
             auto const porosity =
                 _process_data.porous_media_properties.getPorosity(t, pos)
-                    .getValue(0.0, C_int_pt);
+                    .getValue(t, pos, 0.0, C_int_pt);
 
             auto const retardation_factor =
                 _process_data.retardation_factor(t, pos)[0];
@@ -204,7 +204,7 @@ public:
 
             auto const& K =
                 _process_data.porous_media_properties.getIntrinsicPermeability(
-                    t, pos);
+                    t, pos).getValue(t, pos, 0.0, 0.0);
             // Use the viscosity model to compute the viscosity
             auto const mu = _process_data.fluid_properties->getValue(
                 MaterialLib::Fluid::FluidPropertyType::Viscosity, vars);
@@ -285,9 +285,11 @@ public:
             auto const& N = ip_data.N;
             auto const& dNdx = ip_data.dNdx;
 
+            pos.setIntegrationPoint(ip);
+
             auto const& K =
                 _process_data.porous_media_properties.getIntrinsicPermeability(
-                    t, pos);
+                    t, pos).getValue(t, pos, 0.0, 0.0);
             auto const mu = _process_data.fluid_properties->getValue(
                 MaterialLib::Fluid::FluidPropertyType::Viscosity, vars);
             GlobalDimMatrixType const K_over_mu = K / mu;

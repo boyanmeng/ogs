@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -10,8 +10,8 @@
 #include <cassert>
 
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Parameter/ConstantParameter.h"
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
 #include "CreateTwoPhaseFlowWithPPMaterialProperties.h"
@@ -40,20 +40,23 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPPProcess(
     //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PP__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
+    auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PP__process_variables__gas_pressure}
          "gas_pressure",
          //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PP__process_variables__capillary_pressure}
          "capillary_pressure"});
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    process_variables.push_back(std::move(per_process_variables));
 
     SecondaryVariableCollection secondary_variables;
 
     NumLib::NamedFunctionCaller named_function_caller(
         {"TwoPhaseFlow_pressure"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
     // Specific body force
     std::vector<double> const b =
         //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PP__specific_body_force}
@@ -86,8 +89,9 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPPProcess(
     {
         INFO("The twophase flow is in homogeneous porous media.");
     }
-    std::unique_ptr<TwoPhaseFlowWithPPMaterialProperties>
-    material = createTwoPhaseFlowWithPPMaterialProperties(mat_config, material_ids);
+    std::unique_ptr<TwoPhaseFlowWithPPMaterialProperties> material =
+        createTwoPhaseFlowWithPPMaterialProperties(mat_config, material_ids,
+                                                   parameters);
 
     TwoPhaseFlowWithPPProcessData process_data{
         specific_body_force, has_gravity, mass_lumping, temperature, std::move(material)};

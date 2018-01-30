@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkRaster class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,6 +58,9 @@ vtkImageAlgorithm* VtkRaster::loadImage(const std::string &fileName,
 #ifdef GEOTIFF_FOUND
         return loadImageFromTIFF(fileName, x0, y0, delta);
 #else
+        (void)x0;
+        (void)y0;
+        (void)delta;
         ERR("VtkRaster::loadImage(): Tiff file format not supported in this version!");
         return nullptr;
 #endif
@@ -67,7 +70,7 @@ vtkImageAlgorithm* VtkRaster::loadImage(const std::string &fileName,
 }
 vtkImageImport* VtkRaster::loadImageFromArray(double const*const data_array, GeoLib::RasterHeader header)
 {
-    const unsigned length = header.n_rows*header.n_cols;
+    const unsigned length = header.n_rows * header.n_cols * header.n_depth;
     auto* data = new float[length * 2];
     float max_val = *std::max_element(data_array, data_array+length);
     for (unsigned j=0; j<length; ++j)
@@ -85,8 +88,10 @@ vtkImageImport* VtkRaster::loadImageFromArray(double const*const data_array, Geo
     vtkImageImport* image = vtkImageImport::New();
         image->SetDataSpacing(header.cell_size, header.cell_size, header.cell_size);
         image->SetDataOrigin(header.origin[0]+(header.cell_size/2.0), header.origin[1]+(header.cell_size/2.0), 0);    // translate whole mesh by half a pixel in x and y
-        image->SetWholeExtent(0, header.n_cols-1, 0, header.n_rows-1, 0, 0);
-        image->SetDataExtent(0, header.n_cols-1, 0, header.n_rows-1, 0, 0);
+        image->SetWholeExtent(0, header.n_cols - 1, 0, header.n_rows - 1, 0,
+                              header.n_depth - 1);
+        image->SetDataExtent(0, header.n_cols - 1, 0, header.n_rows - 1, 0,
+                             header.n_depth - 1);
         image->SetDataExtentToWholeExtent();
         image->SetDataScalarTypeToFloat();
         image->SetNumberOfScalarComponents(2);

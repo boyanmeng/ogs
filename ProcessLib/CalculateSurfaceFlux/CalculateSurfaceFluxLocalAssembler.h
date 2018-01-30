@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,8 +12,9 @@
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
 
 #include "NumLib/DOF/DOFTableUtil.h"
-#include "ProcessLib/Parameter/Parameter.h"
 
+#include "ProcessLib/Process.h"
+#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "MapBulkElementPoint.h"
@@ -129,7 +130,7 @@ public:
             auto const bulk_flux =
                 bulk_process.getFlux(_bulk_element_id, bulk_element_point, x);
 
-            for (std::size_t component_id(0);
+            for (int component_id(0);
                  component_id < balance.getNumberOfComponents();
                  ++component_id)
             {

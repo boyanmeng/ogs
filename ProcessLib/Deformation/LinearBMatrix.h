@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -8,6 +8,8 @@
  */
 
 #pragma once
+
+#include "ProcessLib/Deformation/BMatrixPolicy.h"
 
 #include <cmath>
 
@@ -78,6 +80,5 @@ BMatrixType computeBMatrix(DNDX_Type const& dNdx,
 
     return B;
 }
-
 }  // namespace LinearBMatrix
 }  // namespace ProcessLib

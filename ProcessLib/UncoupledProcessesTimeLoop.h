@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -10,16 +10,14 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
-#include <typeinfo>
-#include <typeindex>
+#include <functional>
 
 #include <logog/include/logog.hpp>
 
 #include "NumLib/ODESolver/NonlinearSolver.h"
 #include "NumLib/TimeStepping/Algorithms/TimeStepAlgorithm.h"
+#include "ProcessLib/Output/Output.h"
 
-#include "Output.h"
 #include "Process.h"
 
 namespace NumLib
@@ -41,7 +39,7 @@ public:
         std::unique_ptr<Output>&& output,
         std::vector<std::unique_ptr<SingleProcessData>>&& per_process_data,
         const unsigned global_coupling_max_iterations,
-        std::unique_ptr<NumLib::ConvergenceCriterion>&&
+        std::vector<std::unique_ptr<NumLib::ConvergenceCriterion>>&&
             global_coupling_conv_crit,
         const double start_time, const double end_time);
 
@@ -73,15 +71,16 @@ private:
 
     /// Maximum iterations of the global coupling.
     const unsigned _global_coupling_max_iterations;
-    /// Convergence criteria of the global coupling iterations.
-    std::unique_ptr<NumLib::ConvergenceCriterion> _global_coupling_conv_crit;
+    /// Convergence criteria of processes for the global coupling iterations.
+    std::vector<std::unique_ptr<NumLib::ConvergenceCriterion>>
+        _global_coupling_conv_crit;
 
     /**
-     *  Vector of solutions of coupled processes of processes.
+     *  Vector of solutions of the coupled processes.
      *  Each vector element stores the references of the solution vectors
      *  (stored in _process_solutions) of the coupled processes of a process.
      */
-    std::vector<std::unordered_map<std::type_index, GlobalVector const&>>
+    std::vector<std::reference_wrapper<GlobalVector const>>
         _solutions_of_coupled_processes;
 
     /// Solutions of the previous coupling iteration for the convergence
@@ -129,6 +128,12 @@ private:
     double computeTimeStepping(const double prev_dt, double& t,
                                std::size_t& accepted_steps,
                                std::size_t& rejected_steps);
+
+    template <typename OutputClass, typename OutputClassMember>
+    void outputSolutions(bool const output_initial_condition,
+                         bool const is_staggered_coupling, unsigned timestep,
+                         const double t, OutputClass& output_object,
+                         OutputClassMember output_class_member) const;
 };
 
 //! Builds an UncoupledProcessesTimeLoop from the given configuration.

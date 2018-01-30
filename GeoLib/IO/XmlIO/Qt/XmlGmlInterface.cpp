@@ -5,7 +5,7 @@
  * \brief  Implementation of the XmlGmlInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -283,15 +283,15 @@ bool XmlGmlInterface::write()
                 pointTag.setAttribute("id", QString::number(i));
                 pointTag.setAttribute(
                     "x",
-                    QString::number((*(*points)[i])[0], 'g',
+                    QString::number((*(*points)[i])[0], 'f',
                                     std::numeric_limits<double>::digits10));
                 pointTag.setAttribute(
                     "y",
-                    QString::number((*(*points)[i])[1], 'g',
+                    QString::number((*(*points)[i])[1], 'f',
                                     std::numeric_limits<double>::digits10));
                 pointTag.setAttribute(
                     "z",
-                    QString::number((*(*points)[i])[2], 'g',
+                    QString::number((*(*points)[i])[2], 'f',
                                     std::numeric_limits<double>::digits10));
 
                 std::string const& point_name(pnt_vec->getItemNameByID(i));

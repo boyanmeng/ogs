@@ -6,8 +6,18 @@
 cmake_minimum_required(VERSION 3.1)
 
 # Set CMake policies
-cmake_policy(SET CMP0011 OLD)
+cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0054 NEW)
+if(${CMAKE_VERSION} VERSION_GREATER 3.9.6)
+    cmake_policy(SET CMP0071 NEW)
+endif()
+
+if(WIN32 AND
+    NOT ${CMAKE_GENERATOR} STREQUAL Ninja AND
+    NOT ${CMAKE_GENERATOR} MATCHES 2015) # does not work on 2015
+    # Force 64-bit VS compiler
+    set(CMAKE_GENERATOR_TOOLSET host=x64)
+endif()
 
 # Project name
 project( OGS-6 )
@@ -23,18 +33,25 @@ list(APPEND CMAKE_PREFIX_PATH
 option(BUILD_SHARED_LIBS "Create shared libraries?" OFF)
 set(CMAKE_LIBRARY_SEARCH_PATH "" CACHE PATH
     "Additional library installation path, e.g. /opt/local or C:/libs")
-set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, defaults to native (*nix) / blend (MSVC).")
+set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, \
+    defaults to native (*nix) / blend (MSVC).")
 option(OGS_ENABLE_AVX2 "Enable the use of AVX2 instructions" OFF)
 option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
 option(OGS_USE_PCH "Should pre-compiled headers be used?" ON)
+option(OGS_USE_CONAN "Should Conan package manager be used?" OFF)
+set(OGS_CONAN_BUILD "missing" CACHE STRING "Possible values: all, missing, \
+    never or list of libs to build" )
+if(OGS_USE_PETSC)
+    set(OGS_USE_MPI ON CACHE BOOL "Use MPI" FORCE)
+endif()
 
 ### CMake includes ###
 include(scripts/cmake/PreFind.cmake)
-include(scripts/cmake/ConanSetup.cmake)
 include(scripts/cmake/CheckTypeSizes.cmake)
 include(scripts/cmake/Functions.cmake)
 include(scripts/cmake/SubmoduleSetup.cmake)
 include(scripts/cmake/CMakeSetup.cmake)
+include(scripts/cmake/ConanSetup.cmake)
 include(scripts/cmake/CompilerSetup.cmake)
 include(scripts/cmake/Find.cmake)
 include(scripts/cmake/CCacheSetup.cmake)
@@ -145,19 +162,16 @@ option(OGS_COVERAGE "Enables code coverage measurements with gcov/lcov." OFF)
 option(OGS_SYNC_SUBMODULES "Sync git submodules on CMake run. Overwrites custom URLs!" ON)
 
 # Packaging
-option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should addional content such as manuals be downloaded and packaged?" OFF)
+option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should additional content such as manuals be downloaded and packaged?" OFF)
+option(OGS_PACKAGE_DEPENDENCIES "Packages shared libraries when enabled." OFF)
 include(scripts/cmake/packaging/Pack.cmake)
 
-# Third-party libraries
-# Default checks for system first, then builds locally
-set(OGS_LIB_VTK "Default" CACHE STRING "Which VTK library should be used?")
-set(OGS_LIB_BOOST "Default" CACHE STRING "Which Boost library should be used?")
-set(OGS_LIB_EIGEN "Default" CACHE STRING "Which Eigen library should be used?")
-set_property(CACHE
-    OGS_LIB_VTK
-    OGS_LIB_BOOST
-    OGS_LIB_EIGEN
-    PROPERTY STRINGS "Default" "System" "Local")
+# Third-party libraries, names come from Conan package names
+set(OGS_LIBS VTK Boost Eigen3 Qt Shapelib libgeotiff CACHE INTERNAL "")
+foreach(LIB ${OGS_LIBS})
+    set(OGS_LIB_${LIB} "Default" CACHE STRING "Which ${LIB} library should be used?")
+    set_property(CACHE OGS_LIB_${LIB} PROPERTY STRINGS "Default" "System")
+endforeach(LIB)
 
 # Options controlling which FEM elements will be compiled
 set(OGS_MAX_ELEMENT_DIM   3 CACHE STRING "Maximum dimension of FEM elements to be built.")
@@ -166,6 +180,8 @@ option(OGS_ENABLE_ELEMENT_SIMPLEX "Build FEM elements for simplices (triangles, 
 option(OGS_ENABLE_ELEMENT_CUBOID  "Build FEM elements for cuboids (quads, hexahedra)." ON)
 option(OGS_ENABLE_ELEMENT_PRISM   "Build FEM elements for prisms." ON)
 option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
+
+option(OGS_CHECK_HEADER_COMPILATION "Check header for standalone compilation." OFF)
 
 ###################
 ### Definitions ###
@@ -183,7 +199,6 @@ endif()
 
 if(OGS_USE_PETSC)
     add_definitions(-DUSE_PETSC)
-    set(OGS_USE_MPI ON CACHE BOOL "Use MPI" FORCE)
 endif()
 
 # Use MPI
@@ -227,11 +242,6 @@ if (OGS_FATAL_ABORT)
     add_definitions(-DOGS_FATAL_ABORT)
 endif()
 
-if(OGS_BUILD_TESTS)
-    set(Data_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data CACHE INTERNAL "")
-    set(Data_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Tests/Data CACHE INTERNAL "")
-endif()
-
 # Logging level
 add_definitions(-DLOGOG_LEVEL=${OGS_LOG_LEVEL})
 
@@ -241,19 +251,11 @@ add_definitions(-DLOGOG_LEVEL=${OGS_LOG_LEVEL})
 ######################
 
 # External projects
-include(scripts/cmake/ExternalProjectBoost.cmake)
-include(VtkModules)
 if(OGS_INSITU)
-    include(ExternalProjectCatalyst)
     include("${PARAVIEW_USE_FILE}")
     add_definitions(-DUSE_INSITU)
-else()
-    include(ExternalProjectVtk)
 endif()
 
-include_directories( SYSTEM ${Boost_INCLUDE_DIRS} )
-include(scripts/cmake/ExternalProjectEigen.cmake)
-include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 # Add subdirectories with the projects
 add_subdirectory( ThirdParty )
@@ -262,6 +264,8 @@ include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gtest/include
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/autocheck/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tclap/include )
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vtkGUISupportQt)
+
+include(scripts/cmake/CheckHeaderCompilation.cmake)
 
 add_subdirectory( Applications )
 add_subdirectory( BaseLib )
@@ -292,4 +296,7 @@ endif() # OGS_BUILD_TESTS
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/BaseLib/BuildInfo.cpp.in"
     "${CMAKE_CURRENT_BINARY_DIR}/BaseLib/BuildInfo.cpp" @ONLY)
 
+check_header_compilation()
+
 include(scripts/cmake/MarkVariablesAdvanced.cmake)
+unset(PRE_INSTALL_RUN CACHE)

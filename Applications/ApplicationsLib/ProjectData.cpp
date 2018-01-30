@@ -4,7 +4,7 @@
  * \brief  Implementation of the project data class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,8 +34,8 @@
 
 #include "ProcessLib/UncoupledProcessesTimeLoop.h"
 
-#include "ProcessLib/GroundwaterFlow/CreateGroundwaterFlowProcess.h"
 #include "ProcessLib/ComponentTransport/CreateComponentTransportProcess.h"
+#include "ProcessLib/GroundwaterFlow/CreateGroundwaterFlowProcess.h"
 #include "ProcessLib/HT/CreateHTProcess.h"
 #include "ProcessLib/HeatConduction/CreateHeatConductionProcess.h"
 #include "ProcessLib/HydroMechanics/CreateHydroMechanicsProcess.h"
@@ -43,6 +43,7 @@
 #include "ProcessLib/LIE/SmallDeformation/CreateSmallDeformationProcess.h"
 #include "ProcessLib/LiquidFlow/CreateLiquidFlowProcess.h"
 #include "ProcessLib/PhaseField/CreatePhaseFieldProcess.h"
+#include "ProcessLib/RichardsComponentTransport/CreateRichardsComponentTransportProcess.h"
 #include "ProcessLib/RichardsFlow/CreateRichardsFlowProcess.h"
 #include "ProcessLib/SmallDeformation/CreateSmallDeformationProcess.h"
 #include "ProcessLib/TES/CreateTESProcess.h"
@@ -420,6 +421,14 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     break;
             }
         }
+        else if (type == "RichardsComponentTransport")
+        {
+            process = ProcessLib::RichardsComponentTransport::
+                createRichardsComponentTransportProcess(
+                    *_mesh_vec[0], std::move(jacobian_assembler),
+                    _process_variables, _parameters, integration_order,
+                    process_config);
+        }
         else if (type == "SMALL_DEFORMATION")
         {
             switch (_mesh_vec[0]->getDimension())
@@ -471,8 +480,7 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
         }
         else if (type == "THERMO_MECHANICS")
         {
-            //! \ogs_file_param{prj__processes__process__THERMO_MECHANICS__dimension}
-            switch (process_config.getConfigParameter<int>("dimension"))
+            switch (_mesh_vec[0]->getDimension())
             {
                 case 2:
                     process = ProcessLib::ThermoMechanics::

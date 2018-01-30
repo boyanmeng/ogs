@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -67,7 +67,7 @@ createNonuniformNeumannBoundaryCondition(
         OGS_FATAL("`%s' is not a one-component field.", field_name.c_str());
     }
 
-    std::string mapping_to_bulk_nodes_property = "OriginalSubsurfaceNodeIDs";
+    std::string const mapping_to_bulk_nodes_property = "OriginalSubsurfaceNodeIDs";
     auto const* const mapping_to_bulk_nodes =
         boundary_mesh->getProperties().getPropertyVector<std::size_t>(
             mapping_to_bulk_nodes_property);

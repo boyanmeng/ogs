@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,7 +16,7 @@
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
 
 #include "MaterialLib/PhysicalConstant.h"
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
 #include "LiquidFlowProcess.h"
@@ -43,17 +43,20 @@ std::unique_ptr<Process> createLiquidFlowProcess(
     //! \ogs_file_param{prj__processes__process__LIQUID_FLOW__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
+    auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__LIQUID_FLOW__process_variables__process_variable}
          "process_variable"});
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    process_variables.push_back(std::move(per_process_variables));
 
     SecondaryVariableCollection secondary_variables;
 
     NumLib::NamedFunctionCaller named_function_caller({"LiquidFlow_pressure"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
 
     // Get the gravity vector for the Darcy velocity
     //! \ogs_file_param{prj__processes__process__LIQUID_FLOW__darcy_gravity}

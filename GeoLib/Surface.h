@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -62,7 +62,7 @@ public:
     /**
      * is the given point in the bounding volume of the surface
      */
-    bool isPntInBoundingVolume(MathLib::Point3d const& pnt) const;
+    bool isPntInBoundingVolume(MathLib::Point3d const& pnt, double eps) const;
 
     /**
      * is the given point pnt located in the surface

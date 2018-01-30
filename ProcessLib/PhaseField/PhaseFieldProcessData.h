@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,13 +9,24 @@
 
 #pragma once
 
-namespace MeshLib
-{
-class Element;
-}
+#include <Eigen/Eigen>
 
+#include <memory>
+#include <utility>
+
+namespace MaterialLib
+{
+namespace Solids
+{
+template <int DisplacementDim>
+struct MechanicsBase;
+}
+}
 namespace ProcessLib
 {
+template <typename T>
+struct Parameter;
+
 namespace PhaseField
 {
 template <int DisplacementDim>

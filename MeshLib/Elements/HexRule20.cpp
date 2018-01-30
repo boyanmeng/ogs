@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,15 +18,13 @@
 #include "Line.h"
 
 namespace MeshLib {
-
-const unsigned HexRule20::face_nodes[6][8] =
-{
-    {0, 3, 2, 1, 11, 10,  9,  8}, // Face 0
-    {0, 1, 5, 4,  8, 17, 12, 11}, // Face 1
-    {1, 2, 6, 5,  9, 18, 13, 17}, // Face 2
-    {2, 3, 7, 6, 10, 19, 14, 18}, // Face 3
-    {3, 0, 4, 7, 11, 16, 15, 19}, // Face 4
-    {4, 5, 6, 7, 12, 13, 14, 15}  // Face 5
+const unsigned HexRule20::face_nodes[6][8] = {
+    {0, 3, 2, 1, 11, 10, 9, 8},    // Face 0
+    {0, 1, 5, 4, 8, 17, 12, 16},   // Face 1
+    {1, 2, 6, 5, 9, 18, 13, 17},   // Face 2
+    {2, 3, 7, 6, 10, 19, 14, 18},  // Face 3
+    {3, 0, 4, 7, 11, 16, 15, 19},  // Face 4
+    {4, 5, 6, 7, 12, 13, 14, 15}   // Face 5
 };
 
 const unsigned HexRule20::edge_nodes[12][3] =

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,15 +9,23 @@
 
 #pragma once
 
-#include "HTFEM.h"
-#include "HTProcessData.h"
+#include <array>
+
 #include "NumLib/Extrapolation/LocalLinearLeastSquaresExtrapolator.h"
 #include "ProcessLib/Process.h"
+
+namespace NumLib
+{
+class LocalToGlobalIndexMap;
+}
 
 namespace ProcessLib
 {
 namespace HT
 {
+class HTLocalAssemblerInterface;
+struct HTMaterialProperties;
+
 /**
  * # HT process
  *
@@ -40,22 +48,26 @@ namespace HT
 class HTProcess final : public Process
 {
 public:
-    HTProcess(MeshLib::Mesh& mesh,
-              std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
-                  jacobian_assembler,
-              std::vector<std::unique_ptr<ParameterBase>> const& parameters,
-              unsigned const integration_order,
-              std::vector<std::reference_wrapper<ProcessVariable>>&&
-                  process_variables,
-              HTProcessData&& process_data,
-              SecondaryVariableCollection&& secondary_variables,
-              NumLib::NamedFunctionCaller&& named_function_caller);
+    HTProcess(
+        MeshLib::Mesh& mesh,
+        std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
+            jacobian_assembler,
+        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        unsigned const integration_order,
+        std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
+            process_variables,
+        std::unique_ptr<HTMaterialProperties>&& material_properties,
+        SecondaryVariableCollection&& secondary_variables,
+        NumLib::NamedFunctionCaller&& named_function_caller,
+        bool const use_monolithic_scheme);
 
     //! \name ODESystem interface
     //! @{
 
     bool isLinear() const override { return false; }
     //! @}
+
+    void setCoupledTermForTheStaggeredSchemeToLocalAssemblers() override;
 
 private:
     void initializeConcreteProcess(
@@ -65,19 +77,33 @@ private:
 
     void assembleConcreteProcess(const double t, GlobalVector const& x,
                                  GlobalMatrix& M, GlobalMatrix& K,
-                                 GlobalVector& b,
-                                 StaggeredCouplingTerm const& coupling_term
-                                ) override;
+                                 GlobalVector& b) override;
 
     void assembleWithJacobianConcreteProcess(
         const double t, GlobalVector const& x, GlobalVector const& xdot,
         const double dxdot_dx, const double dx_dx, GlobalMatrix& M,
-        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac,
-        StaggeredCouplingTerm const& coupling_term) override;
+        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac) override;
 
-    HTProcessData _process_data;
+    void preTimestepConcreteProcess(GlobalVector const& x, double const t,
+                                    double const dt,
+                                    const int process_id) override;
+
+    /// Set the solutions of the previous time step to the coupled term.
+    /// It only performs for the staggered scheme.
+    void setCoupledSolutionsOfPreviousTimeStep();
+
+    /**
+     * @copydoc ProcessLib::Process::getDOFTableForExtrapolatorData()
+     */
+    std::tuple<NumLib::LocalToGlobalIndexMap*, bool>
+        getDOFTableForExtrapolatorData() const override;
+
+    const std::unique_ptr<HTMaterialProperties> _material_properties;
 
     std::vector<std::unique_ptr<HTLocalAssemblerInterface>> _local_assemblers;
+
+    /// Solutions of the previous time step
+    std::array<std::unique_ptr<GlobalVector>, 2> _xs_previous_timestep;
 };
 
 }  // namespace HT

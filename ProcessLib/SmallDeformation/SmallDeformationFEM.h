@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,6 +18,7 @@
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
+#include "ProcessLib/Deformation/GMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
@@ -45,6 +46,7 @@ struct IntegrationPointData final
 
     typename BMatricesType::KelvinVectorType sigma, sigma_prev;
     typename BMatricesType::KelvinVectorType eps, eps_prev;
+    double free_energy_density = 0;
 
     MaterialLib::Solids::MechanicsBase<DisplacementDim>& solid_material;
     std::unique_ptr<typename MaterialLib::Solids::MechanicsBase<
@@ -91,6 +93,10 @@ public:
     using NodalForceVectorType = typename BMatricesType::NodalForceVectorType;
     using NodalDisplacementVectorType =
         typename BMatricesType::NodalForceVectorType;
+
+    using GMatricesType = GMatrixPolicyType<ShapeFunction, DisplacementDim>;
+    using GradientVectorType = typename GMatricesType::GradientVectorType;
+    using GradientMatrixType = typename GMatricesType::GradientMatrixType;
 
     SmallDeformationLocalAssembler(SmallDeformationLocalAssembler const&) =
         delete;
@@ -185,6 +191,18 @@ public:
             auto const& N = _ip_data[ip].N;
             auto const& dNdx = _ip_data[ip].dNdx;
 
+            typename ShapeMatricesType::template MatrixType<DisplacementDim,
+                                                            displacement_size>
+                N_u_op = ShapeMatricesType::template MatrixType<
+                    DisplacementDim,
+                    displacement_size>::Zero(DisplacementDim,
+                                             displacement_size);
+            for (int i = 0; i < DisplacementDim; ++i)
+                N_u_op
+                    .template block<1, displacement_size / DisplacementDim>(
+                        i, i * displacement_size / DisplacementDim)
+                    .noalias() = N;
+
             auto const x_coord =
                 interpolateXCoordinate<ShapeFunction, ShapeMatricesType>(
                     _element, N);
@@ -215,7 +233,10 @@ public:
             KelvinMatrixType<DisplacementDim> C;
             std::tie(sigma, state, C) = std::move(*solution);
 
-            local_b.noalias() -= B.transpose() * sigma * w;
+            auto const rho = _process_data.solid_density(t, x_position)[0];
+            auto const& b = _process_data.specific_body_force;
+            local_b.noalias() -=
+                (B.transpose() * sigma - N_u_op.transpose() * rho * b) * w;
             local_Jac.noalias() += B.transpose() * C * B * w;
         }
     }
@@ -233,6 +254,40 @@ public:
         }
     }
 
+    void postTimestepConcrete(std::vector<double> const& /*local_x*/) override
+    {
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        SpatialPosition x_position;
+        x_position.setElementID(_element.getID());
+
+        for (unsigned ip = 0; ip < n_integration_points; ip++)
+        {
+            x_position.setIntegrationPoint(ip);
+
+            auto& ip_data = _ip_data[ip];
+
+            // Update free energy density needed for material forces.
+            ip_data.free_energy_density =
+                ip_data.solid_material.computeFreeEnergyDensity(
+                    _process_data.t, x_position, _process_data.dt, ip_data.eps,
+                    ip_data.sigma, *ip_data.material_state_variables);
+        }
+    }
+
+    std::vector<double> const& getMaterialForces(
+        std::vector<double> const& local_x,
+        std::vector<double>& nodal_values) override
+    {
+        return ProcessLib::SmallDeformation::getMaterialForces<
+            DisplacementDim, ShapeFunction, ShapeMatricesType,
+            typename BMatricesType::NodalForceVectorType,
+            NodalDisplacementVectorType, GradientVectorType,
+            GradientMatrixType>(local_x, nodal_values, _integration_method,
+                                _ip_data, _element, _is_axially_symmetric);
+    }
+
     Eigen::Map<const Eigen::RowVectorXd> getShapeMatrix(
         const unsigned integration_point) const override
     {
@@ -240,6 +295,23 @@ public:
 
         // assumes N is stored contiguously in memory
         return Eigen::Map<const Eigen::RowVectorXd>(N.data(), N.size());
+    }
+
+    std::vector<double> const& getIntPtFreeEnergyDensity(
+        const double /*t*/,
+        GlobalVector const& /*current_solution*/,
+        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
+        std::vector<double>& cache) const override
+    {
+        cache.clear();
+        cache.reserve(_ip_data.size());
+
+        for (auto const& ip_data : _ip_data)
+        {
+            cache.push_back(ip_data.free_energy_density);
+        }
+
+        return cache;
     }
 
     std::vector<double> const& getIntPtSigma(
@@ -281,63 +353,6 @@ public:
         return cache;
     }
 
-    // TODO remove the component-wise methods.
-    std::vector<double> const& getIntPtSigmaXX(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtSigma(cache, 0);
-    }
-
-    std::vector<double> const& getIntPtSigmaYY(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtSigma(cache, 1);
-    }
-
-    std::vector<double> const& getIntPtSigmaZZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtSigma(cache, 2);
-    }
-
-    std::vector<double> const& getIntPtSigmaXY(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtSigma(cache, 3);
-    }
-
-    std::vector<double> const& getIntPtSigmaYZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        assert(DisplacementDim == 3);
-        return getIntPtSigma(cache, 4);
-    }
-
-    std::vector<double> const& getIntPtSigmaXZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        assert(DisplacementDim == 3);
-        return getIntPtSigma(cache, 5);
-    }
-
     virtual std::vector<double> const& getIntPtEpsilon(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
@@ -377,63 +392,6 @@ public:
         return cache;
     }
 
-    // TODO remove the component-wise methods
-    std::vector<double> const& getIntPtEpsilonXX(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtEpsilon(cache, 0);
-    }
-
-    std::vector<double> const& getIntPtEpsilonYY(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtEpsilon(cache, 1);
-    }
-
-    std::vector<double> const& getIntPtEpsilonZZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtEpsilon(cache, 2);
-    }
-
-    std::vector<double> const& getIntPtEpsilonXY(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        return getIntPtEpsilon(cache, 3);
-    }
-
-    std::vector<double> const& getIntPtEpsilonYZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        assert(DisplacementDim == 3);
-        return getIntPtEpsilon(cache, 4);
-    }
-
-    std::vector<double> const& getIntPtEpsilonXZ(
-        const double /*t*/,
-        GlobalVector const& /*current_solution*/,
-        NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
-        std::vector<double>& cache) const override
-    {
-        assert(DisplacementDim == 3);
-        return getIntPtEpsilon(cache, 5);
-    }
-
     unsigned getNumberOfIntegrationPoints() const override
     {
         return _integration_method.getNumberOfPoints();
@@ -447,40 +405,6 @@ public:
     }
 
 private:
-    std::vector<double> const& getIntPtSigma(std::vector<double>& cache,
-                                             std::size_t const component) const
-    {
-        cache.clear();
-        cache.reserve(_ip_data.size());
-
-        for (auto const& ip_data : _ip_data)
-        {
-            if (component < 3)  // xx, yy, zz components
-                cache.push_back(ip_data.sigma[component]);
-            else  // mixed xy, yz, xz components
-                cache.push_back(ip_data.sigma[component] / std::sqrt(2));
-        }
-
-        return cache;
-    }
-
-    std::vector<double> const& getIntPtEpsilon(
-        std::vector<double>& cache, std::size_t const component) const
-    {
-        cache.clear();
-        cache.reserve(_ip_data.size());
-
-        for (auto const& ip_data : _ip_data)
-        {
-            if (component < 3)  // xx, yy, zz components
-                cache.push_back(ip_data.eps[component]);
-            else  // mixed xy, yz, xz components
-                cache.push_back(ip_data.eps[component] / std::sqrt(2));
-        }
-
-        return cache;
-    }
-
     SmallDeformationProcessData<DisplacementDim>& _process_data;
 
     std::vector<
@@ -493,6 +417,9 @@ private:
     MeshLib::Element const& _element;
     SecondaryData<typename ShapeMatrices::ShapeType> _secondary_data;
     bool const _is_axially_symmetric;
+
+    static const int displacement_size =
+        ShapeFunction::NPOINTS * DisplacementDim;
 };
 
 }  // namespace SmallDeformation

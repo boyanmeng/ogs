@@ -5,7 +5,7 @@
  * \brief  Tests of AABB class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -284,9 +284,9 @@ TEST(GeoLib, AABBSinglePoint)
                 else if (k==0) p[2] = pnts.front()[2];
                 else p[2] = std::nextafter(pnts.front()[2], to_max);
                 if (i == 0 && j == 0 && k == 0)
-                    ASSERT_TRUE(aabb.containsPoint(p));
+                    ASSERT_TRUE(aabb.containsPoint(p, 0));
                 else
-                    ASSERT_FALSE(aabb.containsPoint(p));
+                    ASSERT_FALSE(aabb.containsPoint(p, 0));
             }
         }
     }

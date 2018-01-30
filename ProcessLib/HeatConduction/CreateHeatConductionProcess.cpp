@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,10 +9,10 @@
 
 #include "CreateHeatConductionProcess.h"
 
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
-#include "ProcessLib/Utils/ProcessUtils.h"
 #include "HeatConductionProcess.h"
 #include "HeatConductionProcessData.h"
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
+#include "ProcessLib/Utils/ProcessUtils.h"
 
 namespace ProcessLib
 {
@@ -36,10 +36,13 @@ std::unique_ptr<Process> createHeatConductionProcess(
     //! \ogs_file_param{prj__processes__process__HEAT_CONDUCTION__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__HEAT_CONDUCTION__process_variables__process_variable}
          "process_variable"});
+    process_variables.push_back(std::move(per_process_variables));
 
     // thermal conductivity parameter.
     auto& thermal_conductivity = findParameter<double>(
@@ -74,8 +77,8 @@ std::unique_ptr<Process> createHeatConductionProcess(
     NumLib::NamedFunctionCaller named_function_caller(
         {"HeatConduction_temperature"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
 
     return std::make_unique<HeatConductionProcess>(
         mesh, std::move(jacobian_assembler), parameters, integration_order,

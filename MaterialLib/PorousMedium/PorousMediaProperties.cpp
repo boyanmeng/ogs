@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -28,10 +28,11 @@ MaterialLib::PorousMedium::Porosity const& PorousMediaProperties::getPorosity(
     return *_porosity_models[getMaterialID(pos)];
 }
 
-Eigen::MatrixXd const& PorousMediaProperties::getIntrinsicPermeability(
+MaterialLib::PorousMedium::Permeability const&
+PorousMediaProperties::getIntrinsicPermeability(
     double /*t*/, ProcessLib::SpatialPosition const& pos) const
 {
-    return _intrinsic_permeability_models[getMaterialID(pos)];
+    return *_intrinsic_permeability_models[getMaterialID(pos)];
 }
 
 MaterialLib::PorousMedium::Storage const&

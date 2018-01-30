@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,11 +14,6 @@
 
 #include "EquationSystem.h"
 #include "Types.h"
-
-namespace ProcessLib
-{
-struct StaggeredCouplingTerm;
-}
 
 namespace NumLib
 {
@@ -49,11 +44,13 @@ public:
     static const ODESystemTag ODETag =
         ODESystemTag::FirstOrderImplicitQuasilinear;
 
+    //! Calls process' pre-assembly with the provided state (\c t, \c x).
+    virtual void preAssemble(const double t, GlobalVector const& x) = 0;
+
     //! Assemble \c M, \c K and \c b at the provided state (\c t, \c x).
     virtual void assemble(
         const double t, GlobalVector const& x, GlobalMatrix& M, GlobalMatrix& K,
-        GlobalVector& b,
-        ProcessLib::StaggeredCouplingTerm const& coupling_term) = 0;
+        GlobalVector& b) = 0;
 
     using Index = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
 
@@ -79,6 +76,10 @@ class ODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
                        NonlinearSolverTag::Picard>
 {
 public:
+
+    //! Calls process' pre-assembly with the provided state (\c t, \c x).
+    virtual void preAssemble(const double t, GlobalVector const& x) = 0;
+
     /*! Assemble \c M, \c K, \c b and the Jacobian
      * \f$ \mathtt{Jac} := \partial r/\partial x_N \f$
      * at the provided state (\c t, \c x).
@@ -126,8 +127,7 @@ public:
     virtual void assembleWithJacobian(
         const double t, GlobalVector const& x, GlobalVector const& xdot,
         const double dxdot_dx, const double dx_dx, GlobalMatrix& M,
-        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac,
-        ProcessLib::StaggeredCouplingTerm const& coupling_term) = 0;
+        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac) = 0;
 };
 
 //! @}

@@ -5,8 +5,6 @@ target_link_libraries(ogs
     PRIVATE BaseLib ApplicationsLib NumLib ProcessLib
 )
 
-ADD_VTK_DEPENDENCY(ogs)
-
 if(OGS_USE_PETSC)
     target_link_libraries(ogs PRIVATE ${PETSC_LIBRARIES})
 endif()
@@ -36,3 +34,8 @@ cpack_add_component(ogs_cli
     DESCRIPTION "The command line interface for OpenGeoSys."
     GROUP Applications
 )
+
+if(NOT APPLE AND OGS_PACKAGE_DEPENDENCIES)
+    include(packaging/InstallDependencies)
+    InstallDependencies(ogs)
+endif()

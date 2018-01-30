@@ -11,13 +11,16 @@ title = "Linear; Single fracture"
 
 +++
 
-{{< project-link >}}
+{{< data-link >}}
 
 ## Problem description
 
 We solve a linear elastic small deformation problem with a pre-existing fracture using the lower-dimensional interface element (LIE) approach.
 
 See [this PDF](../LIE_small_deformation.pdf) for detailed problem description.
+
+The one-sided incompressibility constraint for fracture models is described in
+[this PDF](../LIE_fracture_incompressibility.pdf).
 
 ## Results and evaluation
 

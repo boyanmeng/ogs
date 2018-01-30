@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,7 +12,9 @@
 
 #pragma once
 
-#include <Eigen/Dense>
+#include <memory>
+
+#include "Permeability.h"
 
 namespace BaseLib
 {
@@ -24,9 +26,14 @@ namespace MaterialLib
 namespace PorousMedium
 {
 /** Create a porosity model
- *  @param config  ConfigTree object has a tag of `<permeability>`
+ * @param config  ConfigTree object has a tag of `<permeability>` that
+ * describes the permeability relationsship and contains the name of the
+ * parameter
+ * @param parameters a vector containing the available parameters
  */
-Eigen::MatrixXd createPermeabilityModel(BaseLib::ConfigTree const& config);
+std::unique_ptr<Permeability> createPermeabilityModel(
+    BaseLib::ConfigTree const& config,
+    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters);
 
 }  // end of namespace
 }  // end of namespace

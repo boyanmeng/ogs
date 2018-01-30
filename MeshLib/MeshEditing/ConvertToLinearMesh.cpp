@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -95,7 +95,7 @@ std::unique_ptr<MeshLib::Mesh> convertToLinearMesh(MeshLib::Mesh const& org_mesh
         // copy only base node values
         for (unsigned i=0; i<org_mesh.getNumberOfBaseNodes(); i++)
         {
-            for (unsigned j=0; j<n_src_comp; j++)
+            for (int j = 0; j < n_src_comp; j++)
                 (*new_prop)[i*n_src_comp+j] = (*src_prop)[i*n_src_comp+j];
         }
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -55,7 +55,7 @@ template <typename ParameterDataType>
 Parameter<ParameterDataType>& findParameter(
     std::string const& parameter_name,
     std::vector<std::unique_ptr<ParameterBase>> const& parameters,
-    unsigned const num_components)
+    int const num_components)
 {
     // Find corresponding parameter by name.
     auto const parameter_it = std::find_if(
@@ -111,7 +111,7 @@ template <typename ParameterDataType>
 Parameter<ParameterDataType>& findParameter(
     BaseLib::ConfigTree const& process_config, std::string const& tag,
     std::vector<std::unique_ptr<ParameterBase>> const& parameters,
-    unsigned const num_components)
+    int const num_components)
 {
     // Find parameter name in process config.
     //! \ogs_file_special

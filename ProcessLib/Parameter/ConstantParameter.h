@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,9 +35,9 @@ struct ConstantParameter final : public Parameter<T>
 
     bool isTimeDependent() const override { return false; }
 
-    unsigned getNumberOfComponents() const override
+    int getNumberOfComponents() const override
     {
-        return static_cast<unsigned>(_values.size());
+        return static_cast<int>(_values.size());
     }
 
     std::vector<T> const& operator()(

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -42,11 +42,5 @@ void BoundaryConditionCollection::addBCsForProcessVariables(
     // uninitialized by default, and has to be filled by the respective BC
     // object if needed.
     _dirichlet_bcs.resize(_boundary_conditions.size());
-}
-
-void BoundaryConditionCollection::preTimestep(const double t)
-{
-    for (auto& bc : _boundary_conditions)
-        bc->preTimestep(t);
 }
 }

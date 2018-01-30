@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,13 +9,8 @@
 
 #pragma once
 
-#include <cassert>
-
-#include "ProcessLib/Process.h"
-
-#include "ProcessLib/LIE/SmallDeformation/LocalAssembler/CreateLocalAssemblers.h"
 #include "ProcessLib/LIE/SmallDeformation/LocalAssembler/SmallDeformationLocalAssemblerInterface.h"
-
+#include "ProcessLib/Process.h"
 #include "SmallDeformationProcessData.h"
 
 namespace ProcessLib
@@ -41,7 +36,7 @@ public:
             jacobian_assembler,
         std::vector<std::unique_ptr<ParameterBase>> const& parameters,
         unsigned const integration_order,
-        std::vector<std::reference_wrapper<ProcessVariable>>&&
+        std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
         SmallDeformationProcessData<DisplacementDim>&& process_data,
         SecondaryVariableCollection&& secondary_variables,
@@ -49,8 +44,7 @@ public:
 
     //! \name ODESystem interface
     //! @{
-
-    bool isLinear() const override { return false; }
+    bool isLinear() const override;
     //! @}
 
 private:
@@ -65,48 +59,19 @@ private:
 
     void assembleConcreteProcess(const double t, GlobalVector const& x,
                                  GlobalMatrix& M, GlobalMatrix& K,
-                                 GlobalVector& b,
-                                 StaggeredCouplingTerm const&
-                                 coupling_term) override
-    {
-        DBUG("Assemble SmallDeformationProcess.");
-
-        // Call global assembler for each local assembly item.
-        GlobalExecutor::executeMemberDereferenced(
-            _global_assembler, &VectorMatrixAssembler::assemble,
-            _local_assemblers, *_local_to_global_index_map, t, x, M, K, b,
-            coupling_term);
-    }
+                                 GlobalVector& b) override;
 
     void assembleWithJacobianConcreteProcess(
         const double t, GlobalVector const& x, GlobalVector const& xdot,
         const double dxdot_dx, const double dx_dx, GlobalMatrix& M,
-        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac,
-        StaggeredCouplingTerm const& coupling_term) override
-    {
-        DBUG("AssembleWithJacobian SmallDeformationProcess.");
-
-        // Call global assembler for each local assembly item.
-        GlobalExecutor::executeMemberDereferenced(
-            _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-            _local_assemblers, *_local_to_global_index_map, t, x, xdot,
-            dxdot_dx, dx_dx, M, K, b, Jac, coupling_term);
-    }
+        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac) override;
 
     void preTimestepConcreteProcess(GlobalVector const& x, double const t,
-                     double const dt) override
-    {
-        DBUG("PreTimestep SmallDeformationProcess.");
+                                    double const dt,
+                                    const int /*process_id*/) override;
 
-        _process_data.dt = dt;
-        _process_data.t = t;
-
-        GlobalExecutor::executeMemberOnDereferenced(
-            &SmallDeformationLocalAssemblerInterface::preTimestep,
-            _local_assemblers, *_local_to_global_index_map, x, t, dt);
-    }
-
-    void postTimestepConcreteProcess(GlobalVector const& x) override;
+    void postTimestepConcreteProcess(GlobalVector const& x,
+                                     int const process_id) override;
 
 private:
     SmallDeformationProcessData<DisplacementDim> _process_data;
@@ -122,9 +87,13 @@ private:
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> _vec_fracture_nodes;
 
-    std::vector<std::unique_ptr<MeshLib::MeshSubset const>> _mesh_subset_fracture_nodes;
+    std::vector<std::unique_ptr<MeshLib::MeshSubset const>>
+        _mesh_subset_fracture_nodes;
     std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_matrix_nodes;
 };
+
+extern template class SmallDeformationProcess<2>;
+extern template class SmallDeformationProcess<3>;
 
 }  // namespace SmallDeformation
 }  // namespace LIE

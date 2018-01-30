@@ -3,7 +3,7 @@
  * \date   2013-09-03
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -105,8 +105,9 @@ TYPED_TEST_CASE(ShapeFunctionTest, ShapeFunctionTestTypes);
 // Access private members via this pointer or TestFixture:: for types
 TYPED_TEST(ShapeFunctionTest, PartitionOfUnity)
 {
-    auto isPartitionOfUnity = [this](
-        std::array<double, TypeParam::DIM>& natural_coordinates_point) -> bool {
+    auto isPartitionOfUnity =
+        [](std::array<double, TypeParam::DIM>& natural_coordinates_point)
+        -> bool {
 
         // compute shape functions
         std::array<double, TypeParam::NPOINTS> N;
@@ -125,8 +126,9 @@ TYPED_TEST(ShapeFunctionTest, PartitionOfUnity)
 
 TYPED_TEST(ShapeFunctionTest, SumOfGradientsIsZero)
 {
-    auto isSumOfGradientsZero = [this](
-        std::array<double, TypeParam::DIM>& natural_coordinates_point) -> bool {
+    auto isSumOfGradientsZero =
+        [](std::array<double, TypeParam::DIM>& natural_coordinates_point)
+        -> bool {
 
         // compute shape functions
         std::array<double, TypeParam::DIM * TypeParam::NPOINTS> dNdr;

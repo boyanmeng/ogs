@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -92,6 +92,19 @@ public:
     explicit LinearElasticIsotropic(MaterialProperties material_properties)
         : _mp(std::move(material_properties))
     {
+    }
+
+    double computeFreeEnergyDensity(
+        double const /*t*/,
+        ProcessLib::SpatialPosition const& /*x*/,
+        double const /*dt*/,
+        KelvinVector const& eps,
+        KelvinVector const& sigma,
+        typename MechanicsBase<DisplacementDim>::
+            MaterialStateVariables const& /* material_state_variables */)
+        const override
+    {
+        return eps.dot(sigma) / 2;
     }
 
     boost::optional<std::tuple<KelvinVector,

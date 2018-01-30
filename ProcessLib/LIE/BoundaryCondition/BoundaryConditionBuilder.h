@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,11 +9,7 @@
 
 #pragma once
 
-#include "NumLib/NumericsConfig.h"
-
 #include "ProcessLib/BoundaryCondition/BoundaryCondition.h"
-
-#include "ProcessLib/LIE/Common/FractureProperty.h"
 
 namespace MeshLib
 {
@@ -29,14 +25,24 @@ namespace ProcessLib
 {
 namespace LIE
 {
+struct FractureProperty;
+}
+}  // namespace ProcessLib
 
-/// A boundary condition builder for displacement jumps. Boundary integration,
-/// e.g. for Neumann BC, should take into account the leveset function.
+namespace ProcessLib
+{
+namespace LIE
+{
+/// A boundary condition builder for displacement jumps. Boundary
+/// integration, e.g. for Neumann BC, should take into account the leveset
+/// function.
 class BoundaryConditionBuilder : public ProcessLib::BoundaryConditionBuilder
 {
 public:
     explicit BoundaryConditionBuilder(FractureProperty const& fracture_prop)
-    : _fracture_prop(fracture_prop) {}
+        : _fracture_prop(fracture_prop)
+    {
+    }
 
 private:
     std::unique_ptr<BoundaryCondition> createNeumannBoundaryCondition(
@@ -50,5 +56,5 @@ private:
     FractureProperty const& _fracture_prop;
 };
 
-}  // LIE
-}  // ProcessLib
+}  // namespace LIE
+}  // namespace ProcessLib

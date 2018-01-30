@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,10 +9,10 @@
 
 #include "BoundaryConditionBuilder.h"
 
-#include "MeshGeoToolsLib/SearchLength.h"
 #include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
 #include "MeshGeoToolsLib/MeshNodeSearcher.h"
-
+#include "MeshGeoToolsLib/SearchLength.h"
+#include "MeshLib/Mesh.h"
 #include "ProcessLib/BoundaryCondition/BoundaryConditionConfig.h"
 
 #include "NeumannBoundaryCondition.h"
@@ -41,10 +41,10 @@ BoundaryConditionBuilder::createNeumannBoundaryCondition(
     return ProcessLib::LIE::createNeumannBoundaryCondition(
         config.config,
         getClonedElements(boundary_element_searcher, config.geometry),
-        dof_table, variable_id, *config.component_id,
-        mesh.isAxiallySymmetric(), integration_order, shapefunction_order, mesh.getDimension(),
-        parameters, _fracture_prop);
+        dof_table, variable_id, *config.component_id, mesh.isAxiallySymmetric(),
+        integration_order, shapefunction_order, mesh.getDimension(), parameters,
+        _fracture_prop);
 }
 
-}  // LIE
-}  // ProcessLib
+}  // namespace LIE
+}  // namespace ProcessLib

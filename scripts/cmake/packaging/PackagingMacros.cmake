@@ -11,7 +11,7 @@ macro(ConfigureMacOSXBundle TARGET_NAME ICON_FILE_PATH)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${OGS_VERSION}
         MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_NAME} ${OGS_VERSION}"
         MACOSX_BUNDLE_BUNDLE_VERSION ${OGS_VERSION}
-        MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2012-2017, OpenGeoSys Community. All Rights Reserved."
+        MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2012-2018, OpenGeoSys Community. All Rights Reserved."
     )
 
     set_source_files_properties(${ICON_FILE_PATH} PROPERTIES
@@ -62,3 +62,26 @@ function(DownloadAdditionalFilesForPackaging)
     endforeach()
 
 endfunction()
+
+macro(install_qt5_plugin _qt_plugin_name _qt_plugins_var)
+    get_target_property(_qt_plugin_path "${_qt_plugin_name}" LOCATION)
+    if(EXISTS "${_qt_plugin_path}")
+        get_filename_component(_qt_plugin_file "${_qt_plugin_path}" NAME)
+        get_filename_component(_qt_plugin_type "${_qt_plugin_path}" PATH)
+        get_filename_component(_qt_plugin_type "${_qt_plugin_type}" NAME)
+        if(APPLE)
+            set(_qt_plugin_dir "PlugIns")
+        elseif(WIN32)
+            set(_qt_plugin_dir "plugins")
+        endif()
+        set(_qt_plugin_dest "${_qt_plugin_dir}/${_qt_plugin_type}")
+        install(FILES "${_qt_plugin_path}"
+            DESTINATION "${_qt_plugin_dest}"
+            ${COMPONENT})
+        set(${_qt_plugins_var}
+            "${${_qt_plugins_var}};\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${_qt_plugin_dest}/${_qt_plugin_file}")
+    else()
+        message(FATAL_ERROR "QT plugin ${_qt_plugin_name} not found")
+    endif()
+endmacro()
+

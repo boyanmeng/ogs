@@ -10,7 +10,7 @@ const commonConfig = merge([
       app: pkg.paths.src.js + 'app.js', // PATHS.app,
     },
     output: {
-      path: __dirname + pkg.paths.dist.js,
+      path: __dirname + "/" + pkg.paths.dist.js,
       filename: 'bundle.js'
     },
     module: {
@@ -20,7 +20,13 @@ const commonConfig = merge([
               loader: "expose-loader?MyWebApp"
             }
         ].concat(module.exports = parts.loaders()),
-      },
+    },
+    resolve: {
+    extensions: ['.webpack-loader.js', '.web-loader.js', '.loader.js', '.js', '.jsx'],
+    modules: [
+      path.resolve(__dirname, 'node_modules')
+    ],
+  },
     // postcss: [
       // require('autoprefixer')({ browsers: ['last 2 versions'] }),
     // ],

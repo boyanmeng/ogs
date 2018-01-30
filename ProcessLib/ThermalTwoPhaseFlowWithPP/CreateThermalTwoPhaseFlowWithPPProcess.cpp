@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,10 +12,10 @@
 
 #include "BaseLib/Functional.h"
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Parameter/ConstantParameter.h"
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/CreateThermalTwoPhaseFlowWithPPMaterialProperties.h"
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/ThermalTwoPhaseFlowWithPPMaterialProperties.h"
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
 #include "ThermalTwoPhaseFlowWithPPProcess.h"
@@ -43,7 +43,7 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
     //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
+    auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__process_variables__gas_pressure}
          "gas_pressure",
@@ -51,14 +51,17 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
          "capillary_pressure",
          //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__process_variables__temperature}
          "temperature"});
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    process_variables.push_back(std::move(per_process_variables));
 
     SecondaryVariableCollection secondary_variables;
 
     NumLib::NamedFunctionCaller named_function_caller(
         {"TwoPhaseFlow_pressure"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
     // Specific body force
     std::vector<double> const b =
         //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__specific_body_force}
@@ -108,8 +111,8 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
         INFO("The twophase flow is in heterogeneous porous media.");
         auto const& mat_ids =
             mesh.getProperties().getPropertyVector<int>("MaterialIDs");
-        material = createThermalTwoPhaseFlowWithPPMaterialProperties(mat_config,
-                                                                     *mat_ids);
+        material = createThermalTwoPhaseFlowWithPPMaterialProperties(
+            mat_config, *mat_ids, parameters);
     }
     else
     {
@@ -119,7 +122,7 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
             dummy_property.createNewPropertyVector<int>(
                 "MaterialIDs", MeshLib::MeshItemType::Cell, 1);
         material = createThermalTwoPhaseFlowWithPPMaterialProperties(
-            mat_config, *dummy_property_vector);
+            mat_config, *dummy_property_vector, parameters);
     }
 
     ThermalTwoPhaseFlowWithPPProcessData process_data{specific_body_force,

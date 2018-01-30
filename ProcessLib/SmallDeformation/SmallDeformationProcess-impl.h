@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,7 +27,8 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<std::unique_ptr<ParameterBase>> const& parameters,
     unsigned const integration_order,
-    std::vector<std::reference_wrapper<ProcessVariable>>&& process_variables,
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
+        process_variables,
     SmallDeformationProcessData<DisplacementDim>&& process_data,
     SecondaryVariableCollection&& secondary_variables,
     NumLib::NamedFunctionCaller&& named_function_caller)
@@ -70,45 +71,16 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
     _nodal_forces->resize(DisplacementDim * mesh.getNumberOfNodes());
 
     Base::_secondary_variables.addSecondaryVariable(
+        "free_energy_density",
+        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
+                         &LocalAssemblerInterface::getIntPtFreeEnergyDensity));
+
+    Base::_secondary_variables.addSecondaryVariable(
         "sigma",
         makeExtrapolator(
             ProcessLib::KelvinVectorType<DisplacementDim>::RowsAtCompileTime,
             getExtrapolator(), _local_assemblers,
             &LocalAssemblerInterface::getIntPtSigma));
-
-    // TODO remove the component-wise methods
-    Base::_secondary_variables.addSecondaryVariable(
-        "sigma_xx",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtSigmaXX));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "sigma_yy",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtSigmaYY));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "sigma_zz",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtSigmaZZ));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "sigma_xy",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtSigmaXY));
-
-    if (DisplacementDim == 3)
-    {
-        Base::_secondary_variables.addSecondaryVariable(
-            "sigma_xz",
-            makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                             &LocalAssemblerInterface::getIntPtSigmaXZ));
-
-        Base::_secondary_variables.addSecondaryVariable(
-            "sigma_yz",
-            makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                             &LocalAssemblerInterface::getIntPtSigmaYZ));
-    }
 
     Base::_secondary_variables.addSecondaryVariable(
         "epsilon",
@@ -117,38 +89,6 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
             getExtrapolator(), _local_assemblers,
             &LocalAssemblerInterface::getIntPtEpsilon));
 
-    // TODO remove the component-wise methods
-    Base::_secondary_variables.addSecondaryVariable(
-        "epsilon_xx",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtEpsilonXX));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "epsilon_yy",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtEpsilonYY));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "epsilon_zz",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtEpsilonZZ));
-
-    Base::_secondary_variables.addSecondaryVariable(
-        "epsilon_xy",
-        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &LocalAssemblerInterface::getIntPtEpsilonXY));
-    if (DisplacementDim == 3)
-    {
-        Base::_secondary_variables.addSecondaryVariable(
-            "epsilon_yz",
-            makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                             &LocalAssemblerInterface::getIntPtEpsilonYZ));
-
-        Base::_secondary_variables.addSecondaryVariable(
-            "epsilon_xz",
-            makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                             &LocalAssemblerInterface::getIntPtEpsilonXZ));
-    }
 
     // enable output of internal variables defined by material models
     auto const internal_variables =
@@ -204,14 +144,16 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
 template <int DisplacementDim>
 void SmallDeformationProcess<DisplacementDim>::assembleConcreteProcess(
     const double t, GlobalVector const& x, GlobalMatrix& M, GlobalMatrix& K,
-    GlobalVector& b, StaggeredCouplingTerm const& coupling_term)
+    GlobalVector& b)
 {
     DBUG("Assemble SmallDeformationProcess.");
 
+    std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
+       dof_table = {std::ref(*_local_to_global_index_map)};
     // Call global assembler for each local assembly item.
     GlobalExecutor::executeMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        *_local_to_global_index_map, t, x, M, K, b, coupling_term);
+        dof_table, t, x, M, K, b, _coupled_solutions);
 }
 
 template <int DisplacementDim>
@@ -219,16 +161,17 @@ void SmallDeformationProcess<DisplacementDim>::
     assembleWithJacobianConcreteProcess(
         const double t, GlobalVector const& x, GlobalVector const& xdot,
         const double dxdot_dx, const double dx_dx, GlobalMatrix& M,
-        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac,
-        StaggeredCouplingTerm const& coupling_term)
+        GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac)
 {
     DBUG("AssembleWithJacobian SmallDeformationProcess.");
 
+    std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
+       dof_table = {std::ref(*_local_to_global_index_map)};
     // Call global assembler for each local assembly item.
     GlobalExecutor::executeMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, *_local_to_global_index_map, t, x, xdot, dxdot_dx,
-        dx_dx, M, K, b, Jac, coupling_term);
+        _local_assemblers, dof_table, t, x, xdot, dxdot_dx,
+        dx_dx, M, K, b, Jac, _coupled_solutions);
 
     b.copyValues(*_nodal_forces);
     std::transform(_nodal_forces->begin(), _nodal_forces->end(),
@@ -237,7 +180,8 @@ void SmallDeformationProcess<DisplacementDim>::
 
 template <int DisplacementDim>
 void SmallDeformationProcess<DisplacementDim>::preTimestepConcreteProcess(
-    GlobalVector const& x, double const t, double const dt)
+    GlobalVector const& x, double const t, double const dt,
+    const int /*process_id*/)
 {
     DBUG("PreTimestep SmallDeformationProcess.");
 
@@ -247,6 +191,24 @@ void SmallDeformationProcess<DisplacementDim>::preTimestepConcreteProcess(
     GlobalExecutor::executeMemberOnDereferenced(
         &LocalAssemblerInterface::preTimestep, _local_assemblers,
         *_local_to_global_index_map, x, t, dt);
+}
+
+template <int DisplacementDim>
+void SmallDeformationProcess<DisplacementDim>::postTimestepConcreteProcess(
+    GlobalVector const& x, int const /*process_id*/)
+{
+    DBUG("PostTimestep SmallDeformationProcess.");
+
+    GlobalExecutor::executeMemberOnDereferenced(
+        &LocalAssemblerInterface::postTimestep, _local_assemblers,
+        *_local_to_global_index_map, x);
+
+    ProcessLib::SmallDeformation::writeMaterialForces(
+        _material_forces, _local_assemblers, *_local_to_global_index_map, x);
+
+    auto material_forces_property = MeshLib::getOrCreateMeshProperty<double>(
+        _mesh, "MaterialForces", MeshLib::MeshItemType::Node, DisplacementDim);
+    _material_forces->copyValues(*material_forces_property);
 }
 
 }  // namespace SmallDeformation

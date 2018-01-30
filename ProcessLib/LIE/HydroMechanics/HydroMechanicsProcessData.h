@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,8 +16,8 @@
 #include "MeshLib/ElementStatus.h"
 #include "MeshLib/PropertyVector.h"
 
-#include "MaterialLib/SolidModels/MechanicsBase.h"
 #include "MaterialLib/FractureModels/FractureModelBase.h"
+#include "MaterialLib/SolidModels/MechanicsBase.h"
 
 #include "ProcessLib/LIE/Common/FractureProperty.h"
 
@@ -49,7 +49,7 @@ struct HydroMechanicsProcessData
             specific_body_force_,
         std::unique_ptr<MaterialLib::Fracture::FractureModelBase<GlobalDim>>&&
             fracture_model,
-        std::unique_ptr<FractureProperty>&& fracture_prop,
+        std::unique_ptr<FracturePropertyHM>&& fracture_prop,
         Parameter<double> const& initial_effective_stress_,
         Parameter<double> const& initial_fracture_effective_stress_,
         bool const deactivate_matrix_in_flow_)
@@ -83,7 +83,8 @@ struct HydroMechanicsProcessData
           fracture_model{std::move(other.fracture_model)},
           fracture_property{std::move(other.fracture_property)},
           initial_effective_stress(other.initial_effective_stress),
-          initial_fracture_effective_stress(other.initial_fracture_effective_stress),
+          initial_fracture_effective_stress(
+              other.initial_fracture_effective_stress),
           deactivate_matrix_in_flow(other.deactivate_matrix_in_flow),
           p_element_status(std::move(other.p_element_status)),
           p0(other.p0),
@@ -101,8 +102,7 @@ struct HydroMechanicsProcessData
     //! Assignments are not needed.
     void operator=(HydroMechanicsProcessData&&) = delete;
 
-    std::unique_ptr<MaterialLib::Solids::MechanicsBase<GlobalDim>>
-        material;
+    std::unique_ptr<MaterialLib::Solids::MechanicsBase<GlobalDim>> material;
     Parameter<double> const& intrinsic_permeability;
     Parameter<double> const& specific_storage;
     Parameter<double> const& fluid_viscosity;
@@ -111,16 +111,15 @@ struct HydroMechanicsProcessData
     Parameter<double> const& porosity;
     Parameter<double> const& solid_density;
     Eigen::Matrix<double, GlobalDim, 1> const specific_body_force;
-    std::unique_ptr<MaterialLib::Fracture::FractureModelBase<GlobalDim>> fracture_model;
-    std::unique_ptr<FractureProperty> fracture_property;
-
+    std::unique_ptr<MaterialLib::Fracture::FractureModelBase<GlobalDim>>
+        fracture_model;
+    std::unique_ptr<FracturePropertyHM> fracture_property;
     Parameter<double> const& initial_effective_stress;
     Parameter<double> const& initial_fracture_effective_stress;
 
     bool const deactivate_matrix_in_flow;
     std::unique_ptr<MeshLib::ElementStatus> p_element_status;
     Parameter<double> const* p0 = nullptr;
-
 
     double dt = 0.0;
     double t = 0.0;
@@ -150,6 +149,7 @@ struct HydroMechanicsProcessData
     MeshLib::PropertyVector<double>* mesh_prop_fracture_shear_failure = nullptr;
     MeshLib::PropertyVector<double>* mesh_prop_nodal_w = nullptr;
     MeshLib::PropertyVector<double>* mesh_prop_nodal_b = nullptr;
+    MeshLib::PropertyVector<double>* mesh_prop_nodal_p = nullptr;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };

@@ -18,7 +18,6 @@ APPEND_SOURCE_FILES(TEST_SOURCES MeshLib)
 APPEND_SOURCE_FILES(TEST_SOURCES MeshGeoToolsLib)
 APPEND_SOURCE_FILES(TEST_SOURCES NumLib)
 APPEND_SOURCE_FILES(TEST_SOURCES ProcessLib)
-APPEND_SOURCE_FILES(TEST_SOURCES ProcessLib/LiquidFlow)
 
 if(Qt5XmlPatterns_FOUND)
     APPEND_SOURCE_FILES(TEST_SOURCES FileIO_Qt)
@@ -46,7 +45,6 @@ target_link_libraries(testrunner
     ProcessLib
     Threads::Threads
 )
-ADD_VTK_DEPENDENCY(testrunner)
 
 if(OGS_USE_PETSC)
     target_link_libraries(testrunner ${PETSC_LIBRARIES})
@@ -65,7 +63,7 @@ if(OGS_INSITU)
 endif()
 
 if(Qt5XmlPatterns_FOUND)
-    target_link_libraries(testrunner Qt5::Core Qt5::Gui Qt5::Xml Qt5::Network)
+    target_link_libraries(testrunner Qt5::Core Qt5::Gui Qt5::Xml Qt5::Network VtkVis vtkGUISupportQt QtDataView)
     if(CMAKE_CROSSCOMPILING)
         target_link_libraries(testrunner
             ${QT_XML_DEPS_LIBRARIES}
@@ -73,8 +71,6 @@ if(Qt5XmlPatterns_FOUND)
             ${QT_NETWORK_DEPS_LIBRARIES})
     endif()
 endif()
-
-ADD_VTK_DEPENDENCY(testrunner)
 
 if(OGS_USE_PCH)
     cotire(testrunner)

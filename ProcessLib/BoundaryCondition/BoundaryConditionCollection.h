@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -29,7 +29,8 @@ public:
     std::vector<NumLib::IndexValueVector<GlobalIndexType>> const*
     getKnownSolutions(double const t) const
     {
-        for (std::size_t i=0; i<_boundary_conditions.size(); ++i) {
+        auto const n_bcs = _boundary_conditions.size();
+        for (std::size_t i=0; i<n_bcs; ++i) {
             auto const& bc = *_boundary_conditions[i];
             auto& dirichlet_storage = _dirichlet_bcs[i];
             bc.getEssentialBCValues(t, dirichlet_storage);
@@ -42,8 +43,6 @@ public:
             process_variables,
         NumLib::LocalToGlobalIndexMap const& dof_table,
         unsigned const integration_order);
-
-    void preTimestep(const double t);
 
 private:
     mutable std::vector<NumLib::IndexValueVector<GlobalIndexType>> _dirichlet_bcs;

@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -69,7 +69,7 @@ bool createSurface(GeoLib::Polyline const& ply,
     geo.getGeometryNames(geo_names);
     FileIO::GMSH::GMSHInterface gmsh_io(
         geo, false, FileIO::GMSH::MeshDensityAlgorithm::FixedMeshDensity, 0.0,
-        0.0, 0.0, geo_names, false, false);
+        0.0, 0, geo_names, false, false);
     gmsh_io.setPrecision(std::numeric_limits<double>::digits10);
 
     char file_base_name_c[L_tmpnam];

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,6 +18,7 @@
 #include "MeshLib/PropertyVector.h"
 
 #include "MaterialLib/Fluid/FluidProperty.h"
+#include "MaterialLib/PorousMedium/Permeability/Permeability.h"
 #include "MaterialLib/PorousMedium/Porosity/Porosity.h"
 #include "MaterialLib/PorousMedium/Storage/Storage.h"
 #include "MaterialLib/Fluid/FluidProperties/CreateFluidProperties.h"
@@ -26,7 +27,6 @@
 #include "MaterialLib/PorousMedium/PorousPropertyHeaders.h"
 
 #include "ProcessLib/Utils/ProcessUtils.h"
-#include "ProcessLib/Parameter/ConstantParameter.h"
 
 #include "LiquidFlowMaterialProperties.h"
 
@@ -51,7 +51,8 @@ createLiquidFlowMaterialProperties(
         MaterialLib::Fluid::createFluidProperties(fluid_config);
 
     // Get porous properties
-    std::vector<Eigen::MatrixXd> intrinsic_permeability_models;
+    std::vector<std::unique_ptr<MaterialLib::PorousMedium::Permeability>>
+        intrinsic_permeability_models;
     std::vector<std::unique_ptr<MaterialLib::PorousMedium::Porosity>>
         porosity_models;
     std::vector<std::unique_ptr<MaterialLib::PorousMedium::Storage>>
@@ -75,13 +76,13 @@ createLiquidFlowMaterialProperties(
             porous_medium_config.getConfigSubtree("permeability");
         intrinsic_permeability_models.emplace_back(
             MaterialLib::PorousMedium::createPermeabilityModel(
-                permeability_config));
+                permeability_config, parameters));
 
         auto const& porosity_config =
             //! \ogs_file_param{prj__processes__process__LIQUID_FLOW__material_property__porous_medium__porous_medium__porosity}
             porous_medium_config.getConfigSubtree("porosity");
-        auto n =
-            MaterialLib::PorousMedium::createPorosityModel(porosity_config);
+        auto n = MaterialLib::PorousMedium::createPorosityModel(porosity_config,
+                                                                parameters);
         porosity_models.emplace_back(std::move(n));
 
         auto const& storage_config =
@@ -96,32 +97,10 @@ createLiquidFlowMaterialProperties(
     BaseLib::reorderVector(porosity_models, mat_ids);
     BaseLib::reorderVector(storage_models, mat_ids);
 
-    //! \ogs_file_param{prj__processes__process__LIQUID_FLOW__material_property__solid}
-    auto const solid_config = config.getConfigSubtreeOptional("solid");
-    if (solid_config)
-    {
-        auto& solid_thermal_expansion = findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__LIQUID_FLOW__material_property__solid__thermal_expansion}
-            *solid_config, "thermal_expansion", parameters, 1);
-        DBUG("Use \'%s\' as solid thermal expansion.",
-             solid_thermal_expansion.name.c_str());
-        auto& biot_constant = findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__LIQUID_FLOW__material_property__solid__biot_constant}
-            *solid_config, "biot_constant", parameters, 1);
-        return std::make_unique<LiquidFlowMaterialProperties>(
-            std::move(fluid_properties),
-            std::move(intrinsic_permeability_models),
-            std::move(porosity_models), std::move(storage_models),
-            has_material_ids, material_ids, solid_thermal_expansion,
-            biot_constant);
-    }
-
-    ConstantParameter<double> void_parameter("void_solid_thermal_expansion",
-                                             0.);
     return std::make_unique<LiquidFlowMaterialProperties>(
         std::move(fluid_properties), std::move(intrinsic_permeability_models),
         std::move(porosity_models), std::move(storage_models), has_material_ids,
-        material_ids, void_parameter, void_parameter);
+        material_ids);
 }
 
 }  // end of namespace

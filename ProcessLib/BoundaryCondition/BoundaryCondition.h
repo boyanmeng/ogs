@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -62,8 +62,6 @@ public:
         // Therefore there is nothing to do here.
     }
 
-    virtual void preTimestep(const double /*t*/) {}
-
     virtual ~BoundaryCondition() = default;
 };
 
@@ -108,13 +106,20 @@ protected:
             parameters);
 
     virtual std::unique_ptr<BoundaryCondition>
+    createNonuniformDirichletBoundaryCondition(
+        const BoundaryConditionConfig& config,
+        const NumLib::LocalToGlobalIndexMap& dof_table,
+        const MeshLib::Mesh& mesh, const int variable_id);
+
+    virtual std::unique_ptr<BoundaryCondition>
     createNonuniformNeumannBoundaryCondition(
         const BoundaryConditionConfig& config,
         const NumLib::LocalToGlobalIndexMap& dof_table,
         const MeshLib::Mesh& mesh, const int variable_id,
         const unsigned integration_order, const unsigned shapefunction_order);
 
-    virtual std::unique_ptr<BoundaryCondition> createPressureBoundaryCondition(
+    virtual std::unique_ptr<BoundaryCondition>
+    createNormalTractionBoundaryCondition(
         const BoundaryConditionConfig& config,
         const NumLib::LocalToGlobalIndexMap& dof_table,
         const MeshLib::Mesh& mesh, const int variable_id,

@@ -2,7 +2,7 @@
  * @date Oct 24, 2013
  *
  * @copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -137,12 +137,12 @@ MeshNodesAlongSurface& MeshNodeSearcher::getMeshNodesAlongSurface(
     std::vector<MeshNodesAlongSurface*>::const_iterator it(_mesh_nodes_along_surfaces.begin());
     for (; it != _mesh_nodes_along_surfaces.end(); ++it) {
         if (&(*it)->getSurface() == &sfc) {
-            // we calculated mesh nodes for this polyline already
+            // we calculated mesh nodes on this surface already
             return *(*it);
         }
     }
 
-    // compute nodes (and supporting points) along polyline
+    // compute nodes (and supporting points) on surface
     _mesh_nodes_along_surfaces.push_back(
         new MeshNodesAlongSurface(_mesh,
                                   sfc,

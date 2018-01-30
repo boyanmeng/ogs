@@ -5,7 +5,7 @@
  * \brief  Definition of the Mesh class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -80,10 +80,10 @@ public:
     unsigned getDimension() const { return _mesh_dimension; }
 
     /// Get the node with the given index.
-    const Node* getNode(unsigned idx) const { return _nodes[idx]; }
+    const Node* getNode(std::size_t idx) const { return _nodes[idx]; }
 
     /// Get the element with the given index.
-    const Element* getElement(unsigned idx) const { return _elements[idx]; }
+    const Element* getElement(std::size_t idx) const { return _elements[idx]; }
 
     /// Get the minimum edge length over all elements of the mesh.
     double getMinEdgeLength() const { return _edge_length.first; }

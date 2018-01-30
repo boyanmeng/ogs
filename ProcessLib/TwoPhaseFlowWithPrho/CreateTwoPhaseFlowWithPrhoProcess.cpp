@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -10,10 +10,10 @@
 #include <cassert>
 #include "BaseLib/Functional.h"
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Parameter/ConstantParameter.h"
 #include "ProcessLib/TwoPhaseFlowWithPrho/CreateTwoPhaseFlowPrhoMaterialProperties.h"
 #include "ProcessLib/TwoPhaseFlowWithPrho/TwoPhaseFlowWithPrhoMaterialProperties.h"
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 #include "TwoPhaseFlowWithPrhoProcess.h"
 #include "TwoPhaseFlowWithPrhoProcessData.h"
@@ -40,20 +40,23 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
     //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
+    auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables__liquid_pressure}
          "liquid_pressure",
          //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables__overall_mass_density}
          "overall_mass_density"});
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    process_variables.push_back(std::move(per_process_variables));
 
     SecondaryVariableCollection secondary_variables;
 
     NumLib::NamedFunctionCaller named_function_caller(
         {"TwoPhaseFlow_pressure"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
     // Specific body force
     std::vector<double> const b =
         //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__specific_body_force}
@@ -97,7 +100,8 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
     }
 
     std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties> material =
-        createTwoPhaseFlowPrhoMaterialProperties(mat_config, material_ids);
+        createTwoPhaseFlowPrhoMaterialProperties(mat_config, material_ids,
+                                                 parameters);
 
     TwoPhaseFlowWithPrhoProcessData process_data{
         specific_body_force, has_gravity, mass_lumping,       diff_coeff_b,

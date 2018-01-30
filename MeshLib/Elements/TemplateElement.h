@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,9 +58,6 @@ public:
 
     /// Copy constructor
     TemplateElement(const TemplateElement &e);
-
-    /// Destructor
-    ~TemplateElement() override = default;
 
     /// Returns a copy of this object.
     Element* clone() const override { return new TemplateElement(*this); }

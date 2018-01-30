@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,12 +9,10 @@
 
 #pragma once
 
-#include "GenericNaturalBoundaryCondition.h"
+#include "MeshLib/MeshSearch/NodeSearch.h"  // for getUniqueNodes
 
-#include "MeshLib/MeshSearch/NodeSearch.h"
-
-#include "ProcessLib/Utils/CreateLocalAssemblers.h"
 #include "ProcessLib/BoundaryCondition/GenericNaturalBoundaryConditionLocalAssembler.h"
+#include "ProcessLib/Utils/CreateLocalAssemblers.h"
 
 namespace ProcessLib
 {
@@ -31,19 +29,16 @@ GenericNaturalBoundaryCondition<BoundaryConditionData,
             std::is_same<typename std::decay<BoundaryConditionData>::type,
                          typename std::decay<Data>::type>::value,
             bool>::type is_axially_symmetric,
-        unsigned const integration_order,
-        unsigned const shapefunction_order,
+        unsigned const integration_order, unsigned const shapefunction_order,
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, int const component_id,
-        unsigned const global_dim,
-        std::vector<MeshLib::Element*>&& elements, Data&& data,
-        FractureProperty const& fracture_prop)
+        unsigned const global_dim, std::vector<MeshLib::Element*>&& elements,
+        Data&& data, FractureProperty const& fracture_prop)
     : _data(std::forward<Data>(data)),
       _elements(std::move(elements)),
       _integration_order(integration_order)
 {
-    assert(component_id <
-           static_cast<int>(dof_table_bulk.getNumberOfComponents()));
+    assert(component_id < dof_table_bulk.getNumberOfComponents());
 
     std::vector<MeshLib::Node*> nodes = MeshLib::getUniqueNodes(_elements);
     DBUG("Found %d nodes for Natural BCs for the variable %d and component %d",
@@ -86,14 +81,14 @@ template <typename BoundaryConditionData,
 void GenericNaturalBoundaryCondition<
     BoundaryConditionData,
     LocalAssemblerImplementation>::applyNaturalBC(const double t,
-                                         const GlobalVector& x,
-                                         GlobalMatrix& K,
-                                         GlobalVector& b)
+                                                  const GlobalVector& x,
+                                                  GlobalMatrix& K,
+                                                  GlobalVector& b)
 {
     GlobalExecutor::executeMemberOnDereferenced(
         &GenericNaturalBoundaryConditionLocalAssemblerInterface::assemble,
         _local_assemblers, *_dof_table_boundary, t, x, K, b);
 }
 
-}  // LIE
-}  // ProcessLib
+}  // namespace LIE
+}  // namespace ProcessLib

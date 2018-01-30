@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -25,7 +25,18 @@ BoundaryElementsAtPoint::BoundaryElementsAtPoint(
     : _mesh(mesh), _point(point)
 {
     auto const node_ids = mshNodeSearcher.getMeshNodeIDs(_point);
-    assert(node_ids.size() == 1);
+    if (node_ids.empty())
+        OGS_FATAL(
+            "BoundaryElementsAtPoint: the mesh node searcher was unable to "
+            "locate the point (%f, %f, %f) in the mesh.",
+            _point[0], _point[1], _point[2]);
+    if (node_ids.size() > 1)
+        OGS_FATAL(
+            "BoundaryElementsAtPoint: the mesh node searcher found %d points "
+            "near the requested point (%f, %f, %f) in the mesh, while exactly "
+            "one is expected.",
+            node_ids.size(), _point[0], _point[1], _point[2]);
+
     std::array<MeshLib::Node*, 1> const nodes = {{
         const_cast<MeshLib::Node*>(_mesh.getNode(node_ids[0]))}};
 

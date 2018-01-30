@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,17 +18,9 @@
 
 #include "MaterialLib/Fluid/FluidProperty.h"
 #include "MaterialLib/Fluid/FluidProperties/FluidProperties.h"
-
+#include "MaterialLib/PorousMedium/Permeability/Permeability.h"
 #include "MaterialLib/PorousMedium/Porosity/Porosity.h"
 #include "MaterialLib/PorousMedium/Storage/Storage.h"
-
-namespace MaterialLib
-{
-namespace Fluid
-{
-class FluidProperties;
-}
-}
 
 namespace BaseLib
 {
@@ -43,9 +35,6 @@ class PropertyVector;
 
 namespace ProcessLib
 {
-template <typename T>
-struct Parameter;
-
 class SpatialPosition;
 
 namespace LiquidFlow
@@ -61,24 +50,21 @@ public:
 
     LiquidFlowMaterialProperties(
         std::unique_ptr<MaterialLib::Fluid::FluidProperties>&& fluid_properties,
-        std::vector<Eigen::MatrixXd>&& intrinsic_permeability_models,
+        std::vector<std::unique_ptr<MaterialLib::PorousMedium::Permeability>>&&
+            intrinsic_permeability_models,
         std::vector<std::unique_ptr<MaterialLib::PorousMedium::Porosity>>&&
             porosity_models,
         std::vector<std::unique_ptr<MaterialLib::PorousMedium::Storage>>&&
             storage_models,
         bool const has_material_ids,
-        MeshLib::PropertyVector<int> const& material_ids,
-        Parameter<double> const& solid_thermal_expansion,
-        Parameter<double> const& biot_constant)
+        MeshLib::PropertyVector<int> const& material_ids)
         : _has_material_ids(has_material_ids),
           _material_ids(material_ids),
           _fluid_properties(std::move(fluid_properties)),
           _intrinsic_permeability_models(
               std::move(intrinsic_permeability_models)),
           _porosity_models(std::move(porosity_models)),
-          _storage_models(std::move(storage_models)),
-          _solid_thermal_expansion(solid_thermal_expansion),
-          _biot_constant(biot_constant)
+          _storage_models(std::move(storage_models))
     {
     }
 
@@ -113,24 +99,11 @@ public:
 
     double getLiquidDensity(const double p, const double T) const;
 
-    double getdLiquidDensity_dT(const double p, const double T) const;
-
     double getViscosity(const double p, const double T) const;
 
-    double getHeatCapacity(const double p, const double T) const;
-
-    double getThermalConductivity(const double p, const double T) const;
-
-    double getPorosity(const int material_id, const double porosity_variable,
-                       const double T) const
-    {
-        return _porosity_models[material_id]->getValue(porosity_variable, T);
-    }
-
-    double getSolidThermalExpansion(const double t,
-                                    const SpatialPosition& pos) const;
-
-    double getBiotConstant(const double t, const SpatialPosition& pos) const;
+    double getPorosity(const int material_id, const double t,
+                       const SpatialPosition& pos,
+                       const double porosity_variable, const double T) const;
 
 private:
     /// A flag to indicate whether the reference member, _material_ids,
@@ -144,14 +117,13 @@ private:
     const std::unique_ptr<MaterialLib::Fluid::FluidProperties>
         _fluid_properties;
 
-    const std::vector<Eigen::MatrixXd> _intrinsic_permeability_models;
+    const std::vector<std::unique_ptr<MaterialLib::PorousMedium::Permeability>>
+        _intrinsic_permeability_models;
     const std::vector<std::unique_ptr<MaterialLib::PorousMedium::Porosity>>
         _porosity_models;
     const std::vector<std::unique_ptr<MaterialLib::PorousMedium::Storage>>
         _storage_models;
 
-    Parameter<double> const& _solid_thermal_expansion;
-    Parameter<double> const& _biot_constant;
     // Note: For the statistical data of porous media, they could be read from
     // vtu files directly. This can be done by using property vectors directly.
     // Such property vectors will be added here if they are needed.

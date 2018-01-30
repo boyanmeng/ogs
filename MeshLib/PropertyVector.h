@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,7 @@ public:
 
     MeshItemType getMeshItemType() const { return _mesh_item_type; }
     std::string const& getPropertyName() const { return _property_name; }
-    std::size_t getNumberOfComponents() const { return _n_components; }
+    int getNumberOfComponents() const { return _n_components; }
 
 protected:
     PropertyVectorBase(std::string property_name,
@@ -44,7 +44,7 @@ protected:
           _property_name(std::move(property_name))
     {}
 
-    std::size_t const _n_components;
+    int const _n_components;
     MeshItemType const _mesh_item_type;
     std::string const _property_name;
 };
@@ -66,7 +66,7 @@ public:
     }
 
     //! Returns the value for the given component stored in the given tuple.
-    PROP_VAL_TYPE& getComponent(std::size_t tuple_index, std::size_t component)
+    PROP_VAL_TYPE& getComponent(std::size_t tuple_index, int component)
     {
         assert(component < _n_components);
         assert(tuple_index < getNumberOfTuples());
@@ -76,7 +76,7 @@ public:
 
     //! Returns the value for the given component stored in the given tuple.
     PROP_VAL_TYPE const& getComponent(std::size_t tuple_index,
-                                      std::size_t component) const
+                                      int component) const
     {
         assert(component < _n_components);
         assert(tuple_index < getNumberOfTuples());
@@ -174,7 +174,7 @@ public:
 
     void initPropertyValue(std::size_t group_id, std::vector<T> const& values)
     {
-        if (_n_components != values.size())
+        if (_n_components != static_cast<int>(values.size()))
             OGS_FATAL("The size of provided values in initPropertyValue() is "
                       "not same as the number of components in PropertyVector<T*>");
 
@@ -215,7 +215,7 @@ public:
     }
 
     //! Returns the value for the given component stored in the given tuple.
-    T const& getComponent(std::size_t tuple_index, std::size_t component) const
+    T const& getComponent(std::size_t tuple_index, int component) const
     {
         assert(component < _n_components);
         assert(tuple_index < getNumberOfTuples());

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -67,7 +67,7 @@ struct Parameter : public ParameterBase
 
     //! Returns the number of components this Parameter has at every position and
     //! point in time.
-    virtual unsigned getNumberOfComponents() const = 0;
+    virtual int getNumberOfComponents() const = 0;
 
     //! Returns the parameter value at the given time and position.
     virtual std::vector<T> const& operator()(

@@ -5,7 +5,7 @@
  * \brief  Implementation of the GeoOnMeshMappingDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,6 +40,9 @@ int GeoOnMeshMappingDialog::getDataSetChoice() const
 
 void GeoOnMeshMappingDialog::on_meshNameComboBox_currentIndexChanged(int idx)
 {
+    if (idx == 1)
+        this->normalMappingButton->setChecked(true);
+
     bool is_enabled(idx != 1);
     this->normalMappingButton->setEnabled(is_enabled);
     this->advancedMappingButton->setEnabled(is_enabled);

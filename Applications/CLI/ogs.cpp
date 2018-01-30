@@ -3,7 +3,7 @@
  * \brief  Implementation of OpenGeoSys simulation application
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,7 +14,11 @@
 #include <tclap/CmdLine.h>
 
 #ifndef _WIN32
+#ifdef __APPLE__
+#include <xmmintrin.h>
+#else
 #include <cfenv>
+#endif  // __APPLE__
 #endif  // _WIN32
 
 #ifdef USE_PETSC
@@ -28,6 +32,7 @@
 #include "BaseLib/DateTools.h"
 #include "BaseLib/FileTools.h"
 #include "BaseLib/RunTime.h"
+#include "BaseLib/TemplateLogogFormatterSuppressedGCC.h"
 
 #include "Applications/ApplicationsLib/LinearSolverLibrarySetup.h"
 #include "Applications/ApplicationsLib/LogogSetup.h"
@@ -37,17 +42,18 @@
 
 #include "NumLib/NumericsConfig.h"
 
-
 int main(int argc, char *argv[])
 {
     // Parse CLI arguments.
-    TCLAP::CmdLine cmd("OpenGeoSys-6 software.\n"
-            "Copyright (c) 2012-2017, OpenGeoSys Community "
-            "(http://www.opengeosys.org) "
-            "Distributed under a Modified BSD License. "
-            "See accompanying file LICENSE.txt or "
-            "http://www.opengeosys.org/project/license\n"
-            "version: " + BaseLib::BuildInfo::git_describe,
+    TCLAP::CmdLine cmd(
+        "OpenGeoSys-6 software.\n"
+        "Copyright (c) 2012-2018, OpenGeoSys Community "
+        "(http://www.opengeosys.org) "
+        "Distributed under a Modified BSD License. "
+        "See accompanying file LICENSE.txt or "
+        "http://www.opengeosys.org/project/license\n"
+        "version: " +
+            BaseLib::BuildInfo::git_describe,
         ' ',
         BaseLib::BuildInfo::git_describe);
 
@@ -111,11 +117,14 @@ int main(int argc, char *argv[])
 #ifndef _WIN32  // On windows this command line option is not present.
     // Enable floating point exceptions
     if (enable_fpe_arg.isSet())
+#ifdef __APPLE__
+        _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+#else
         feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#endif  // __APPLE__
 #endif  // _WIN32
 
     BaseLib::RunTime run_time;
-    run_time.start();
 
     {
         auto const start_time = std::chrono::system_clock::now();
@@ -136,7 +145,14 @@ int main(int argc, char *argv[])
                 vtkSmartPointer<vtkMPIController>::New();
             controller->Initialize(&argc, &argv, 1);
             vtkMPIController::SetGlobalController(controller);
+
+            logog_setup.setFormatter(
+                std::make_unique<BaseLib::TemplateLogogFormatterSuppressedGCC<
+                    TOPIC_LEVEL_FLAG | TOPIC_FILE_NAME_FLAG |
+                    TOPIC_LINE_NUMBER_FLAG>>());
 #endif
+            run_time.start();
+
             auto project_config = BaseLib::makeConfigTree(
                 project_arg.getValue(), !nonfatal_arg.getValue(),
                 "OpenGeoSysProject");
@@ -181,6 +197,8 @@ int main(int argc, char *argv[])
             if (isInsituConfigured)
                 InSituLib::Finalize();
  #endif
+            INFO("[time] Execution took %g s.", run_time.elapsed());
+
 #if defined(USE_PETSC)
             controller->Finalize(1) ;
 #endif
@@ -201,8 +219,6 @@ int main(int argc, char *argv[])
         auto const time_str = BaseLib::formatDate(end_time);
         INFO("OGS terminated on %s.", time_str.c_str());
     }
-
-    INFO("[time] Execution took %g s.", run_time.elapsed());
 
     return ogs_status;
 }

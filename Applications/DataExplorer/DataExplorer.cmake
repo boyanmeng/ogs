@@ -50,6 +50,7 @@ target_link_libraries(DataExplorer
     MeshLib
     ApplicationsFileIO
     DataHolderLib
+    NetCdfDialogLib
     OGSFileConverterLib
     QtBase
     QtDataView
@@ -66,7 +67,7 @@ target_link_libraries(DataExplorer
 )
 
 # Workaround for Windows conan tiff-package
-if(USE_CONAN AND WIN32)
+if(OGS_USE_CONAN AND WIN32)
     find_package(ZLIB REQUIRED)
     target_link_libraries(DataExplorer ${ZLIB_LIBRARIES})
 endif()
@@ -97,8 +98,6 @@ if(VTKFBXCONVERTER_FOUND)
     target_link_libraries(DataExplorer ${VTKFBXCONVERTER_LIBRARIES})
 endif()
 
-ADD_VTK_DEPENDENCY(DataExplorer)
-
 set_property(TARGET DataExplorer PROPERTY FOLDER "DataExplorer")
 
 if(OGS_USE_PCH)
@@ -117,3 +116,8 @@ cpack_add_component(ogs_gui
 )
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} "DataExplorer" "OGS Data Explorer" PARENT_SCOPE)
 set(CPACK_NSIS_MENU_LINKS ${CPACK_NSIS_MENU_LINKS} "bin/DataExplorer.exe" "Data Explorer" PARENT_SCOPE)
+
+if(NOT APPLE AND OGS_PACKAGE_DEPENDENCIES)
+    include(packaging/InstallDependencies)
+    InstallDependencies(DataExplorer)
+endif()

@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -97,6 +97,68 @@ struct DamagePropertiesParameters
     P const& alpha_d;
     P const& beta_d;
     P const& h_d;
+};
+
+/// Evaluated MaterialPropertiesParameters container, see its documentation for
+/// details.
+struct MaterialProperties final
+{
+    MaterialProperties(double const t, ProcessLib::SpatialPosition const& x,
+                       MaterialPropertiesParameters const& mp)
+        : G(mp.G(t, x)[0]),
+          K(mp.K(t, x)[0]),
+          alpha(mp.alpha(t, x)[0]),
+          beta(mp.beta(t, x)[0]),
+          gamma(mp.gamma(t, x)[0]),
+          delta(mp.delta(t, x)[0]),
+          epsilon(mp.epsilon(t, x)[0]),
+          m(mp.m(t, x)[0]),
+          alpha_p(mp.alpha_p(t, x)[0]),
+          beta_p(mp.beta_p(t, x)[0]),
+          gamma_p(mp.gamma_p(t, x)[0]),
+          delta_p(mp.delta_p(t, x)[0]),
+          epsilon_p(mp.epsilon_p(t, x)[0]),
+          m_p(mp.m_p(t, x)[0]),
+          kappa(mp.kappa(t, x)[0]),
+          hardening_coefficient(mp.hardening_coefficient(t, x)[0])
+    {
+    }
+    double const G;
+    double const K;
+
+    double const alpha;
+    double const beta;
+    double const gamma;
+    double const delta;
+    double const epsilon;
+    double const m;
+
+    double const alpha_p;
+    double const beta_p;
+    double const gamma_p;
+    double const delta_p;
+    double const epsilon_p;
+    double const m_p;
+
+    double const kappa;
+    double const hardening_coefficient;
+};
+
+/// Evaluated DamagePropertiesParameters container, see its documentation for
+/// details.
+struct DamageProperties
+{
+    DamageProperties(double const t,
+                     ProcessLib::SpatialPosition const& x,
+                     DamagePropertiesParameters const& dp)
+        : alpha_d(dp.alpha_d(t, x)[0]),
+          beta_d(dp.beta_d(t, x)[0]),
+          h_d(dp.h_d(t, x)[0])
+    {
+    }
+    double const alpha_d;
+    double const beta_d;
+    double const h_d;
 };
 
 template <typename KelvinVector>
@@ -224,6 +286,27 @@ public:
     {
     }
 
+    double computeFreeEnergyDensity(
+        double const /*t*/,
+        ProcessLib::SpatialPosition const& /*x*/,
+        double const /*dt*/,
+        KelvinVector const& eps,
+        KelvinVector const& sigma,
+        typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
+            material_state_variables) const override
+    {
+        assert(dynamic_cast<StateVariables<DisplacementDim> const*>(
+                   &material_state_variables) != nullptr);
+
+        auto const& eps_p = static_cast<StateVariables<DisplacementDim> const&>(
+                                material_state_variables)
+                                .eps_p;
+        using Invariants =
+            MaterialLib::SolidModels::Invariants<KelvinVectorSize>;
+        auto const& identity2 = Invariants::identity2;
+        return (eps - eps_p.D - eps_p.V / 3 * identity2).dot(sigma) / 2;
+    }
+
     boost::optional<
         std::tuple<KelvinVector, std::unique_ptr<typename MechanicsBase<
                                      DisplacementDim>::MaterialStateVariables>,
@@ -240,6 +323,18 @@ public:
 
     std::vector<typename MechanicsBase<DisplacementDim>::InternalVariable>
     getInternalVariables() const override;
+
+    MaterialProperties evaluatedMaterialProperties(
+        double const t, ProcessLib::SpatialPosition const& x) const
+    {
+        return MaterialProperties(t, x, _mp);
+    }
+
+    DamageProperties evaluatedDamageProperties(
+        double const t, ProcessLib::SpatialPosition const& x) const
+    {
+        return DamageProperties(t, x, *_damage_properties);
+    }
 
 private:
     NumLib::NewtonRaphsonSolverParameters const _nonlinear_solver_parameters;

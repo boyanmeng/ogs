@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -15,6 +15,7 @@
 #include <tuple>
 #include <vector>
 
+#include "BaseLib/Error.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 
 namespace ProcessLib
@@ -128,6 +129,14 @@ struct MechanicsBase
     {
         return {};
     }
+
+    virtual double computeFreeEnergyDensity(
+        double const t,
+        ProcessLib::SpatialPosition const& x,
+        double const dt,
+        KelvinVector const& eps,
+        KelvinVector const& sigma,
+        MaterialStateVariables const& material_state_variables) const = 0;
 
     virtual ~MechanicsBase() = default;
 };

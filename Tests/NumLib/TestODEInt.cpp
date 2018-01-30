@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -68,8 +68,9 @@ public:
 
         Solution sol;
 
+        const int process_id = 0;
         NumLib::TimeDiscretizedODESystem<ODE_::ODETag, NLTag>
-                ode_sys(ode, timeDisc);
+                ode_sys(process_id, ode, timeDisc);
 
         auto linear_solver = createLinearSolver();
         auto conv_crit = std::make_unique<NumLib::ConvergenceCriterionDeltaX>(
@@ -90,7 +91,7 @@ public:
              delta_t);
 
         // initial condition
-        GlobalVector x0(ode.getMatrixSpecifications().nrows);
+        GlobalVector x0(ode.getMatrixSpecifications(process_id).nrows);
         ODET::setIC(x0);
 
         sol.ts.push_back(t0);
@@ -279,7 +280,12 @@ public:
 
 TYPED_TEST_CASE(NumLibODEIntTyped, TestCases);
 
+// Temporarily disabled for PETSc issue #1989
+#ifndef USE_PETSC
 TYPED_TEST(NumLibODEIntTyped, T1)
+#else
+TYPED_TEST(NumLibODEIntTyped, DISABLED_T1)
+#endif
 {
     TestFixture::test();
 }

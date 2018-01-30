@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,10 +58,9 @@ public:
     /// The size of the vector should be equal to the number of variables. Sum of the entries
     /// should be equal to the size of the mesh_subsets.
     /// \param order  type of ordering values in a vector
-    LocalToGlobalIndexMap(
-        std::vector<MeshLib::MeshSubsets>&& mesh_subsets,
-        std::vector<unsigned> const& vec_var_n_components,
-        NumLib::ComponentOrder const order);
+    LocalToGlobalIndexMap(std::vector<MeshLib::MeshSubsets>&& mesh_subsets,
+                          std::vector<int> const& vec_var_n_components,
+                          NumLib::ComponentOrder const order);
 
     /// Creates a MeshComponentMap internally and stores the global indices for
     /// the given mesh elements
@@ -74,8 +73,9 @@ public:
     /// \param order  type of ordering values in a vector
     LocalToGlobalIndexMap(
         std::vector<MeshLib::MeshSubsets>&& mesh_subsets,
-        std::vector<unsigned> const& vec_var_n_components,
-        std::vector<std::vector<MeshLib::Element*>const*> const& vec_var_elements,
+        std::vector<int> const& vec_var_n_components,
+        std::vector<std::vector<MeshLib::Element*> const*> const&
+            vec_var_elements,
         NumLib::ComponentOrder const order);
 
     /// Derive a LocalToGlobalIndexMap constrained to a set of mesh subsets and
@@ -103,23 +103,28 @@ public:
 
     std::size_t size() const;
 
-    std::size_t getNumberOfVariables() const { return (_variable_component_offsets.size() - 1); }
+    int getNumberOfVariables() const
+    {
+        return static_cast<int>(_variable_component_offsets.size()) - 1;
+    }
 
     int getNumberOfVariableComponents(int variable_id) const
     {
-        assert(static_cast<unsigned>(variable_id) < getNumberOfVariables());
+        assert(variable_id < getNumberOfVariables());
         return _variable_component_offsets[variable_id+1] - _variable_component_offsets[variable_id];
     }
 
-    std::size_t getNumberOfComponents() const { return _mesh_subsets.size(); }
+    int getNumberOfComponents() const { return _mesh_subsets.size(); }
 
-    RowColumnIndices operator()(std::size_t const mesh_item_id, const unsigned component_id) const;
+    RowColumnIndices operator()(std::size_t const mesh_item_id,
+                                const int component_id) const;
 
     std::size_t getNumberOfElementDOF(std::size_t const mesh_item_id) const;
 
     std::size_t getNumberOfElementComponents(std::size_t const mesh_item_id) const;
 
-    std::vector<std::size_t> getElementVariableIDs(std::size_t const mesh_item_id) const;
+    std::vector<int> getElementVariableIDs(
+        std::size_t const mesh_item_id) const;
 
     GlobalIndexType getGlobalIndex(MeshLib::Location const& l,
                                    int const variable_id,
@@ -181,18 +186,16 @@ private:
         NumLib::MeshComponentMap&& mesh_component_map);
 
     template <typename ElementIterator>
-    void
-    findGlobalIndices(ElementIterator first, ElementIterator last,
-        std::vector<MeshLib::Node*> const& nodes,
-        std::size_t const mesh_id,
-        const unsigned component_id, const unsigned comp_id_write);
+    void findGlobalIndices(ElementIterator first, ElementIterator last,
+                           std::vector<MeshLib::Node*> const& nodes,
+                           std::size_t const mesh_id, const int component_id,
+                           const int comp_id_write);
 
     template <typename ElementIterator>
-    void
-    findGlobalIndicesWithElementID(ElementIterator first, ElementIterator last,
-        std::vector<MeshLib::Node*> const& nodes,
-        std::size_t const mesh_id,
-        const unsigned component_id, const unsigned comp_id_write);
+    void findGlobalIndicesWithElementID(
+        ElementIterator first, ElementIterator last,
+        std::vector<MeshLib::Node*> const& nodes, std::size_t const mesh_id,
+        const int component_id, const int comp_id_write);
 
     /// The global component id for the specific variable (like velocity) and a
     /// component (like x, or y, or z).
@@ -215,7 +218,7 @@ private:
     /// \see _rows
     Table const& _columns = _rows;
 
-    std::vector<unsigned> const _variable_component_offsets;
+    std::vector<int> const _variable_component_offsets;
 #ifndef NDEBUG
     /// Prints first rows of the table, every line, and the mesh component map.
     friend std::ostream& operator<<(std::ostream& os, LocalToGlobalIndexMap const& map);

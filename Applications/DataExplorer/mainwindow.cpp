@@ -5,7 +5,7 @@
  * \brief  Implementation of the MainWindow class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.net)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.net)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -70,7 +70,7 @@
 #include "MeshAnalysisDialog.h"
 #include "MeshElementRemovalDialog.h"
 #include "MeshQualitySelectionDialog.h"
-#include "NetCdfConfigureDialog.h"
+#include "NetCdfDialog/NetCdfConfigureDialog.h"
 #include "SHPImportDialog.h"
 #include "SetNameDialog.h"
 #include "VtkAddFilterDialog.h"
@@ -821,7 +821,7 @@ void MainWindow::mapGeometry(const std::string &geo_name)
             std::unique_ptr<GeoLib::Raster> raster (
                 FileIO::AsciiRasterInterface::getRasterFromASCFile(file_name.toStdString()));
             if (raster)
-                geo_mapper.mapOnDEM(raster.get());
+                geo_mapper.mapOnDEM(std::move(raster));
             else
                 OGSError::box("Error reading raster file.");
             _geo_model->updateGeometry(geo_name);
@@ -857,8 +857,7 @@ void MainWindow::mapGeometry(const std::string &geo_name)
         GeoLib::DuplicateGeometry dup(_project.getGEOObjects(), geo_name,
                                       new_geo_name);
         new_geo_name = dup.getFinalizedOutputName();
-        MeshGeoToolsLib::GeoMapper mapper =
-            MeshGeoToolsLib::GeoMapper(_project.getGEOObjects(), new_geo_name);
+        MeshGeoToolsLib::GeoMapper mapper(_project.getGEOObjects(), new_geo_name);
         mapper.advancedMapOnMesh(*mesh);
         _geo_model->updateGeometry(new_geo_name);
     }
@@ -926,8 +925,21 @@ void MainWindow::callGMSH(std::vector<std::string> & selectedGeometries,
                     if (pos != std::string::npos)
                         fname = fname.substr (0, pos);
                     gmsh_command += " -o " + fname + ".msh";
-                    system(gmsh_command.c_str());
-                    this->loadFile(ImportFileType::GMSH, fileName.left(fileName.length() - 3).append("msh"));
+                    auto const return_value = system(gmsh_command.c_str());
+                    if (return_value != 0)
+                    {
+                        QString const message =
+                            "Execution of gmsh command returned non-zero "
+                            "status, " +
+                            QString::number(return_value);
+                        OGSError::box(message, "Error");
+                    }
+                    else
+                    {
+                        this->loadFile(
+                            ImportFileType::GMSH,
+                            fileName.left(fileName.length() - 3).append("msh"));
+                    }
                 }
                 else
                     OGSError::box("Location of GMSH not specified.", "Error");
@@ -943,7 +955,15 @@ void MainWindow::callGMSH(std::vector<std::string> & selectedGeometries,
 #endif
                 remove_command += fileName.toStdString();
                 INFO("remove command: %s", remove_command.c_str());
-                system(remove_command.c_str());
+                auto const return_value = system(remove_command.c_str());
+                if (return_value != 0)
+                {
+                    QString const message =
+                        "Execution of remove command returned non-zero "
+                        "status, " +
+                        QString::number(return_value);
+                    OGSError::box(message, "Error");
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,8 +13,6 @@
 #include "NumLib/ODESolver/TimeDiscretizedODESystem.h"
 #include "NumLib/ODESolver/NonlinearSolver.h"
 #include "MathLib/LinAlg/LinAlg.h"
-
-#include "ProcessLib/StaggeredCouplingTerm.h"
 
 namespace NumLib
 {
@@ -99,8 +97,7 @@ bool TimeLoopSingleODE<NLTag>::loop(const double t0, GlobalVector const& x0,
     if (time_disc.needsPreload())
     {
         MathLib::LinAlg::setLocalAccessibleVector(x);
-        _nonlinear_solver->assemble(x,
-                                 ProcessLib::createVoidStaggeredCouplingTerm());
+        _nonlinear_solver->assemble(x);
         time_disc.pushState(t0, x0,
                             _ode_sys);  // TODO: that might do duplicate work
     }
@@ -116,9 +113,7 @@ bool TimeLoopSingleODE<NLTag>::loop(const double t0, GlobalVector const& x0,
         // INFO("time: %e, delta_t: %e", t, delta_t);
         time_disc.nextTimestep(t, delta_t);
 
-        nl_slv_succeeded = _nonlinear_solver->solve(x,
-                                ProcessLib::createVoidStaggeredCouplingTerm(),
-                                nullptr);
+        nl_slv_succeeded = _nonlinear_solver->solve(x, nullptr);
         if (!nl_slv_succeeded)
             break;
 

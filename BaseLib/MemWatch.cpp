@@ -5,7 +5,7 @@
  * \brief  Implementation of the MemWatch class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,7 +14,7 @@
 
 #include "MemWatch.h"
 
-#if !defined(WIN32) && !defined(__APPLE__) && !defined(__MINGW32__)
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__MINGW32__)
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -31,7 +31,7 @@ MemWatch::MemWatch ()
 
 unsigned MemWatch::updateMemUsage ()
 {
-#if !defined(WIN32) && !defined(__APPLE__) && !defined(__MINGW32__)
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__MINGW32__)
         std::string fname ("/proc/");
         std::stringstream str_pid;
         str_pid << static_cast<unsigned> (getpid());

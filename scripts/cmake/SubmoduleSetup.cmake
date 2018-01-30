@@ -12,9 +12,6 @@ set(REQUIRED_SUBMODULES
     ThirdParty/tetgen
     ${OGS_ADDITIONAL_SUBMODULES_TO_CHECKOUT}
 )
-if(OGS_BUILD_TESTS)
-    list(APPEND REQUIRED_SUBMODULES Tests/Data)
-endif()
 if(OGS_BUILD_GUI)
     list(APPEND REQUIRED_SUBMODULES ThirdParty/vtkGUISupportQt)
 endif()
@@ -42,19 +39,25 @@ foreach(SUBMODULE ${REQUIRED_SUBMODULES})
     string(REGEX MATCH "^\\-" UNINITIALIZED ${SUBMODULE_STATE})
     string(REGEX MATCH "^\\+" MISMATCH ${SUBMODULE_STATE})
 
+    set(RESULT "")
     if(UNINITIALIZED)
         message(STATUS "Initializing submodule ${SUBMODULE}")
         execute_process(
-            COMMAND ${GIT_TOOL_PATH}
-                submodule update --init --recursive ${SUBMODULE}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${GIT_TOOL_PATH} submodule update --init --recursive ${DEPTH} ${SUBMODULE}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+            RESULT_VARIABLE RESULT
         )
+
     elseif(MISMATCH)
         message(STATUS "Updating submodule ${SUBMODULE}")
         execute_process(
-            COMMAND ${GIT_TOOL_PATH}
-                submodule update --recursive ${SUBMODULE}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${GIT_TOOL_PATH} submodule update --recursive ${SUBMODULE}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+            RESULT_VARIABLE RESULT
         )
+    endif()
+
+    if((NOT ${RESULT} STREQUAL "") AND (NOT ${RESULT} STREQUAL "0"))
+        message(FATAL_ERROR "Error in submodule setup; return value: ${RESULT}")
     endif()
 endforeach()

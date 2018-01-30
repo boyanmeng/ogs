@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkCompositeTextureOnSurfaceFilter class.
  *
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,7 +23,7 @@
 #include <vtkUnstructuredGrid.h>
 #include "VtkGeoImageSource.h"
 #include "VtkRaster.h"
-#include "NetCdfConfigureDialog.h"
+#include "NetCdfDialog/NetCdfConfigureDialog.h"
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -90,10 +90,6 @@ void VtkCompositeTextureOnSurfaceFilter::init()
             image->GetOutput()->GetOrigin(origin);
             double spacing[3];
             image->GetOutput()->GetSpacing(spacing);
-/*
-            VtkCompositeColormapToImageFilter* cm = new VtkCompositeColormapToImageFilter(image);
-            vtkImageAlgorithm* img = dynamic_cast<vtkImageAlgorithm*>(cm->GetOutputAlgorithm());
-*/
             surface->SetRaster(image, origin[0], origin[1], spacing[0]);
             surface->Update();
         }

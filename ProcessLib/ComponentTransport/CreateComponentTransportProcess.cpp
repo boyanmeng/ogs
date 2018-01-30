@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,8 +12,8 @@
 #include "MaterialLib/Fluid/FluidProperties/CreateFluidProperties.h"
 #include "MaterialLib/PorousMedium/CreatePorousMediaProperties.h"
 
+#include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Parameter/ConstantParameter.h"
-#include "ProcessLib/Utils/ParseSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
 #include "ComponentTransportProcess.h"
@@ -35,23 +35,47 @@ std::unique_ptr<Process> createComponentTransportProcess(
     config.checkConfigParameter("type", "ComponentTransport");
 
     DBUG("Create ComponentTransportProcess.");
+    auto const staggered_scheme =
+        //! \ogs_file_param{prj__processes__process__ComponentTransport__coupling_scheme}
+        config.getConfigParameterOptional<std::string>("coupling_scheme");
+    const bool use_monolithic_scheme =
+        !(staggered_scheme && (*staggered_scheme == "staggered"));
 
     // Process variable.
 
     //! \ogs_file_param{prj__processes__process__ComponentTransport__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
-    auto process_variables = findProcessVariables(
-        variables, pv_config,
+    std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
+        process_variables;
+    if (use_monolithic_scheme)  // monolithic scheme.
+    {
+        auto per_process_variables = findProcessVariables(
+            variables, pv_config,
+            {
+            //! \ogs_file_param_special{prj__processes__process__ComponentTransport__process_variables__concentration}
+             "concentration",
+             //! \ogs_file_param_special{prj__processes__process__ComponentTransport__process_variables__pressure}
+             "pressure"});
+        process_variables.push_back(std::move(per_process_variables));
+    }
+    else  // staggered scheme.
+    {
+        std::array<std::string, 2> variable_names = {
+            {"concentration",
+             "pressure"}};  // double-braces required in C++11 (not in C++14)
+
+        for (int i = 0; i < 2; i++)
         {
-        //! \ogs_file_param_special{prj__processes__process__ComponentTransport__process_variables__concentration}
-        "concentration",
-        //! \ogs_file_param_special{prj__processes__process__ComponentTransport__process_variables__pressure}
-        "pressure"});
+            auto per_process_variables =
+                findProcessVariables(variables, pv_config, {variable_names[i]});
+            process_variables.push_back(std::move(per_process_variables));
+        }
+    }
 
     MaterialLib::PorousMedium::PorousMediaProperties porous_media_properties{
         MaterialLib::PorousMedium::createPorousMediaProperties(
-            mesh, config)};
+            mesh, config, parameters)};
 
     //! \ogs_file_param{prj__processes__process__ComponentTransport__fluid}
     auto const& fluid_config = config.getConfigSubtree("fluid");
@@ -138,13 +162,14 @@ std::unique_ptr<Process> createComponentTransportProcess(
     NumLib::NamedFunctionCaller named_function_caller(
         {"ComponentTransport_concentration_pressure"});
 
-    ProcessLib::parseSecondaryVariables(config, secondary_variables,
-                                        named_function_caller);
+    ProcessLib::createSecondaryVariables(config, secondary_variables,
+                                         named_function_caller);
 
     return std::make_unique<ComponentTransportProcess>(
         mesh, std::move(jacobian_assembler), parameters, integration_order,
         std::move(process_variables), std::move(process_data),
-        std::move(secondary_variables), std::move(named_function_caller));
+        std::move(secondary_variables), std::move(named_function_caller),
+        use_monolithic_scheme);
 }
 
 }  // namespace ComponentTransport

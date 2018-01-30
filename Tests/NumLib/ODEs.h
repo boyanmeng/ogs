@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,7 +13,6 @@
 #include "MathLib/LinAlg/LinAlg.h"
 #include "MathLib/LinAlg/UnifiedMatrixSetters.h"
 #include "NumLib/ODESolver/ODESystem.h"
-#include "ProcessLib/StaggeredCouplingTerm.h"
 
 // debug
 //#include <iostream>
@@ -27,10 +26,10 @@ class ODE1 final : public NumLib::ODESystem<
                        NumLib::NonlinearSolverTag::Newton>
 {
 public:
+    void preAssemble(const double /*t*/, GlobalVector const& /*x*/) override {}
+
     void assemble(const double /*t*/, GlobalVector const& /*x*/,
-                  GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
-                  ProcessLib::StaggeredCouplingTerm const& /*coupling_term*/
-                 ) override
+                  GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b) override
     {
         MathLib::setMatrix(M, { 1.0, 0.0,  0.0, 1.0 });
         MathLib::setMatrix(K, { 0.0, 1.0, -1.0, 0.0 });
@@ -39,28 +38,28 @@ public:
     }
 
     void assembleWithJacobian(const double t, GlobalVector const& x_curr,
-                              GlobalVector const& /*xdot*/, const double dxdot_dx,
-                              const double dx_dx, GlobalMatrix& M,
-                              GlobalMatrix& K, GlobalVector& b,
-                              GlobalMatrix& Jac,
-                              ProcessLib::StaggeredCouplingTerm
-                              const& coupling_term) override
+                              GlobalVector const& /*xdot*/,
+                              const double dxdot_dx, const double dx_dx,
+                              GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
+                              GlobalMatrix& Jac) override
     {
         namespace LinAlg = MathLib::LinAlg;
 
-        assemble(t, x_curr, M, K, b, coupling_term);
+        assemble(t, x_curr, M, K, b);
 
         // compute Jac = M*dxdot_dx + dx_dx*K
         LinAlg::finalizeAssembly(M);
         LinAlg::copy(M, Jac);
         LinAlg::scale(Jac, dxdot_dx);
-        if (dx_dx != 0.0) {
+        if (dx_dx != 0.0)
+        {
             LinAlg::finalizeAssembly(K);
             LinAlg::axpy(Jac, dx_dx, K);
         }
     }
 
-    MathLib::MatrixSpecifications getMatrixSpecifications() const override
+    MathLib::MatrixSpecifications getMatrixSpecifications(
+        const int /*process_id*/) const override
     {
         return { N, N, nullptr, nullptr };
     }
@@ -107,10 +106,10 @@ class ODE2 final : public NumLib::ODESystem<
                        NumLib::NonlinearSolverTag::Newton>
 {
 public:
+    void preAssemble(const double /*t*/, GlobalVector const& /*x*/) override {}
+
     void assemble(const double /*t*/, GlobalVector const& x, GlobalMatrix& M,
-                  GlobalMatrix& K, GlobalVector& b,
-                  ProcessLib::StaggeredCouplingTerm const& /*coupling_term*/
-                 ) override
+                  GlobalMatrix& K, GlobalVector& b) override
     {
         MathLib::setMatrix(M, {1.0});
         MathLib::LinAlg::setLocalAccessibleVector(x);
@@ -122,11 +121,9 @@ public:
                               GlobalVector const& /*xdot*/,
                               const double dxdot_dx, const double dx_dx,
                               GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
-                              GlobalMatrix& Jac,
-                              ProcessLib::StaggeredCouplingTerm const&
-                              coupling_term) override
+                              GlobalMatrix& Jac) override
     {
-        assemble(t, x, M, K, b, coupling_term);
+        assemble(t, x, M, K, b);
 
         namespace LinAlg = MathLib::LinAlg;
 
@@ -145,7 +142,8 @@ public:
         }
     }
 
-    MathLib::MatrixSpecifications getMatrixSpecifications() const override
+    MathLib::MatrixSpecifications getMatrixSpecifications(
+        const int /*process_id*/) const override
     {
         return { N, N, nullptr, nullptr };
     }
@@ -196,10 +194,10 @@ class ODE3 final : public NumLib::ODESystem<
                        NumLib::NonlinearSolverTag::Newton>
 {
 public:
+    void preAssemble(const double /*t*/, GlobalVector const& /*x*/) override {}
+
     void assemble(const double /*t*/, GlobalVector const& x_curr, GlobalMatrix& M,
-                  GlobalMatrix& K, GlobalVector& b,
-                  ProcessLib::StaggeredCouplingTerm const& /*coupling_term*/
-                 ) override
+                  GlobalMatrix& K, GlobalVector& b) override
     {
         MathLib::LinAlg::setLocalAccessibleVector(x_curr);
         auto const u = x_curr[0];
@@ -215,13 +213,11 @@ public:
                               GlobalVector const& xdot, const double dxdot_dx,
                               const double dx_dx, GlobalMatrix& M,
                               GlobalMatrix& K, GlobalVector& b,
-                              GlobalMatrix& Jac,
-                              ProcessLib::StaggeredCouplingTerm const&
-                              coupling_term) override
+                              GlobalMatrix& Jac) override
     {
         MathLib::LinAlg::setLocalAccessibleVector(x_curr);
         MathLib::LinAlg::setLocalAccessibleVector(xdot);
-        assemble(t, x_curr, M, K, b, coupling_term);
+        assemble(t, x_curr, M, K, b);
 
         auto const u = x_curr[0];
         auto const v = x_curr[1];
@@ -273,7 +269,8 @@ public:
         // INFO("Det J: %e <<<", J.determinant());
     }
 
-    MathLib::MatrixSpecifications getMatrixSpecifications() const override
+    MathLib::MatrixSpecifications getMatrixSpecifications(
+        const int /*process_id*/) const override
     {
         return { N, N, nullptr, nullptr };
     }

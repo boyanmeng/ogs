@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -11,8 +11,9 @@
 
 #include <logog/include/logog.hpp>
 
-#include "MeshLib/Node.h"
+#include "BaseLib/makeVectorUnique.h"
 #include "MeshLib/Elements/Element.h"
+#include "MeshLib/Node.h"
 
 namespace MeshLib {
 
@@ -59,7 +60,7 @@ std::size_t ElementSearch::searchByBoundingBox(
         [&aabb](MeshLib::Element* e) {
             std::size_t const nElemNodes (e->getNumberOfBaseNodes());
             for (std::size_t n=0; n < nElemNodes; ++n)
-                if (aabb.containsPoint(*e->getNode(n)))
+                if (aabb.containsPoint(*e->getNode(n), 0))
                     return true;    // any node of element is in aabb.
             return false;    // no nodes of element are in aabb.
         });
@@ -77,9 +78,8 @@ std::size_t ElementSearch::searchByNodeIDs(const std::vector<std::size_t> &nodes
             connected_elements.push_back(e->getID());
         }
     }
-    std::sort(connected_elements.begin(), connected_elements.end());
-    auto it = std::unique(connected_elements.begin(), connected_elements.end());
-    connected_elements.resize(std::distance(connected_elements.begin(),it));
+
+    BaseLib::makeVectorUnique(connected_elements);
 
     this->updateUnion(connected_elements);
     return connected_elements.size();

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -21,14 +21,13 @@
 namespace NumLib
 {
 void NonlinearSolver<NonlinearSolverTag::Picard>::assemble(
-    GlobalVector const& x,
-    ProcessLib::StaggeredCouplingTerm const& coupling_term) const
+    GlobalVector const& x) const
 {
-    _equation_system->assemble(x, coupling_term);
+    _equation_system->assemble(x);
 }
 
 bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
-    GlobalVector& x, ProcessLib::StaggeredCouplingTerm const& coupling_term,
+    GlobalVector& x,
     std::function<void(unsigned, GlobalVector const&)> const& postIterationCallback)
 {
     namespace LinAlg = MathLib::LinAlg;
@@ -59,7 +58,7 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
 
         BaseLib::RunTime time_assembly;
         time_assembly.start();
-        sys.assemble(x, coupling_term);
+        sys.assemble(x);
         sys.getA(A);
         sys.getRhs(rhs);
         INFO("[time] Assembly took %g s.", time_assembly.elapsed());
@@ -159,17 +158,16 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
 }
 
 void NonlinearSolver<NonlinearSolverTag::Newton>::assemble(
-    GlobalVector const& x,
-    ProcessLib::StaggeredCouplingTerm const& coupling_term) const
+    GlobalVector const& x) const
 {
-    _equation_system->assemble(x, coupling_term);
+    _equation_system->assemble(x);
     // TODO if the equation system would be reset to nullptr after each
     //      assemble() or solve() call, the user would be forced to set the
     //      equation every time and could not forget it.
 }
 
 bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
-    GlobalVector& x, ProcessLib::StaggeredCouplingTerm const& coupling_term,
+    GlobalVector& x,
     std::function<void(unsigned, GlobalVector const&)> const& postIterationCallback)
 {
     namespace LinAlg = MathLib::LinAlg;
@@ -202,7 +200,7 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
 
         BaseLib::RunTime time_assembly;
         time_assembly.start();
-        sys.assemble(x, coupling_term);
+        sys.assemble(x);
         sys.getResidual(x, res);
         sys.getJacobian(J);
         INFO("[time] Assembly took %g s.", time_assembly.elapsed());
@@ -234,7 +232,7 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
             auto& x_new =
                 NumLib::GlobalVectorProvider::provider.getVector(
                     x, _x_new_id);
-            LinAlg::axpy(x_new, -_alpha, minus_delta_x);
+            LinAlg::axpy(x_new, -_damping, minus_delta_x);
 
             if (postIterationCallback)
                 postIterationCallback(iteration, x_new);
@@ -323,10 +321,20 @@ createNonlinearSolver(GlobalLinearSolver& linear_solver,
     }
     if (type == "Newton")
     {
+        //! \ogs_file_param{prj__nonlinear_solvers__nonlinear_solver__damping}
+        auto const damping = config.getConfigParameter<double>("damping", 1.0);
+        if (damping <= 0)
+        {
+            OGS_FATAL(
+                "The damping factor for the Newon method must be positive, got "
+                "%g.",
+                damping);
+        }
         auto const tag = NonlinearSolverTag::Newton;
         using ConcreteNLS = NonlinearSolver<tag>;
         return std::make_pair(
-            std::make_unique<ConcreteNLS>(linear_solver, max_iter), tag);
+            std::make_unique<ConcreteNLS>(linear_solver, max_iter, damping),
+            tag);
     }
     OGS_FATAL("Unsupported nonlinear solver type");
 }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2017, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,11 +20,6 @@
 namespace BaseLib
 {
 class ConfigTree;
-}
-
-namespace ProcessLib
-{
-    struct StaggeredCouplingTerm;
 }
 
 // TODO Document in the ODE solver lib, which matrices and vectors that are
@@ -47,27 +42,18 @@ public:
      *
      * \param x             the state at which the equation system will be
      *                      assembled.
-     * \param coupling_term  the coupled term including the reference of the
-     *                      coupled processes and solutions of the equations of
-     *                      the coupled processes.
      */
-    virtual void assemble(GlobalVector const& x,
-                          ProcessLib::StaggeredCouplingTerm const& coupling_term
-                         ) const = 0;
+    virtual void assemble(GlobalVector const& x) const = 0;
 
     /*! Assemble and solve the equation system.
      *
      * \param x   in: the initial guess, out: the solution.
-     * \param coupling_term  the coupled term including the reference of the
-     *                      coupled processes and solutions of the equations of
-     *                      the coupled processes.
      * \param postIterationCallback called after each iteration if set.
      *
      * \retval true if the equation system could be solved
      * \retval false otherwise
      */
     virtual bool solve(GlobalVector& x,
-                       ProcessLib::StaggeredCouplingTerm const& coupling_term,
                        std::function<void(unsigned, GlobalVector const&)> const&
                            postIterationCallback) = 0;
 
@@ -100,12 +86,12 @@ public:
      * \param linear_solver the linear solver used by this nonlinear solver.
      * \param maxiter the maximum number of iterations used to solve the
      *                equation.
+     * \param damping \copydoc _damping
      */
-    explicit NonlinearSolver(
-        GlobalLinearSolver& linear_solver,
-        const unsigned maxiter)
-        : _linear_solver(linear_solver),
-          _maxiter(maxiter)
+    explicit NonlinearSolver(GlobalLinearSolver& linear_solver,
+                             const unsigned maxiter,
+                             double const damping = 1.0)
+        : _linear_solver(linear_solver), _maxiter(maxiter), _damping(damping)
     {
     }
 
@@ -117,12 +103,9 @@ public:
         _convergence_criterion = &conv_crit;
     }
 
-    void assemble(GlobalVector const& x,
-                  ProcessLib::StaggeredCouplingTerm const& coupling_term
-                 ) const override;
+    void assemble(GlobalVector const& x) const override;
 
     bool solve(GlobalVector& x,
-               ProcessLib::StaggeredCouplingTerm const& coupling_term,
                std::function<void(unsigned, GlobalVector const&)> const&
                    postIterationCallback) override;
 
@@ -134,8 +117,11 @@ private:
     ConvergenceCriterion* _convergence_criterion = nullptr;
     const unsigned _maxiter;  //!< maximum number of iterations
 
-    double const _alpha =
-        1;  //!< Damping factor. \todo Add constructor parameter.
+    //! A positive damping factor. The default value 1.0 gives a non-damped
+    //! Newton method. Common values are in the range 0.5 to 0.7 for somewhat
+    //! conservative method and seldom become smaller than 0.2 for very
+    //! conservative approach.
+    double const _damping;
 
     std::size_t _res_id = 0u;            //!< ID of the residual vector.
     std::size_t _J_id = 0u;              //!< ID of the Jacobian matrix.
@@ -176,12 +162,9 @@ public:
         _convergence_criterion = &conv_crit;
     }
 
-    void assemble(GlobalVector const& x,
-                  ProcessLib::StaggeredCouplingTerm const& coupling_term
-                 ) const override;
+    void assemble(GlobalVector const& x) const override;
 
     bool solve(GlobalVector& x,
-               ProcessLib::StaggeredCouplingTerm const& coupling_term,
                std::function<void(unsigned, GlobalVector const&)> const&
                    postIterationCallback) override;
 
