@@ -11,9 +11,10 @@
 
 #include <cassert>
 
+#include "MaterialLib/FractureModels/CreateCohesiveZoneModeI.h"
 #include "MaterialLib/FractureModels/CreateLinearElasticIsotropic.h"
 #include "MaterialLib/FractureModels/CreateMohrCoulomb.h"
-#include "MaterialLib/SolidModels/CreateLinearElasticIsotropic.h"
+#include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
 
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"  // required for findParameter
@@ -124,28 +125,9 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
 
 
     // Constitutive relation.
-    // read type;
-    auto const constitutive_relation_config =
-        //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__constitutive_relation}
-        config.getConfigSubtree("constitutive_relation");
-
-    auto const type =
-        //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__constitutive_relation__type}
-        constitutive_relation_config.peekConfigParameter<std::string>("type");
-
-    std::unique_ptr<MaterialLib::Solids::MechanicsBase<GlobalDim>> material =
-        nullptr;
-    if (type == "LinearElasticIsotropic")
-    {
-        material = MaterialLib::Solids::createLinearElasticIsotropic<GlobalDim>(
-            parameters, constitutive_relation_config);
-    }
-    else
-    {
-        OGS_FATAL(
-            "Cannot construct constitutive relation of given type \'%s\'.",
-            type.c_str());
-    }
+    auto material =
+        MaterialLib::Solids::createConstitutiveRelation<GlobalDim>(
+            parameters, config);
 
     // Intrinsic permeability
     auto& intrinsic_permeability = findParameter<double>(
@@ -247,6 +229,12 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
                 MaterialLib::Fracture::createMohrCoulomb<GlobalDim>(
                     parameters, fracture_model_config);
         }
+        else if (frac_type == "CohesiveZoneModeI")
+        {
+            fracture_model = MaterialLib::Fracture::CohesiveZoneModeI::
+                createCohesiveZoneModeI<GlobalDim>(parameters,
+                                                   fracture_model_config);
+        }
         else
         {
             OGS_FATAL(
@@ -272,6 +260,13 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         frac_prop->aperture0 = &ProcessLib::findParameter<double>(
             //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__initial_aperture}
             fracture_properties_config, "initial_aperture", parameters, 1);
+        if (frac_prop->aperture0->isTimeDependent())
+        {
+            OGS_FATAL(
+                "The initial aperture parameter '%s' must not be "
+                "time-dependent.",
+                frac_prop->aperture0->name.c_str());
+        }
         frac_prop->specific_storage = &ProcessLib::findParameter<double>(
             //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__specific_storage}
             fracture_properties_config, "specific_storage", parameters, 1);
@@ -285,7 +280,7 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__initial_effective_stress}
         "initial_effective_stress", parameters,
-        ProcessLib::KelvinVectorDimensions<GlobalDim>::value);
+        MathLib::KelvinVector::KelvinVectorDimensions<GlobalDim>::value);
     DBUG("Use \'%s\' as initial effective stress parameter.",
          initial_effective_stress.name.c_str());
 
@@ -307,6 +302,12 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     if (deactivate_matrix_in_flow)
         INFO("Deactivate matrix elements in flow calculation.");
 
+    // Reference temperature
+    const auto& reference_temperature =
+        //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__reference_temperature}
+        config.getConfigParameter<double>(
+            "reference_temperature", std::numeric_limits<double>::quiet_NaN());
+
     HydroMechanicsProcessData<GlobalDim> process_data{
         std::move(material),
         intrinsic_permeability,
@@ -321,7 +322,8 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         std::move(frac_prop),
         initial_effective_stress,
         initial_fracture_effective_stress,
-        deactivate_matrix_in_flow};
+        deactivate_matrix_in_flow,
+        reference_temperature};
 
     SecondaryVariableCollection secondary_variables;
 

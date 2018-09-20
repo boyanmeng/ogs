@@ -16,7 +16,7 @@
 #include "NumLib/Fem/CoordinatesMapping/NaturalNodeCoordinates.h"
 #include "NumLib/Fem/CoordinatesMapping/ShapeMatrices.h"
 #include "NumLib/Fem/FiniteElement/C0IsoparametricElements.h"
-#include "NumLib/Fem/Integration/GaussIntegrationPolicy.h"
+#include "NumLib/Fem/Integration/GaussLegendreIntegrationPolicy.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
 
 template <typename ShapeFunction, int GlobalDim>
@@ -58,7 +58,7 @@ bool test(MeshLib::Element const& element)
             shape_matrices, GlobalDim, false /* axial symmetry */);
 
         auto const& N = shape_matrices.N;
-        for (int p = 0; p < ShapeFunction::NPOINTS; ++p)
+        for (int p = 0; p < static_cast<int>(ShapeFunction::NPOINTS); ++p)
         {
             if (p == n)
             {

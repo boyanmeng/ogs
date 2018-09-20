@@ -12,22 +12,20 @@
 #include <tclap/CmdLine.h>
 
 #include "Applications/ApplicationsLib/LogogSetup.h"
-
-#include "MeshLib/Mesh.h"
-#include "MeshLib/MeshInformation.h"
+#include "BaseLib/BuildInfo.h"
+#include "MeshLib/Elements/Hex.h"
 #include "MeshLib/Elements/Line.h"
-#include "MeshLib/Elements/Tri.h"
+#include "MeshLib/Elements/Prism.h"
+#include "MeshLib/Elements/Pyramid.h"
 #include "MeshLib/Elements/Quad.h"
 #include "MeshLib/Elements/Tet.h"
-#include "MeshLib/Elements/Hex.h"
-#include "MeshLib/Elements/Pyramid.h"
-#include "MeshLib/Elements/Prism.h"
-#include "MeshLib/IO/readMeshFromFile.h"
+#include "MeshLib/Elements/Tri.h"
 #include "MeshLib/IO/VtkIO/VtuInterface.h"
-#include "MeshLib/MeshSearch/ElementSearch.h"
+#include "MeshLib/IO/readMeshFromFile.h"
+#include "MeshLib/Mesh.h"
 #include "MeshLib/MeshEditing/RemoveMeshComponents.h"
-
-
+#include "MeshLib/MeshInformation.h"
+#include "MeshLib/MeshSearch/ElementSearch.h"
 
 bool containsCellVecs(MeshLib::Mesh const& mesh)
 {
@@ -121,7 +119,7 @@ MeshLib::Properties constructProperties(MeshLib::Properties const& props,
 
 MeshLib::Mesh* constructMesh(MeshLib::Mesh const& mesh)
 {
-    INFO("Splitting nodes...")
+    INFO("Splitting nodes...");
     std::vector<MeshLib::Element*> const& elems = mesh.getElements();
     std::vector<MeshLib::Node*> new_nodes;
     std::vector<MeshLib::Element*> new_elems;
@@ -160,10 +158,13 @@ int main (int argc, char* argv[])
     ApplicationsLib::LogogSetup logog_setup;
 
     TCLAP::CmdLine cmd(
-        "Prepares OGS-meshes for use in Unity"
-        "",
-        ' ',
-        "0.1");
+        "Prepares OGS-meshes for use in Unity.\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
 
     TCLAP::ValueArg<std::string> mesh_arg("i", "input",
         "the file containing the original OGS mesh", true,
@@ -183,7 +184,7 @@ int main (int argc, char* argv[])
         return EXIT_FAILURE;
     INFO("done.\n");
 
-    INFO("Checking for line elements...")
+    INFO("Checking for line elements...");
     std::array<unsigned, 7> const& n_element_types =
         MeshLib::MeshInformation::getNumberOfElementTypes(*mesh);
     std::unique_ptr<MeshLib::Mesh> result;

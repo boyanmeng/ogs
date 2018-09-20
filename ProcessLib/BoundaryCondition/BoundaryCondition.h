@@ -11,22 +11,9 @@
 
 #include "NumLib/NumericsConfig.h"
 
-namespace GeoLib
-{
-class GeoObject;
-}
-
 namespace MeshLib
 {
-class Element;
 class Mesh;
-}
-
-namespace MeshGeoToolsLib
-{
-class SearchLength;
-class MeshNodeSearcher;
-class BoundaryElementsSearcher;
 }
 
 namespace NumLib
@@ -40,6 +27,7 @@ namespace ProcessLib
 {
 struct BoundaryConditionConfig;
 struct ParameterBase;
+class Process;
 
 class BoundaryCondition
 {
@@ -47,7 +35,8 @@ public:
     //! Applies natural BCs (i.e. non-Dirichlet BCs) to the stiffness matrix
     //! \c K and the vector \c b.
     virtual void applyNaturalBC(const double /*t*/, GlobalVector const& /*x*/,
-                                GlobalMatrix& /*K*/, GlobalVector& /*b*/)
+                                GlobalMatrix& /*K*/, GlobalVector& /*b*/,
+                                GlobalMatrix* /*Jac*/)
     {
         // By default it is assumed that the BC is not a natural BC. Therefore
         // there is nothing to do here.
@@ -55,81 +44,19 @@ public:
 
     //! Writes the values of essential BCs to \c bc_values.
     virtual void getEssentialBCValues(
-        const double /*t*/,
+        const double /*t*/, GlobalVector const& /*x*/,
         NumLib::IndexValueVector<GlobalIndexType>& /*bc_values*/) const
     {
         // By default it is assumed that the BC is not an essential BC.
         // Therefore there is nothing to do here.
     }
 
+    virtual void preTimestep(const double /*t*/, GlobalVector const& /*x*/)
+    {
+        // A hook added for solution dependent dirichlet
+    }
+
     virtual ~BoundaryCondition() = default;
-};
-
-class BoundaryConditionBuilder
-{
-public:
-    virtual ~BoundaryConditionBuilder() = default;
-
-    virtual std::unique_ptr<BoundaryCondition> createBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh,
-        const int variable_id, const unsigned integration_order,
-        const unsigned shapefunction_order,
-        const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>&
-            parameters);
-
-protected:
-    virtual std::unique_ptr<BoundaryCondition> createDirichletBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id,
-        const unsigned integration_order,
-        const unsigned shapefunction_order,
-        const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>&
-            parameters);
-
-    virtual std::unique_ptr<BoundaryCondition> createNeumannBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id,
-        const unsigned integration_order, const unsigned shapefunction_order,
-        const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>&
-            parameters);
-
-    virtual std::unique_ptr<BoundaryCondition> createRobinBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id,
-        const unsigned integration_order, const unsigned shapefunction_order,
-        const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>&
-            parameters);
-
-    virtual std::unique_ptr<BoundaryCondition>
-    createNonuniformDirichletBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id);
-
-    virtual std::unique_ptr<BoundaryCondition>
-    createNonuniformNeumannBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id,
-        const unsigned integration_order, const unsigned shapefunction_order);
-
-    virtual std::unique_ptr<BoundaryCondition>
-    createNormalTractionBoundaryCondition(
-        const BoundaryConditionConfig& config,
-        const NumLib::LocalToGlobalIndexMap& dof_table,
-        const MeshLib::Mesh& mesh, const int variable_id,
-        const unsigned integration_order, const unsigned shapefunction_order,
-        const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>&
-            parameters);
-
-    static std::vector<MeshLib::Element*> getClonedElements(
-        MeshGeoToolsLib::BoundaryElementsSearcher& boundary_element_searcher,
-        GeoLib::GeoObject const& geometry);
 };
 
 }  // ProcessLib

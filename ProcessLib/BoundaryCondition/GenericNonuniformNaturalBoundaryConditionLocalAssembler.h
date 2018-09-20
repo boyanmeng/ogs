@@ -24,7 +24,8 @@ public:
     virtual void assemble(
         std::size_t const id,
         NumLib::LocalToGlobalIndexMap const& dof_table_boundary, double const t,
-        const GlobalVector& x, GlobalMatrix& K, GlobalVector& b) = 0;
+        const GlobalVector& x, GlobalMatrix& K, GlobalVector& b,
+        GlobalMatrix* Jac) = 0;
 };
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -78,14 +79,18 @@ public:
     GenericNonuniformNaturalBoundaryConditionLocalAssembler(
         MeshLib::Element const& e, bool is_axially_symmetric,
         unsigned const integration_order)
-        : _ns_and_weights(
+        : _integration_method(integration_order),
+          _element(e),
+          _ns_and_weights(
               initNsAndWeights(e, is_axially_symmetric, integration_order))
     {
     }
 
 protected:
+    IntegrationMethod const _integration_method;
+    MeshLib::Element const& _element;
     std::vector<NAndWeight, Eigen::aligned_allocator<NAndWeight>> const
         _ns_and_weights;
 };
 
-}  // ProcessLib
+}  // namespace ProcessLib

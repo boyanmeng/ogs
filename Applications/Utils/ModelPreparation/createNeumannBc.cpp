@@ -11,12 +11,12 @@
 #include <tclap/CmdLine.h>
 
 #include "Applications/ApplicationsLib/LogogSetup.h"
-
+#include "BaseLib/BuildInfo.h"
+#include "MeshLib/Elements/Element.h"
 #include "MeshLib/IO/readMeshFromFile.h"
 #include "MeshLib/IO/writeMeshToFile.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/Node.h"
-#include "MeshLib/Elements/Element.h"
 
 /// Returns a vector of values where each value is associated with a
 /// particular node. Since a node is part of elements, it is possible to
@@ -79,11 +79,15 @@ int main(int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Integrates the given element property and outputs an OGS-5 direct "
         "Neumann boundary condition. The mesh has to contain a property "
-        "\"OriginalSubsurfaceNodeIDs\" that stores the original subsurface "
+        "\"bulk_node_ids\" that stores the original subsurface "
         "mesh node ids. Such surface meshes can be created using the OGS-6 "
-        "tool ExtractSurface.",
-        ' ',
-        "0.1");
+        "tool ExtractSurface.\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
 
     TCLAP::ValueArg<std::string> in_mesh("i",
                                          "in-mesh",
@@ -129,7 +133,7 @@ int main(int argc, char* argv[])
     std::unique_ptr<MeshLib::Mesh> surface_mesh(
         MeshLib::IO::readMeshFromFile(in_mesh.getValue()));
 
-    std::string const prop_name("OriginalSubsurfaceNodeIDs");
+    std::string const prop_name("bulk_node_ids");
     auto const* const node_id_pv =
         surface_mesh->getProperties().getPropertyVector<std::size_t>(prop_name);
     if (!node_id_pv)

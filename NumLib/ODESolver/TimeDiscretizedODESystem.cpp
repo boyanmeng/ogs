@@ -34,14 +34,14 @@ void applyKnownSolutions(std::vector<Solutions> const* const known_solutions,
     }
     MathLib::LinAlg::finalizeAssembly(x);
 }
-}
+}  // namespace detail
 
 namespace NumLib
 {
 TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
                          NonlinearSolverTag::Newton>::
-    TimeDiscretizedODESystem(const int process_id,
-                             ODE& ode, TimeDisc& time_discretization)
+    TimeDiscretizedODESystem(const int process_id, ODE& ode,
+                             TimeDisc& time_discretization)
     : _ode(ode),
       _time_disc(time_discretization),
       _mat_trans(createMatrixTranslator<ODETag>(time_discretization))
@@ -66,9 +66,9 @@ TimeDiscretizedODESystem<
     NumLib::GlobalVectorProvider::provider.releaseVector(*_b);
 }
 
-void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
-                              NonlinearSolverTag::Newton>::
-    assemble(const GlobalVector& x_new_timestep)
+void TimeDiscretizedODESystem<
+    ODESystemTag::FirstOrderImplicitQuasilinear,
+    NonlinearSolverTag::Newton>::assemble(const GlobalVector& x_new_timestep)
 {
     namespace LinAlg = MathLib::LinAlg;
 
@@ -122,26 +122,29 @@ void TimeDiscretizedODESystem<
 
 void TimeDiscretizedODESystem<
     ODESystemTag::FirstOrderImplicitQuasilinear,
+    NonlinearSolverTag::Newton>::computeKnownSolutions(GlobalVector const& x)
+{
+    _known_solutions = _ode.getKnownSolutions(_time_disc.getCurrentTime(), x);
+}
+
+void TimeDiscretizedODESystem<
+    ODESystemTag::FirstOrderImplicitQuasilinear,
     NonlinearSolverTag::Newton>::applyKnownSolutions(GlobalVector& x) const
 {
-    ::detail::applyKnownSolutions(
-        _ode.getKnownSolutions(_time_disc.getCurrentTime()), x);
+    ::detail::applyKnownSolutions(_known_solutions, x);
 }
 
 void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
                               NonlinearSolverTag::Newton>::
     applyKnownSolutionsNewton(GlobalMatrix& Jac, GlobalVector& res,
-                              GlobalVector& minus_delta_x)
+                              GlobalVector& minus_delta_x) const
 {
-    auto const* known_solutions =
-        _ode.getKnownSolutions(_time_disc.getCurrentTime());
-
-    if (!known_solutions || known_solutions->empty())
+    if (!_known_solutions)
         return;
 
     using IndexType = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
     std::vector<IndexType> ids;
-    for (auto const& bc : *known_solutions)
+    for (auto const& bc : *_known_solutions)
     {
         std::copy(bc.ids.cbegin(), bc.ids.cend(), std::back_inserter(ids));
     }
@@ -176,9 +179,9 @@ TimeDiscretizedODESystem<
     NumLib::GlobalVectorProvider::provider.releaseVector(*_b);
 }
 
-void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
-                              NonlinearSolverTag::Picard>::
-    assemble(const GlobalVector& x_new_timestep)
+void TimeDiscretizedODESystem<
+    ODESystemTag::FirstOrderImplicitQuasilinear,
+    NonlinearSolverTag::Picard>::assemble(const GlobalVector& x_new_timestep)
 {
     namespace LinAlg = MathLib::LinAlg;
 
@@ -199,34 +202,37 @@ void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
 
 void TimeDiscretizedODESystem<
     ODESystemTag::FirstOrderImplicitQuasilinear,
-    NonlinearSolverTag::Picard>::applyKnownSolutions(GlobalVector& x) const
+    NonlinearSolverTag::Picard>::computeKnownSolutions(GlobalVector const& x)
 {
-    ::detail::applyKnownSolutions(
-        _ode.getKnownSolutions(_time_disc.getCurrentTime()), x);
+    _known_solutions = _ode.getKnownSolutions(_time_disc.getCurrentTime(), x);
 }
 
 void TimeDiscretizedODESystem<
     ODESystemTag::FirstOrderImplicitQuasilinear,
-    NonlinearSolverTag::Picard>::applyKnownSolutionsPicard(GlobalMatrix& A,
-                                                           GlobalVector& rhs,
-                                                           GlobalVector& x)
+    NonlinearSolverTag::Picard>::applyKnownSolutions(GlobalVector& x) const
 {
-    auto const* known_solutions =
-        _ode.getKnownSolutions(_time_disc.getCurrentTime());
-
-    if (known_solutions)
-    {
-        using IndexType = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
-        std::vector<IndexType> ids;
-        std::vector<double> values;
-        for (auto const& bc : *known_solutions)
-        {
-            std::copy(bc.ids.cbegin(), bc.ids.cend(), std::back_inserter(ids));
-            std::copy(bc.values.cbegin(), bc.values.cend(),
-                      std::back_inserter(values));
-        }
-        MathLib::applyKnownSolution(A, rhs, x, ids, values);
-    }
+    ::detail::applyKnownSolutions(_known_solutions, x);
 }
 
-}  // NumLib
+void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
+                              NonlinearSolverTag::Picard>::
+    applyKnownSolutionsPicard(GlobalMatrix& A,
+                              GlobalVector& rhs,
+                              GlobalVector& x) const
+{
+    if (!_known_solutions)
+        return;
+
+    using IndexType = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
+    std::vector<IndexType> ids;
+    std::vector<double> values;
+    for (auto const& bc : *_known_solutions)
+    {
+        std::copy(bc.ids.cbegin(), bc.ids.cend(), std::back_inserter(ids));
+        std::copy(bc.values.cbegin(), bc.values.cend(),
+                  std::back_inserter(values));
+    }
+    MathLib::applyKnownSolution(A, rhs, x, ids, values);
+}
+
+}  // namespace NumLib

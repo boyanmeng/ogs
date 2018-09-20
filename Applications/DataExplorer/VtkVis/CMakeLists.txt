@@ -19,15 +19,21 @@ set(SOURCES
     VtkCompositeElementSelectionFilter.cpp
     VtkCompositeGeoObjectFilter.cpp
     VtkCompositeImageToCylindersFilter.cpp
+    VtkCompositeImageToPointCloudFilter.cpp
+    VtkCompositeImageToSurfacePointsFilter.cpp
     VtkCompositeLineToTubeFilter.cpp
     VtkCompositeNodeSelectionFilter.cpp
     VtkCompositePointToGlyphFilter.cpp
     VtkCompositeTextureOnSurfaceFilter.cpp
     VtkCompositeThresholdFilter.cpp
     VtkConsoleOutputWindow.cpp
+    VtkCustomInteractorStyle.cpp
     VtkFilterFactory.cpp
     VtkGeoImageSource.cpp
     VtkImageDataToLinePolyDataFilter.cpp
+    VtkImageDataToPointCloudFilter.cpp
+    VtkImageDataToSurfacePointsFilter.cpp
+    VtkPickCallback.cpp
     VtkPolylinesSource.cpp
     VtkPointsSource.cpp
     VtkRaster.cpp
@@ -41,11 +47,18 @@ set(SOURCES
     VtkVisPipelineView.cpp
     VtkVisPointSetItem.cpp
     VtkVisTabWidget.cpp
-    VtkPickCallback.cpp
-    VtkCustomInteractorStyle.cpp
 )
 
 set(HEADERS
+    MeshFromRasterDialog.h
+    QVtkDataSetMapper.h
+    VisPrefsDialog.h
+    VisualizationWidget.h
+    VtkAddFilterDialog.h
+    VtkAlgorithmProperties.h
+    VtkAlgorithmPropertyLineEdit.h
+    VtkAlgorithmPropertyCheckbox.h
+    VtkAlgorithmPropertyVectorEdit.h
     VtkAppendArrayFilter.h
     VtkBGImageSource.h
     VtkColorByHeightFilter.h
@@ -57,14 +70,21 @@ set(HEADERS
     VtkCompositeElementSelectionFilter.h
     VtkCompositeGeoObjectFilter.h
     VtkCompositeImageToCylindersFilter.h
+    VtkCompositeImageToPointCloudFilter.h
+    VtkCompositeImageToSurfacePointsFilter.h
     VtkCompositeLineToTubeFilter.h
     VtkCompositeNodeSelectionFilter.h
     VtkCompositePointToGlyphFilter.h
     VtkCompositeTextureOnSurfaceFilter.h
     VtkCompositeThresholdFilter.h
+    VtkConsoleOutputWindow.h
+    VtkCustomInteractorStyle.h
     VtkFilterFactory.h
     VtkGeoImageSource.h
     VtkImageDataToLinePolyDataFilter.h
+    VtkImageDataToPointCloudFilter.h
+    VtkImageDataToSurfacePointsFilter.h
+    VtkPickCallback.h
     VtkPolylinesSource.h
     VtkPointsSource.h
     VtkRaster.h
@@ -73,23 +93,11 @@ set(HEADERS
     VtkTextureOnSurfaceFilter.h
     VtkVisHelper.h
     VtkVisImageItem.h
-    VtkVisPipelineItem.h
-    VtkVisPointSetItem.h
-    MeshFromRasterDialog.h
-    QVtkDataSetMapper.h
-    VisPrefsDialog.h
-    VisualizationWidget.h
-    VtkAddFilterDialog.h
-    VtkAlgorithmProperties.h
-    VtkAlgorithmPropertyLineEdit.h
-    VtkAlgorithmPropertyCheckbox.h
-    VtkAlgorithmPropertyVectorEdit.h
     VtkVisPipeline.h
+    VtkVisPipelineItem.h
     VtkVisPipelineView.h
+    VtkVisPointSetItem.h
     VtkVisTabWidget.h
-    VtkConsoleOutputWindow.h
-    VtkPickCallback.h
-    VtkCustomInteractorStyle.h
 )
 
 # Visual Studio folder
@@ -120,6 +128,9 @@ add_library(VtkVis
     ${HEADERS}
     ${UIS}
 )
+if(BUILD_SHARED_LIBS)
+    install(TARGETS VtkVis LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 
 if(GEOTIFF_FOUND)
     include_directories(${GEOTIFF_INCLUDE_DIRS})
@@ -127,9 +138,13 @@ if(GEOTIFF_FOUND)
 endif() # GEOTIFF_FOUND
 
 target_link_libraries(VtkVis
-    PUBLIC BaseLib GeoLib MeshLib DataHolderLib QtBase ${VTK_LIBRARIES} NetCdfDialogLib
-    PRIVATE MathLib ApplicationsFileIO Qt5::Gui logog
+    PUBLIC BaseLib GeoLib MeshLib DataHolderLib QtBase vtkIOImage
+    PRIVATE MathLib ApplicationsFileIO Qt5::Gui logog NetCdfDialogLib
 )
+if(NOT APPLE AND OGS_USE_CONAN)
+    # HACK for unresolved external
+    target_link_libraries(VtkVis PUBLIC vtkGUISupportQt-8.1)
+endif()
 set_property(TARGET VtkVis PROPERTY FOLDER "DataExplorer")
 
 if(OGS_USE_PCH)

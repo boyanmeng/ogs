@@ -18,7 +18,7 @@
 
 #include "MeshLib/Elements/Elements.h"
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
-#include "NumLib/Fem/Integration/GaussIntegrationPolicy.h"
+#include "NumLib/Fem/Integration/GaussLegendreIntegrationPolicy.h"
 
 #ifndef OGS_MAX_ELEMENT_DIM
 static_assert(false, "The macro OGS_MAX_ELEMENT_DIM is undefined.");
@@ -241,6 +241,11 @@ public:
         else if (shapefunction_order == 2)
         {
 // /// Lines and points ///////////////////////////////////
+#if (OGS_ENABLED_ELEMENTS & ENABLED_ELEMENT_TYPE_LINE) != 0 && \
+    OGS_MAX_ELEMENT_DIM >= 0 && OGS_MAX_ELEMENT_ORDER >= 1
+            _builder[std::type_index(typeid(MeshLib::Point))] =
+                makeLocalAssemblerBuilder<NumLib::ShapePoint1>();
+#endif
 
 #if (OGS_ENABLED_ELEMENTS & ENABLED_ELEMENT_TYPE_LINE) != 0 && \
     OGS_MAX_ELEMENT_DIM >= 1 && OGS_MAX_ELEMENT_ORDER >= 2
@@ -333,7 +338,7 @@ private:
                                     ConstructorArgs&&...)>;
 
     template <typename ShapeFunction>
-    using IntegrationMethod = typename NumLib::GaussIntegrationPolicy<
+    using IntegrationMethod = typename NumLib::GaussLegendreIntegrationPolicy<
         typename ShapeFunction::MeshElement>::IntegrationMethod;
 
     template <typename ShapeFunction>

@@ -132,9 +132,9 @@ MeshLib::Mesh* RasterToMesh::convert(
         return nullptr;
     }
 
-    MathLib::Point3d mesh_origin({header.origin[0] - (header.cell_size / 2.0),
-                                  header.origin[1] - (header.cell_size / 2.0),
-                                  header.origin[2]});
+    MathLib::Point3d mesh_origin(std::array<double, 3>{
+        {header.origin[0] - (header.cell_size / 2.0),
+         header.origin[1] - (header.cell_size / 2.0), header.origin[2]}});
     std::unique_ptr<MeshLib::Mesh> mesh (nullptr);
     if (elem_type == MeshElemType::TRIANGLE)
         mesh.reset(
@@ -211,14 +211,14 @@ MeshLib::Mesh* RasterToMesh::convert(
             auto* const prop_vec = properties.createNewPropertyVector<int>(
                 array_name, MeshLib::MeshItemType::Cell, 1);
             fillPropertyVector<int>(*prop_vec, img, header, elem_type);
-            ex.searchByPropertyValue<int>(header.no_data, array_name);
+            ex.searchByPropertyValue<int>(array_name, header.no_data);
         }
         else
         {
             auto* const prop_vec = properties.createNewPropertyVector<double>(
                 array_name, MeshLib::MeshItemType::Cell, 1);
             fillPropertyVector<double>(*prop_vec, img, header, elem_type);
-            ex.searchByPropertyValue<double>(header.no_data, array_name);
+            ex.searchByPropertyValue<double>(array_name, header.no_data);
         }
         elements_to_remove = ex.getSearchedElementIDs();
     }

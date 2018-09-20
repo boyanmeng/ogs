@@ -88,6 +88,71 @@ public:
         return Eigen::Map<const Eigen::RowVectorXd>(N.data(), N.size());
     }
 
+    /// Computes the flux in the point \c pnt_local_coords that is given in
+    /// local coordinates using the values from \c local_x.
+    Eigen::Vector3d getFlux(
+        MathLib::Point3d const& pnt_local_coords,
+        double const t,
+        std::vector<double> const& local_x) const override
+    {
+        // eval dNdx and invJ at given point
+        using FemType =
+            NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
+
+        FemType fe(*static_cast<const typename ShapeFunction::MeshElement*>(
+            &this->_element));
+
+        typename ShapeMatricesType::ShapeMatrices shape_matrices(
+            ShapeFunction::DIM, GlobalDim, ShapeFunction::NPOINTS);
+
+        // Note: Axial symmetry is set to false here, because we only need dNdx
+        // here, which is not affected by axial symmetry.
+        fe.computeShapeFunctions(pnt_local_coords.getCoords(), shape_matrices,
+                                 GlobalDim, false);
+
+        // fetch permeability, viscosity, density
+        SpatialPosition pos;
+        pos.setElementID(this->_element.getID());
+
+        MaterialLib::Fluid::FluidProperty::ArrayType vars;
+
+        // local_x contains the local temperature and pressure values
+        NumLib::shapeFunctionInterpolate(
+            local_x, shape_matrices.N,
+            vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::T)],
+            vars[static_cast<int>(
+                MaterialLib::Fluid::PropertyVariableType::p)]);
+
+        auto const K =
+            this->_material_properties.porous_media_properties
+                .getIntrinsicPermeability(t, pos)
+                .getValue(t, pos, 0.0,
+                          vars[static_cast<int>(
+                              MaterialLib::Fluid::PropertyVariableType::T)]);
+
+        auto const mu = this->_material_properties.fluid_properties->getValue(
+            MaterialLib::Fluid::FluidPropertyType::Viscosity, vars);
+        GlobalDimMatrixType const K_over_mu = K / mu;
+
+        auto const p_nodal_values = Eigen::Map<const NodalVectorType>(
+            &local_x[local_x.size()/2], ShapeFunction::NPOINTS);
+        GlobalDimVectorType q =
+            -K_over_mu * shape_matrices.dNdx * p_nodal_values;
+
+        if (this->_material_properties.has_gravity)
+        {
+            auto const rho_w =
+                this->_material_properties.fluid_properties->getValue(
+                    MaterialLib::Fluid::FluidPropertyType::Density, vars);
+            auto const b = this->_material_properties.specific_body_force;
+            q += K_over_mu * rho_w * b;
+        }
+
+        Eigen::Vector3d flux;
+        flux.head<GlobalDim>() = q;
+        return flux;
+    }
+
 protected:
     MeshLib::Element const& _element;
     HTMaterialProperties const& _material_properties;
@@ -135,14 +200,21 @@ protected:
             _material_properties.thermal_dispersivity_transversal(t, pos)[0];
 
         double const velocity_magnitude = velocity.norm();
-        GlobalDimMatrixType const thermal_dispersivity =
-            fluid_density * specific_heat_capacity_fluid *
-            (thermal_dispersivity_transversal * velocity_magnitude * I +
-             (thermal_dispersivity_longitudinal -
-              thermal_dispersivity_transversal) /
-                 velocity_magnitude * velocity * velocity.transpose());
 
-        return thermal_conductivity * I + thermal_dispersivity;
+        if (velocity_magnitude < std::numeric_limits<double>::epsilon())
+        {
+            return thermal_conductivity * I;
+        }
+        else
+        {
+            GlobalDimMatrixType const thermal_dispersivity =
+                fluid_density * specific_heat_capacity_fluid *
+                (thermal_dispersivity_transversal * velocity_magnitude * I +
+                 (thermal_dispersivity_longitudinal -
+                  thermal_dispersivity_transversal) /
+                     velocity_magnitude * velocity * velocity.transpose());
+            return thermal_conductivity * I + thermal_dispersivity;
+        }
     }
 
     std::vector<double> const& getIntPtDarcyVelocityLocal(

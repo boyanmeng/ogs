@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include "MaterialLib/PhysicalConstant.h"
 #include "MaterialLib/SolidModels/LinearElasticIsotropic.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
@@ -136,19 +137,42 @@ public:
             ip_data.N = sm.N;
             ip_data.dNdx = sm.dNdx;
 
+            static const int kelvin_vector_size =
+                MathLib::KelvinVector::KelvinVectorDimensions<
+                    DisplacementDim>::value;
             // Initialize current time step values
-            ip_data.sigma.setZero(
-                KelvinVectorDimensions<DisplacementDim>::value);
-            ip_data.eps.setZero(KelvinVectorDimensions<DisplacementDim>::value);
+            ip_data.sigma.setZero(kelvin_vector_size);
+            ip_data.eps.setZero(kelvin_vector_size);
 
             // Previous time step values are not initialized and are set later.
-            ip_data.sigma_prev.resize(
-                KelvinVectorDimensions<DisplacementDim>::value);
-            ip_data.eps_prev.resize(
-                KelvinVectorDimensions<DisplacementDim>::value);
+            ip_data.sigma_prev.resize(kelvin_vector_size);
+            ip_data.eps_prev.resize(kelvin_vector_size);
 
             _secondary_data.N[ip] = shape_matrices[ip].N;
         }
+    }
+
+    /// Returns number of read integration points.
+    std::size_t setIPDataInitialConditions(std::string const& name,
+                                           double const* values,
+                                           int const integration_order) override
+    {
+        if (integration_order !=
+            static_cast<int>(_integration_method.getIntegrationOrder()))
+        {
+            OGS_FATAL(
+                "Setting integration point initial conditions; The integration "
+                "order of the local assembler for element %d is different from "
+                "the integration order in the initial condition.",
+                _element.getID());
+        }
+
+        if (name == "sigma_ip")
+        {
+            return setSigma(values);
+        }
+
+        return 0;
     }
 
     void assemble(double const /*t*/, std::vector<double> const& /*local_x*/,
@@ -225,12 +249,12 @@ public:
 
             auto&& solution = _ip_data[ip].solid_material.integrateStress(
                 t, x_position, _process_data.dt, eps_prev, eps, sigma_prev,
-                *state);
+                *state, _process_data.reference_temperature);
 
             if (!solution)
                 OGS_FATAL("Computation of local constitutive relation failed.");
 
-            KelvinMatrixType<DisplacementDim> C;
+            MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
             std::tie(sigma, state, C) = std::move(*solution);
 
             auto const rho = _process_data.solid_density(t, x_position)[0];
@@ -314,15 +338,63 @@ public:
         return cache;
     }
 
+    std::size_t setSigma(double const* values)
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        auto const n_integration_points = _ip_data.size();
+
+        std::vector<double> ip_sigma_values;
+        auto sigma_values =
+            Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
+                                     Eigen::ColMajor> const>(
+                values, kelvin_vector_size, n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            _ip_data[ip].sigma =
+                MathLib::KelvinVector::symmetricTensorToKelvinVector(
+                    sigma_values.col(ip));
+        }
+
+        return n_integration_points;
+    }
+
+    // TODO (naumov) This method is same as getIntPtSigma but for arguments and
+    // the ordering of the cache_mat.
+    // There should be only one.
+    std::vector<double> getSigma() const override
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        auto const n_integration_points = _ip_data.size();
+
+        std::vector<double> ip_sigma_values;
+        auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+            double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+            ip_sigma_values, n_integration_points, kelvin_vector_size);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto const& sigma = _ip_data[ip].sigma;
+            cache_mat.row(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(sigma);
+        }
+
+        return ip_sigma_values;
+    }
+
     std::vector<double> const& getIntPtSigma(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
         std::vector<double>& cache) const override
     {
-        using KelvinVectorType = typename BMatricesType::KelvinVectorType;
-        auto const kelvin_vector_size =
-            KelvinVectorDimensions<DisplacementDim>::value;
+        static const int kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
         auto const num_intpts = _ip_data.size();
 
         cache.clear();
@@ -330,24 +402,11 @@ public:
             double, kelvin_vector_size, Eigen::Dynamic, Eigen::RowMajor>>(
             cache, kelvin_vector_size, num_intpts);
 
-        // TODO make a general implementation for converting KelvinVectors
-        // back to symmetric rank-2 tensors.
         for (unsigned ip = 0; ip < num_intpts; ++ip)
         {
             auto const& sigma = _ip_data[ip].sigma;
-
-            for (typename KelvinVectorType::Index component = 0;
-                 component < kelvin_vector_size && component < 3;
-                 ++component)
-            {  // xx, yy, zz components
-                cache_mat(component, ip) = sigma[component];
-            }
-            for (typename KelvinVectorType::Index component = 3;
-                 component < kelvin_vector_size;
-                 ++component)
-            {  // mixed xy, yz, xz components
-                cache_mat(component, ip) = sigma[component] / std::sqrt(2);
-            }
+            cache_mat.col(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(sigma);
         }
 
         return cache;
@@ -359,9 +418,9 @@ public:
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
         std::vector<double>& cache) const override
     {
-        using KelvinVectorType = typename BMatricesType::KelvinVectorType;
         auto const kelvin_vector_size =
-            KelvinVectorDimensions<DisplacementDim>::value;
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
         auto const num_intpts = _ip_data.size();
 
         cache.clear();
@@ -369,24 +428,11 @@ public:
             double, kelvin_vector_size, Eigen::Dynamic, Eigen::RowMajor>>(
             cache, kelvin_vector_size, num_intpts);
 
-        // TODO make a general implementation for converting KelvinVectors
-        // back to symmetric rank-2 tensors.
         for (unsigned ip = 0; ip < num_intpts; ++ip)
         {
             auto const& eps = _ip_data[ip].eps;
-
-            for (typename KelvinVectorType::Index component = 0;
-                 component < kelvin_vector_size && component < 3;
-                 ++component)
-            {  // xx, yy, zz components
-                cache_mat(component, ip) = eps[component];
-            }
-            for (typename KelvinVectorType::Index component = 3;
-                 component < kelvin_vector_size;
-                 ++component)
-            {  // mixed xy, yz, xz components
-                cache_mat(component, ip) = eps[component] / std::sqrt(2);
-            }
+            cache_mat.col(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(eps);
         }
 
         return cache;

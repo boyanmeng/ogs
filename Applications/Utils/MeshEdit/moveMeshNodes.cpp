@@ -13,17 +13,14 @@
 #include <string>
 
 #include "Applications/ApplicationsLib/LogogSetup.h"
-
+#include "BaseLib/BuildInfo.h"
 #include "BaseLib/FileTools.h"
-
 #include "GeoLib/AABB.h"
-
+#include "MathLib/MathTools.h"
 #include "MeshLib/IO/readMeshFromFile.h"
 #include "MeshLib/IO/writeMeshToFile.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/Node.h"
-
-#include "MathLib/MathTools.h"
 
 int find_closest_point(MeshLib::Node const*const point, std::vector<MeshLib::Node*> const& nodes, double const& max_dist)
 {
@@ -211,6 +208,6 @@ int main (int argc, char* argv[])
     if (MeshLib::IO::writeMeshToFile(*mesh, new_mesh_name) != 0)
         return EXIT_FAILURE;
 
-    INFO ("Result successfully written.")
+    INFO("Result successfully written.");
     return EXIT_SUCCESS;
 }

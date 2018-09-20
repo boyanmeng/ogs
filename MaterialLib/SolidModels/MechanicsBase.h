@@ -32,6 +32,15 @@ namespace MaterialLib
 {
 namespace Solids
 {
+enum class ConstitutiveModel
+{
+    Ehlers,
+    LinearElasticIsotropic,
+    Lubby2,
+    CreepBGRa,
+    Invalid
+};
+
 /// Interface for mechanical solid material models. Provides updates of the
 /// stress for a given current state and also a tangent at that position. If the
 /// implemented material model stores an internal state, the nested
@@ -59,8 +68,10 @@ struct MechanicsBase
     virtual std::unique_ptr<MaterialStateVariables>
     createMaterialStateVariables() = 0;
 
-    using KelvinVector = ProcessLib::KelvinVectorType<DisplacementDim>;
-    using KelvinMatrix = ProcessLib::KelvinMatrixType<DisplacementDim>;
+    using KelvinVector =
+        MathLib::KelvinVector::KelvinVectorType<DisplacementDim>;
+    using KelvinMatrix =
+        MathLib::KelvinVector::KelvinMatrixType<DisplacementDim>;
 
     /// Dynamic size Kelvin vector and matrix wrapper for the polymorphic
     /// constitutive relation compute function.
@@ -75,7 +86,8 @@ struct MechanicsBase
                     Eigen::Matrix<double, Eigen::Dynamic, 1> const& eps_prev,
                     Eigen::Matrix<double, Eigen::Dynamic, 1> const& eps,
                     Eigen::Matrix<double, Eigen::Dynamic, 1> const& sigma_prev,
-                    MaterialStateVariables const& material_state_variables)
+                    MaterialStateVariables const& material_state_variables,
+                    double const T)
     {
         // TODO Avoid copies of data:
         // Using MatrixBase<Derived> not possible because template functions
@@ -87,7 +99,8 @@ struct MechanicsBase
         KelvinVector const sigma_prev_{sigma_prev};
 
         return integrateStress(
-            t, x, dt, eps_prev_, eps_, sigma_prev_, material_state_variables);
+            t, x, dt, eps_prev_, eps_, sigma_prev_, material_state_variables,
+            T);
     }
 
     /// Computation of the constitutive relation for specific material model.
@@ -105,7 +118,8 @@ struct MechanicsBase
                     KelvinVector const& eps_prev,
                     KelvinVector const& eps,
                     KelvinVector const& sigma_prev,
-                    MaterialStateVariables const& material_state_variables) = 0;
+                    MaterialStateVariables const& material_state_variables,
+                    double const T) = 0;
 
     /// Helper type for providing access to internal variables.
     struct InternalVariable
@@ -128,6 +142,22 @@ struct MechanicsBase
     virtual std::vector<InternalVariable> getInternalVariables() const
     {
         return {};
+    }
+
+    /// Gets the type of constitutive model
+    virtual ConstitutiveModel getConstitutiveModel() const
+    {
+        return ConstitutiveModel::Invalid;
+    }
+
+    /// Get temperature related coefficient for the global assembly if there is
+    /// one.
+    virtual double getTemperatureRelatedCoefficient(
+        double const /*t*/, double const /*dt*/,
+        ProcessLib::SpatialPosition const& /*x*/, double const /*T*/,
+        double const /*deviatoric_stress_norm*/) const
+    {
+        return 0.0;
     }
 
     virtual double computeFreeEnergyDensity(

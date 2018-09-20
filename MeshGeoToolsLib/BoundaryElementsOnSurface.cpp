@@ -48,7 +48,9 @@ BoundaryElementsOnSurface::BoundaryElementsOnSurface(
             }
             // update the list
             if (cnt_match==face->getNumberOfBaseNodes())
+            {
                 _boundary_elements.push_back(const_cast<MeshLib::Element*>(face));
+            }
             else
                 delete face;
         }

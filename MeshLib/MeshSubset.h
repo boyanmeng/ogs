@@ -22,60 +22,49 @@
 
 namespace MeshLib
 {
-
-/// A subset of nodes or elements on a single mesh.
+/// A subset of nodes on a single mesh.
 class MeshSubset
 {
 public:
     /// Construct a mesh subset from vector of nodes on the given mesh.
     /// \param msh Mesh
     /// \param vec_items Vector of Node pointers.
-    /// \param delete_ptr Deletes the vector of Node pointers if true.
-    /// \note When delete_ptr is set only the vector is deleted, not the
-    /// elements of the vector.
-    MeshSubset(const Mesh& msh, std::vector<Node*> const* vec_items,
-        bool const delete_ptr = false)
-        : _msh(msh), _nodes(vec_items), _eles(nullptr), _delete_ptr(delete_ptr)
-    {}
-
-    /// Construct a mesh subset from vector of elements on the given mesh.
-    /// \param msh Mesh
-    /// \param vec_items Vector of Element pointers.
-    /// \param delete_ptr Deletes the vector of Element pointers if true.
-    /// \note When delete_ptr is set only the vector is deleted, not the
-    /// elements of the vector.
-    MeshSubset(const Mesh& msh, std::vector<Element*> const* vec_items,
-        bool const delete_ptr = false)
-        : _msh(msh), _nodes(nullptr), _eles(vec_items), _delete_ptr(delete_ptr)
-    {}
-
-    /// construct from both nodes and elements
-    /// Construct a mesh subset from vector of nodes and a vector of elements on
-    /// the given mesh.
-    /// \param msh Mesh
-    /// \param vec_nodes Vector of Node pointers.
-    /// \param vec_eles Vector of Element pointers.
-    /// \param delete_ptr Deletes the vector of Node pointers if true.
-    /// \note When delete_ptr is set only the vectors are deleted, not the
-    /// elements of the vectors.
-    MeshSubset(const Mesh& msh, std::vector<Node*> const* vec_nodes,
-        std::vector<Element*> const* vec_eles, bool const delete_ptr = false)
-        : _msh(msh), _nodes(vec_nodes), _eles(vec_eles), _delete_ptr(delete_ptr)
-    {}
-
-    ~MeshSubset()
+    MeshSubset(const Mesh& msh, std::vector<Node*> const& vec_items)
+        : _msh(msh), _nodes(vec_items)
     {
-        if (_delete_ptr)
+        // If the mesh nodes and the given nodes point to the same vector, they
+        // must be equal.
+        if (&_msh.getNodes() == &_nodes)
         {
-            delete _nodes;
-            delete _eles;
+            return;
         }
-    }
 
-    /// return the total number of mesh items
-    std::size_t getNumberOfTotalItems() const
-    {
-        return getNumberOfNodes() + getNumberOfElements();
+        //
+        // Testing if the given nodes belong to the mesh.
+        //
+        {
+            // Need sorted version of the large vector.
+            auto sorted_nodes = _msh.getNodes();  // full copy of pointers.
+            sort(begin(sorted_nodes), end(sorted_nodes));
+
+            // Then proceed with the search function.
+            auto node_is_part_of_mesh = [& mesh_nodes = sorted_nodes](
+                                            MeshLib::Node* const& n) {
+                auto it = lower_bound(begin(mesh_nodes), end(mesh_nodes), n);
+                if (it == end(mesh_nodes))
+                {
+                    ERR("A node %d (%g, %g, %g) in mesh subset is not a part "
+                        "of the mesh.",
+                        n->getID(), (*n)[0], (*n)[1], (*n)[2]);
+                    return false;
+                }
+                return true;
+            };
+            if (!std::all_of(begin(_nodes), end(_nodes), node_is_part_of_mesh))
+            {
+                OGS_FATAL("The mesh subset construction failed.");
+            }
+        }
     }
 
     /// return this mesh ID
@@ -87,31 +76,16 @@ public:
     /// return the number of registered nodes
     std::size_t getNumberOfNodes() const
     {
-        return (_nodes==nullptr) ? 0 : _nodes->size();
+        return _nodes.size();
     }
 
     /// Returns the global node id Node::getID() of i-th node in the mesh
     /// subset.
-    /// \pre The _nodes must be a valid pointer to a vector of size > i.
+    /// \pre The _nodes vector must be of size > i.
     std::size_t getNodeID(std::size_t const i) const
     {
-        assert(_nodes && i < _nodes->size());
-        return (*_nodes)[i]->getID();
-    }
-
-    /// return the number of registered elements
-    std::size_t getNumberOfElements() const
-    {
-        return (_eles==nullptr) ? 0 : _eles->size();
-    }
-
-    /// Returns the global element id Element::getID() of i-th element in the
-    /// mesh subset.
-    /// \pre The _eles must be a valid pointer to a vector of size > i.
-    std::size_t getElementID(std::size_t const i) const
-    {
-        assert(_eles && i < _eles->size());
-        return (*_eles)[i]->getID();
+        assert(i < _nodes.size());
+        return _nodes[i]->getID();
     }
 
     std::vector<Element*>::const_iterator elementsBegin() const
@@ -126,33 +100,7 @@ public:
 
     std::vector<Node*> const& getNodes() const
     {
-        assert(_nodes);
-        return *_nodes;
-    }
-
-    /// Constructs a new mesh subset which is a set intersection of the current
-    /// nodes and the provided vector of nodes.
-    /// An empty mesh subset may be returned, not a nullptr, in case of empty
-    /// intersection or empty input vector.
-    MeshSubset*
-    getIntersectionByNodes(std::vector<Node*> const& nodes) const
-    {
-        auto* active_nodes = new std::vector<Node*>;
-
-        if (_nodes == nullptr || _nodes->empty())
-            return new MeshSubset(_msh, active_nodes);   // Empty mesh subset
-
-        for (auto n : nodes)
-        {
-            auto it = std::find(_nodes->cbegin(), _nodes->cend(), n);
-            if (it == _nodes->cend())
-                continue;
-            active_nodes->push_back(n);
-        }
-
-        // Transfer the ownership of active_nodes to the new MeshSubset, which
-        // deletes the pointer itself.
-        return new MeshSubset(_msh, active_nodes, true);
+        return _nodes;
     }
 
     Mesh const& getMesh() const
@@ -162,10 +110,6 @@ public:
 
 private:
     Mesh const& _msh;
-    std::vector<Node*> const* _nodes;
-    std::vector<Element*> const* _eles;
-    bool const _delete_ptr = false;
-
+    std::vector<Node*> const& _nodes;
 };
-
 }   // namespace MeshLib

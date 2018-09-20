@@ -2,6 +2,10 @@
 <OpenGeoSysProject>
     <mesh>tm_q_quad.vtu</mesh>
     <geometry>quarter_group.gml</geometry>
+    <search_length_algorithm>
+        <type>fixed</type>
+        <value>1e-6</value>
+    </search_length_algorithm>
     <processes>
         <process>
             <name>ThermoMechanics</name>
@@ -16,20 +20,13 @@
             <linear_thermal_expansion_coefficient>alpha</linear_thermal_expansion_coefficient>
             <specific_heat_capacity>cs</specific_heat_capacity>
             <thermal_conductivity>lambda</thermal_conductivity>
-            <reference_temperature>283.15</reference_temperature>
             <process_variables>
                 <displacement>displacement</displacement>
                 <temperature>temperature</temperature>
             </process_variables>
             <secondary_variables>
-                <secondary_variable type="static" internal_name="sigma_xx" output_name="sigma_xx"/>
-                <secondary_variable type="static" internal_name="sigma_yy" output_name="sigma_yy"/>
-                <secondary_variable type="static" internal_name="sigma_zz" output_name="sigma_zz"/>
-                <secondary_variable type="static" internal_name="sigma_xy" output_name="sigma_xy"/>
-                <secondary_variable type="static" internal_name="epsilon_xx" output_name="epsilon_xx"/>
-                <secondary_variable type="static" internal_name="epsilon_yy" output_name="epsilon_yy"/>
-                <secondary_variable type="static" internal_name="epsilon_zz" output_name="epsilon_zz"/>
-                <secondary_variable type="static" internal_name="epsilon_xy" output_name="epsilon_xy"/>
+                <secondary_variable type="static" internal_name="sigma" output_name="sigma"/>
+                <secondary_variable type="static" internal_name="epsilon" output_name="epsilon"/>
             </secondary_variables>
             <specific_body_force>0 0</specific_body_force>
         </process>
@@ -50,14 +47,8 @@
                     <variables>
                         <variable>displacement</variable>
                         <variable>temperature</variable>
-                        <variable>sigma_xx</variable>
-                        <variable>sigma_yy</variable>
-                        <variable>sigma_zz</variable>
-                        <variable>sigma_xy</variable>
-                        <variable>epsilon_xx</variable>
-                        <variable>epsilon_yy</variable>
-                        <variable>epsilon_zz</variable>
-                        <variable>epsilon_xy</variable>
+                        <variable>sigma</variable>
+                        <variable>epsilon</variable>
                     </variables>
                 </output>
                 <time_stepping>
@@ -216,10 +207,6 @@
                 <boundary_condition>
                     <geometrical_set>square_1x1_geometry</geometrical_set>
                     <geometry>in</geometry>
-                    <search_length_algorithm>
-                        <type>fixed</type>
-                        <value>1e-6</value>
-                    </search_length_algorithm>
                     <type>Dirichlet</type>
                     <component>0</component>
                     <parameter>temperature_bc</parameter>

@@ -12,14 +12,15 @@ set(REQUIRED_SUBMODULES
     ThirdParty/tetgen
     ${OGS_ADDITIONAL_SUBMODULES_TO_CHECKOUT}
 )
-if(OGS_BUILD_GUI)
-    list(APPEND REQUIRED_SUBMODULES ThirdParty/vtkGUISupportQt)
-endif()
-if(OGS_BUILD_METIS)
+if(OGS_BUILD_UTILS)
+    # Required by the partmesh tool, which is build with utils only.
     list(APPEND REQUIRED_SUBMODULES ThirdParty/metis)
 endif()
 if(OGS_BUILD_SWMM)
     list(APPEND REQUIRED_SUBMODULES ThirdParty/SwmmInterface)
+endif()
+if(OGS_USE_PYTHON)
+    list(APPEND REQUIRED_SUBMODULES ThirdParty/pybind11)
 endif()
 
 # Sync submodules, which is required when a submodule changed its URL

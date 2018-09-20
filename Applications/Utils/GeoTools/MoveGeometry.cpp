@@ -15,10 +15,9 @@
 #include <tclap/CmdLine.h>
 
 #include "Applications/ApplicationsLib/LogogSetup.h"
-
-#include "GeoLib/IO/XmlIO/Qt/XmlGmlInterface.h"
+#include "BaseLib/BuildInfo.h"
 #include "GeoLib/GEOObjects.h"
-
+#include "GeoLib/IO/XmlIO/Qt/XmlGmlInterface.h"
 #include "MathLib/Vector3.h"
 
 #include <QCoreApplication>
@@ -29,8 +28,14 @@ int main(int argc, char *argv[])
 
     ApplicationsLib::LogogSetup logog_setup;
 
-    TCLAP::CmdLine cmd
-        ("Moves the points of a geometry by a given displacement vector.", ' ', "0.1");
+    TCLAP::CmdLine cmd(
+        "Moves the points of a geometry by a given displacement vector\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
     TCLAP::ValueArg<double> z_arg
         ("z", "z", "displacement in z direction", false, 0.0, "z-displacement");
     cmd.add(z_arg);
@@ -50,8 +55,17 @@ int main(int argc, char *argv[])
 
     GeoLib::GEOObjects geo_objects;
     GeoLib::IO::XmlGmlInterface xml(geo_objects);
-    if (!xml.readFile(geo_input_arg.getValue()))
+    try
     {
+        if (!xml.readFile(geo_input_arg.getValue()))
+        {
+            return EXIT_FAILURE;
+        }
+    }
+    catch (std::runtime_error const& err)
+    {
+        ERR("Failed to read file `%s'.", geo_input_arg.getValue().c_str());
+        ERR("%s", err.what());
         return EXIT_FAILURE;
     }
 

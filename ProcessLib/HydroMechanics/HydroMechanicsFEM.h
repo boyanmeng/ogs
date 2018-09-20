@@ -12,8 +12,9 @@
 #include <memory>
 #include <vector>
 
-#include "MaterialLib/SolidModels/KelvinVector.h"
+#include "MaterialLib/PhysicalConstant.h"
 #include "MaterialLib/SolidModels/LinearElasticIsotropic.h"
+#include "MathLib/KelvinVector.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
@@ -72,16 +73,17 @@ struct IntegrationPointData final
         double const t,
         SpatialPosition const& x_position,
         double const dt,
-        DisplacementVectorType const& /*u*/)
+        DisplacementVectorType const& /*u*/,
+        double const T)
     {
         auto&& solution = solid_material.integrateStress(
             t, x_position, dt, eps_prev, eps, sigma_eff_prev,
-            *material_state_variables);
+            *material_state_variables, T);
 
         if (!solution)
             OGS_FATAL("Computation of local constitutive relation failed.");
 
-        KelvinMatrixType<DisplacementDim> C;
+        MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
         std::tie(sigma_eff, material_state_variables, C) = std::move(*solution);
 
         return C;
@@ -111,8 +113,8 @@ public:
         ShapeMatrixPolicyType<ShapeFunctionPressure, DisplacementDim>;
 
     static int const KelvinVectorSize =
-        ProcessLib::KelvinVectorDimensions<DisplacementDim>::value;
-    using Invariants = MaterialLib::SolidModels::Invariants<KelvinVectorSize>;
+        MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value;
+    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
 
     HydroMechanicsLocalAssembler(HydroMechanicsLocalAssembler const&) = delete;
     HydroMechanicsLocalAssembler(HydroMechanicsLocalAssembler&&) = delete;
@@ -416,8 +418,6 @@ private:
     static const int displacement_index = ShapeFunctionPressure::NPOINTS;
     static const int displacement_size =
         ShapeFunctionDisplacement::NPOINTS * DisplacementDim;
-    static const int kelvin_vector_size =
-        KelvinVectorDimensions<DisplacementDim>::value;
 };
 
 }  // namespace HydroMechanics

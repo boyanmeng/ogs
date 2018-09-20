@@ -19,8 +19,10 @@ namespace Solids
 template <int DisplacementDim>
 struct PhaseFieldExtension : public MechanicsBase<DisplacementDim>
 {
-    using KelvinVector = ProcessLib::KelvinVectorType<DisplacementDim>;
-    using KelvinMatrix = ProcessLib::KelvinMatrixType<DisplacementDim>;
+    using KelvinVector =
+        MathLib::KelvinVector::KelvinVectorType<DisplacementDim>;
+    using KelvinMatrix =
+        MathLib::KelvinVector::KelvinMatrixType<DisplacementDim>;
     virtual bool calculateDegradedStress(double const t,
                                          ProcessLib::SpatialPosition const& x,
                                          KelvinVector const& eps,
@@ -30,7 +32,8 @@ struct PhaseFieldExtension : public MechanicsBase<DisplacementDim>
                                          KelvinMatrix& C_tensile,
                                          KelvinMatrix& C_compressive,
                                          KelvinVector& sigma_real,
-                                         double const degradation) const = 0;
+                                         double const degradation,
+                                         double& elastic_energy) const = 0;
 
     /// Dynamic size Kelvin vector and matrix wrapper for the polymorphic
     /// constitutive relation compute function.
@@ -46,7 +49,8 @@ struct PhaseFieldExtension : public MechanicsBase<DisplacementDim>
         Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>&
             C_compressive,
         Eigen::Matrix<double, Eigen::Dynamic, 1>& sigma_real,
-        double const degradation) const
+        double const degradation,
+        double& elastic_energy) const
     {
         // TODO Avoid copies of data:
         // Using MatrixBase<Derived> not possible because template functions
@@ -69,7 +73,8 @@ struct PhaseFieldExtension : public MechanicsBase<DisplacementDim>
                                                     C_tensile_,
                                                     C_compressive_,
                                                     sigma_real_,
-                                                    degradation);
+                                                    degradation,
+                                                    elastic_energy);
 
         sigma_tensile = sigma_tensile_;
         sigma_compressive = sigma_compressive_;

@@ -8,12 +8,54 @@
  */
 
 #include "LinearElasticIsotropic.h"
-#include "LinearElasticIsotropic-impl.h"
 
 namespace MaterialLib
 {
 namespace Solids
 {
+template <int DisplacementDim>
+boost::optional<
+    std::tuple<typename LinearElasticIsotropic<DisplacementDim>::KelvinVector,
+               std::unique_ptr<typename MechanicsBase<
+                   DisplacementDim>::MaterialStateVariables>,
+               typename LinearElasticIsotropic<DisplacementDim>::KelvinMatrix>>
+LinearElasticIsotropic<DisplacementDim>::integrateStress(
+    double const t,
+    ProcessLib::SpatialPosition const& x,
+    double const /*dt*/,
+    KelvinVector const& eps_prev,
+    KelvinVector const& eps,
+    KelvinVector const& sigma_prev,
+    typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
+        material_state_variables, double const T)
+{
+    KelvinMatrix C = getElasticTensor(t, x, T);
+
+    KelvinVector sigma = sigma_prev + C * (eps - eps_prev);
+
+    return {std::make_tuple(
+        sigma,
+        std::unique_ptr<
+            typename MechanicsBase<DisplacementDim>::MaterialStateVariables>{
+            new MaterialStateVariables{
+                static_cast<MaterialStateVariables const&>(
+                    material_state_variables)}},
+        C)};
+}
+
+template <int DisplacementDim>
+typename LinearElasticIsotropic<DisplacementDim>::KelvinMatrix
+LinearElasticIsotropic<DisplacementDim>::getElasticTensor(
+    double const t, ProcessLib::SpatialPosition const& x,
+    double const /*T*/) const
+{
+    KelvinMatrix C = KelvinMatrix::Zero();
+
+    C.template topLeftCorner<3, 3>().setConstant(_mp.lambda(t, x));
+    C.noalias() += 2 * _mp.mu(t, x) * KelvinMatrix::Identity();
+
+    return C;
+}
 
 template class LinearElasticIsotropic<2>;
 template class LinearElasticIsotropic<3>;

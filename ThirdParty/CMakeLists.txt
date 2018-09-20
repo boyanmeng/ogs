@@ -40,20 +40,42 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vtkdiff/CMakeLists.txt AND OGS_BUILD_TESTS
     install (PROGRAMS $<TARGET_FILE:vtkdiff> DESTINATION bin COMPONENT ogs_extras)
 endif()
 
-if(NOT TARGET vtkGUISupportQt AND OGS_BUILD_GUI)
-    set(VTK_QT_VERSION 5 CACHE INTERNAL "")
-    include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
-    add_subdirectory(vtkGUISupportQt)
-    if(MSVC)
-        set_target_properties(vtkGUISupportQt PROPERTIES COMPILE_FLAGS /W0)
-    endif()
-endif()
-
 if(OGS_BUILD_SWMM)
     add_subdirectory(SWMMInterface)
     set_target_properties(SWMM SwmmInterface PROPERTIES COMPILE_FLAGS /W0)
 endif()
 
-if(OGS_BUILD_METIS)
+if(OGS_USE_PYTHON)
+    add_subdirectory(pybind11)
+
+    function(check_python_version_compatibility)
+        if(NOT EXISTS ${VTK_DIR}/VTKConfig.cmake)
+            return()
+        endif()
+
+        include(${VTK_DIR}/VTKConfig.cmake)
+
+        if(NOT ${VTK_WRAP_PYTHON})
+            return()
+        endif()
+        if(NOT EXISTS ${VTK_MODULES_DIR}/vtkPython.cmake)
+            return()
+        endif()
+
+        include(${VTK_MODULES_DIR}/vtkPython.cmake)
+
+        if (NOT "${vtkPython_LIBRARIES}" STREQUAL "${PYTHON_LIBRARIES}")
+            message(SEND_ERROR "Mismatch between VTK's and OpenGeoSys' Python "
+                "libraries: ${vtkPython_LIBRARIES} vs. ${PYTHON_LIBRARIES}. "
+                "This will lead to compilation or linking errors. "
+                "You can fix this error by using the same Python version for "
+                "OpenGeoSys as VTK is built with.")
+        endif()
+    endfunction()
+
+    check_python_version_compatibility()
+endif()
+
+if(OGS_BUILD_UTILS)
     include(${PROJECT_SOURCE_DIR}/scripts/cmake/MetisSetup.cmake)
 endif()

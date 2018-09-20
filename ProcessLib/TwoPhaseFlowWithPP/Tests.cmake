@@ -20,7 +20,7 @@ AddTest(
     h2_Liako_20.vtu twophaseflow_pcs_0_ts_218_t_20.000000.vtu gas_pressure gas_pressure 20 1e-3
 )
 AddTest(
-    NAME LARGE_2D_TwoPhase_PP_Lia_quad_1
+    NAME 2D_TwoPhase_PP_Lia_quad_1_lg
     PATH Parabolic/TwoPhaseFlowPP/Liakopoulos
     EXECUTABLE ogs
     EXECUTABLE_ARGS TwoPhase_Lia_quad_large.prj
@@ -30,7 +30,7 @@ AddTest(
     h2_Liako_1198.vtu twophaseflow_pcs_0_ts_1198_t_1000.000000.vtu SATURATION1 saturation 1e-2 1e-3
 )
 AddTest(
-    NAME LARGE_2D_TwoPhase_PP_Lia_quad_2
+    NAME 2D_TwoPhase_PP_Lia_quad_2_lg
     PATH Parabolic/TwoPhaseFlowPP/Liakopoulos
     EXECUTABLE ogs
     EXECUTABLE_ARGS TwoPhase_Lia_quad_large.prj
@@ -42,7 +42,7 @@ AddTest(
 )
 AddTest(
     NAME 1D_TwoPhase_PP_mcwt_1
-    PATH Parabolic/TwoPhaseFlowPP/McWorts
+    PATH Parabolic/TwoPhaseFlowPP/McWhorter
     EXECUTABLE ogs
     EXECUTABLE_ARGS TwoPhase_mcwt_line.prj
     TESTER vtkdiff
@@ -52,7 +52,7 @@ AddTest(
 )
 AddTest(
     NAME 1D_TwoPhase_PP_mcwt_2
-    PATH Parabolic/TwoPhaseFlowPP/McWorts
+    PATH Parabolic/TwoPhaseFlowPP/McWhorter
     EXECUTABLE ogs
     EXECUTABLE_ARGS TwoPhase_mcwt_line.prj
     TESTER vtkdiff

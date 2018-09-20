@@ -42,7 +42,14 @@ int main(int argc, char *argv[])
 
     ApplicationsLib::LogogSetup logog_setup;
 
-    TCLAP::CmdLine cmd("Triangulates the specified polyline in the given geometry file.", ' ', BaseLib::BuildInfo::git_describe);
+    TCLAP::CmdLine cmd(
+        "Triangulates the specified polyline in the given geometry file.\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
     TCLAP::ValueArg<std::string>  input_arg("i", "input",  "GML input file (*.gml)", true, "", "string");
     TCLAP::ValueArg<std::string> output_arg("o", "output", "GML output file (*.gml)", true, "", "string");
     TCLAP::ValueArg<std::string>   name_arg("n", "name",   "Name of polyline in given file", true, "", "string");
@@ -56,9 +63,18 @@ int main(int argc, char *argv[])
 
     GeoLib::GEOObjects geo_objects;
     GeoLib::IO::XmlGmlInterface xml(geo_objects);
-    if (!xml.readFile(file_name))
+    try
     {
-        ERR ("Failed to load geometry file.");
+        if (!xml.readFile(file_name))
+        {
+            ERR("Failed to load geometry file.");
+            return EXIT_FAILURE;
+        }
+    }
+    catch (std::runtime_error const& err)
+    {
+        ERR("Failed to read file `%s'.", file_name.c_str());
+        ERR("%s", err.what());
         return EXIT_FAILURE;
     }
 

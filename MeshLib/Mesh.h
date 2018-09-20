@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -268,7 +269,13 @@ PropertyVector<T>* getOrCreateMeshProperty(Mesh& mesh,
         auto result =
             mesh.getProperties().template getPropertyVector<T>(property_name);
         assert(result);
-        assert(result->size() == numberOfMeshItems() * number_of_components);
+        if (item_type != MeshItemType::IntegrationPoint)
+        {
+            // Test the size if number of mesh items is known, which is not the
+            // case for the integration point data.
+            assert(result->size() ==
+                   numberOfMeshItems() * number_of_components);
+        }
         return result;
     }
 
@@ -278,5 +285,12 @@ PropertyVector<T>* getOrCreateMeshProperty(Mesh& mesh,
     result->resize(numberOfMeshItems() * number_of_components);
     return result;
 }
+
+/// Creates a new mesh from a vector of elements.
+///
+/// \note The elements are owned by the returned mesh object as well as the
+/// nodes and will be destructed together with the mesh.
+std::unique_ptr<MeshLib::Mesh> createMeshFromElementSelection(
+    std::string mesh_name, std::vector<MeshLib::Element*> const& elements);
 
 } /* namespace */

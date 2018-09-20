@@ -36,37 +36,33 @@ public:
     /// DOF-table, and a mesh subset for a given variable and its component.
     /// A local DOF-table, a subset of the given one, is constructed.
     NormalTractionBoundaryCondition(
-        bool const is_axially_symmetric, unsigned const integration_order,
-        unsigned const shapefunction_order,
+        unsigned const integration_order, unsigned const shapefunction_order,
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, unsigned const global_dim,
-        std::vector<MeshLib::Element*>&& elements,
-        Parameter<double> const& pressure);
-
-    ~NormalTractionBoundaryCondition() override;
+        MeshLib::Mesh const& bc_mesh, Parameter<double> const& pressure);
 
     /// Calls local assemblers which calculate their contributions to the global
     /// matrix and the right-hand-side.
-    void applyNaturalBC(const double t,
-                        GlobalVector const& x,
-                        GlobalMatrix& K,
-                        GlobalVector& b) override;
+    void applyNaturalBC(const double t, GlobalVector const& x, GlobalMatrix& K,
+                        GlobalVector& b, GlobalMatrix* Jac) override;
 
 private:
-    /// Vector of lower-dimensional elements on which the boundary condition is
-    /// defined.
-    std::vector<MeshLib::Element*> _elements;
+    MeshLib::Mesh const& _bc_mesh;
+
+    /// Intersection of boundary nodes and bulk mesh subset for the
+    /// variable_id/component_id pair.
+    std::vector<MeshLib::Node*> _nodes_subset;
 
     std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_all_nodes;
 
     /// Local dof table, a subset of the global one restricted to the
-    /// participating #_elements of the boundary condition.
+    /// participating number of _elements of the boundary condition.
     std::unique_ptr<NumLib::LocalToGlobalIndexMap> _dof_table_boundary;
 
     /// Integration order for integration over the lower-dimensional elements
     unsigned const _integration_order;
 
-    /// Local assemblers for each element of #_elements.
+    /// Local assemblers for each element of number of _elements.
     std::vector<
         std::unique_ptr<NormalTractionBoundaryConditionLocalAssemblerInterface>>
         _local_assemblers;
@@ -77,11 +73,10 @@ private:
 std::unique_ptr<NormalTractionBoundaryCondition<
     NormalTractionBoundaryConditionLocalAssembler>>
 createNormalTractionBoundaryCondition(
-    BaseLib::ConfigTree const& config,
-    std::vector<MeshLib::Element*>&& elements,
+    BaseLib::ConfigTree const& config, MeshLib::Mesh const& bc_mesh,
     NumLib::LocalToGlobalIndexMap const& dof_table, int const variable_id,
-    bool is_axially_symmetric, unsigned const integration_order,
-    unsigned const shapefunction_order, unsigned const global_dim,
+    unsigned const integration_order, unsigned const shapefunction_order,
+    unsigned const global_dim,
     std::vector<std::unique_ptr<ParameterBase>> const& parameters);
 
 }  // namespace NormalTractionBoundaryCondition

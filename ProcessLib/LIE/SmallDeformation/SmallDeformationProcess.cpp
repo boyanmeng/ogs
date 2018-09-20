@@ -15,7 +15,6 @@
 
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
 
-#include "ProcessLib/LIE/BoundaryCondition/BoundaryConditionBuilder.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
 #include "ProcessLib/LIE/SmallDeformation/LocalAssembler/CreateLocalAssemblers.h"
 #include "ProcessLib/LIE/SmallDeformation/LocalAssembler/SmallDeformationLocalAssemblerFracture.h"
@@ -97,20 +96,12 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
             *fracture_prop.get());
     }
 
-    // need to use a custom Neumann BC assembler for displacement jumps
-    int pv_disp_jump_id = 0;
-    const int process_id = 0;
-    for (ProcessVariable& pv : getProcessVariables(process_id))
-    {
-        if (pv.getName().find("displacement_jump") == std::string::npos)
-        {
-            continue;
-        }
-        pv.setBoundaryConditionBuilder(
-            std::make_unique<BoundaryConditionBuilder>(
-                *_process_data._vec_fracture_property[pv_disp_jump_id].get()));
-        pv_disp_jump_id++;
-    }
+    //
+    // If Neumann BCs for the displacement_jump variable are required they need
+    // special treatment because of the levelset function. The implementation
+    // exists in the version 6.1.0 (e54815cc07ee89c81f953a4955b1c788595dd725)
+    // and was removed due to lack of applications.
+    //
 
     MeshLib::PropertyVector<int> const* material_ids(
         mesh.getProperties().getPropertyVector<int>("MaterialIDs"));
@@ -125,29 +116,27 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
     //------------------------------------------------------------
     // for extrapolation
     _mesh_subset_all_nodes =
-        std::make_unique<MeshLib::MeshSubset>(_mesh, &_mesh.getNodes());
+        std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh.getNodes());
     // regular u
     _mesh_subset_matrix_nodes =
-        std::make_unique<MeshLib::MeshSubset>(_mesh, &_mesh.getNodes());
+        std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh.getNodes());
     // u jump
     for (unsigned i = 0; i < _vec_fracture_nodes.size(); i++)
     {
         _mesh_subset_fracture_nodes.push_back(
             std::make_unique<MeshLib::MeshSubset const>(
-                _mesh, &_vec_fracture_nodes[i]));
+                _mesh, _vec_fracture_nodes[i]));
     }
 
     // Collect the mesh subsets in a vector.
-    std::vector<MeshLib::MeshSubsets> all_mesh_subsets;
-    std::generate_n(
-        std::back_inserter(all_mesh_subsets), DisplacementDim, [&]() {
-            return MeshLib::MeshSubsets{_mesh_subset_matrix_nodes.get()};
-        });
+    std::vector<MeshLib::MeshSubset> all_mesh_subsets;
+    std::generate_n(std::back_inserter(all_mesh_subsets), DisplacementDim,
+                    [&]() { return *_mesh_subset_matrix_nodes; });
     for (auto& ms : _mesh_subset_fracture_nodes)
     {
         std::generate_n(std::back_inserter(all_mesh_subsets),
                         DisplacementDim,
-                        [&]() { return MeshLib::MeshSubsets{ms.get()}; });
+                        [&]() { return *ms; });
     }
 
     std::vector<int> const vec_n_components(1 + _vec_fracture_mat_IDs.size(),
@@ -183,34 +172,33 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
 
     // TODO move the two data members somewhere else.
     // for extrapolation of secondary variables
-    std::vector<MeshLib::MeshSubsets> all_mesh_subsets_single_component;
-    all_mesh_subsets_single_component.emplace_back(
-        _mesh_subset_all_nodes.get());
+    std::vector<MeshLib::MeshSubset> all_mesh_subsets_single_component{
+        *_mesh_subset_all_nodes};
     _local_to_global_index_map_single_component =
         std::make_unique<NumLib::LocalToGlobalIndexMap>(
             std::move(all_mesh_subsets_single_component),
             // by location order is needed for output
             NumLib::ComponentOrder::BY_LOCATION);
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "sigma_xx",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtSigmaXX));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "sigma_yy",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtSigmaYY));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "sigma_zz",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtSigmaZZ));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "sigma_xy",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
@@ -218,38 +206,38 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
 
     if (DisplacementDim == 3)
     {
-        Base::_secondary_variables.addSecondaryVariable(
+        _secondary_variables.addSecondaryVariable(
             "sigma_xz",
             makeExtrapolator(
                 1, getExtrapolator(), _local_assemblers,
                 &SmallDeformationLocalAssemblerInterface::getIntPtSigmaXZ));
 
-        Base::_secondary_variables.addSecondaryVariable(
+        _secondary_variables.addSecondaryVariable(
             "sigma_yz",
             makeExtrapolator(
                 1, getExtrapolator(), _local_assemblers,
                 &SmallDeformationLocalAssemblerInterface::getIntPtSigmaYZ));
     }
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "epsilon_xx",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonXX));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "epsilon_yy",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonYY));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "epsilon_zz",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonZZ));
 
-    Base::_secondary_variables.addSecondaryVariable(
+    _secondary_variables.addSecondaryVariable(
         "epsilon_xy",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
@@ -257,13 +245,13 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
 
     if (DisplacementDim == 3)
     {
-        Base::_secondary_variables.addSecondaryVariable(
+        _secondary_variables.addSecondaryVariable(
             "epsilon_xz",
             makeExtrapolator(
                 1, getExtrapolator(), _local_assemblers,
                 &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonXZ));
 
-        Base::_secondary_variables.addSecondaryVariable(
+        _secondary_variables.addSecondaryVariable(
             "epsilon_yz",
             makeExtrapolator(
                 1, getExtrapolator(), _local_assemblers,
@@ -368,6 +356,18 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         }
     }
 
+    auto mesh_prop_w_n = MeshLib::getOrCreateMeshProperty<double>(
+        const_cast<MeshLib::Mesh&>(mesh), "w_n", MeshLib::MeshItemType::Cell,
+        1);
+    mesh_prop_w_n->resize(mesh.getNumberOfElements());
+    _process_data._mesh_prop_w_n = mesh_prop_w_n;
+
+    auto mesh_prop_w_s = MeshLib::getOrCreateMeshProperty<double>(
+        const_cast<MeshLib::Mesh&>(mesh), "w_s", MeshLib::MeshItemType::Cell,
+        1);
+    mesh_prop_w_s->resize(mesh.getNumberOfElements());
+    _process_data._mesh_prop_w_s = mesh_prop_w_s;
+
     auto mesh_prop_b = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "aperture",
         MeshLib::MeshItemType::Cell, 1);
@@ -391,17 +391,34 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         }
     }
     _process_data._mesh_prop_b = mesh_prop_b;
+
+    auto mesh_prop_fracture_stress_shear =
+        MeshLib::getOrCreateMeshProperty<double>(
+            const_cast<MeshLib::Mesh&>(mesh), "f_stress_s",
+            MeshLib::MeshItemType::Cell, 1);
+    mesh_prop_fracture_stress_shear->resize(mesh.getNumberOfElements());
+    _process_data._mesh_prop_fracture_stress_shear =
+        mesh_prop_fracture_stress_shear;
+
+    auto mesh_prop_fracture_stress_normal =
+        MeshLib::getOrCreateMeshProperty<double>(
+            const_cast<MeshLib::Mesh&>(mesh), "f_stress_n",
+            MeshLib::MeshItemType::Cell, 1);
+    mesh_prop_fracture_stress_normal->resize(mesh.getNumberOfElements());
+    _process_data._mesh_prop_fracture_stress_normal =
+        mesh_prop_fracture_stress_normal;
 }
 
 template <int DisplacementDim>
-void SmallDeformationProcess<DisplacementDim>::postTimestepConcreteProcess(
-    GlobalVector const& x, int const /*process_id*/)
+void SmallDeformationProcess<DisplacementDim>::computeSecondaryVariableConcrete(
+    const double t, GlobalVector const& x)
 {
-    DBUG("PostTimestep SmallDeformationProcess.");
+    DBUG("Compute the secondary variables for SmallDeformationProcess.");
 
     GlobalExecutor::executeMemberOnDereferenced(
-        &SmallDeformationLocalAssemblerInterface::postTimestep,
-        _local_assemblers, *_local_to_global_index_map, x);
+        &SmallDeformationLocalAssemblerInterface::computeSecondaryVariable,
+        _local_assemblers, *_local_to_global_index_map, t, x,
+        _coupled_solutions);
 }
 
 template <int DisplacementDim>

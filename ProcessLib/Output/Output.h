@@ -42,7 +42,8 @@ public:
     Output(std::string output_directory, std::string prefix,
            bool const compress_output, std::string const& data_mode,
            bool const output_nonlinear_iteration_results,
-           std::vector<PairRepeatEachSteps> repeats_each_steps);
+           std::vector<PairRepeatEachSteps> repeats_each_steps,
+           std::vector<double>&& fixed_output_times);
 
     //! TODO doc. Opens a PVD file for each process.
     void addProcess(ProcessLib::Process const& process, const int process_id);
@@ -77,10 +78,12 @@ public:
                                     GlobalVector const& x,
                                     const unsigned iteration);
 
+    std::vector<double> getFixedOutputTimes() {return _fixed_output_times;}
+
 private:
-    struct SingleProcessData
+    struct ProcessData
     {
-        SingleProcessData(std::string const& filename) : pvd_file(filename) {}
+        ProcessData(std::string const& filename) : pvd_file(filename) {}
 
         MeshLib::IO::PVDFile pvd_file;
     };
@@ -100,16 +103,23 @@ private:
     //! Describes after which timesteps to write output.
     std::vector<PairRepeatEachSteps> _repeats_each_steps;
 
-    std::multimap<Process const*, SingleProcessData> _single_process_data;
+    //! Given times that steps have to reach.
+    std::vector<double> _fixed_output_times;
+
+    std::multimap<Process const*, ProcessData> _process_to_process_data;
 
     /**
-     * Get the address of a SingleProcessData from _single_process_data.
+     * Get the address of a ProcessData from corresponding to the given process.
      * @param process    Process.
      * @param process_id Process ID.
-     * @return Address of a SingleProcessData.
+     * @return Address of a ProcessData.
      */
-    SingleProcessData* findSingleProcessData(Process const& process,
-                                             const int process_id);
+    ProcessData* findProcessData(Process const& process, const int process_id);
+
+    //! Determines if there should be output at the given \c timestep or \c t.
+    bool shallDoOutput(unsigned timestep, double const t);
 };
+
+
 
 }  // namespace ProcessLib

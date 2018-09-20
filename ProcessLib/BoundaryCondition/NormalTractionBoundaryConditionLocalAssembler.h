@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "MeshLib/Elements/FaceRule.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
+#include "MeshLib/Elements/FaceRule.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "ProcessLib/Parameter/Parameter.h"
 
@@ -45,7 +45,8 @@ public:
     virtual void assemble(
         std::size_t const id,
         NumLib::LocalToGlobalIndexMap const& dof_table_boundary, double const t,
-        const GlobalVector& /*x*/, GlobalMatrix& /*K*/, GlobalVector& b) = 0;
+        const GlobalVector& /*x*/, GlobalMatrix& /*K*/, GlobalVector& b,
+        GlobalMatrix* /*Jac*/) = 0;
     virtual ~NormalTractionBoundaryConditionLocalAssemblerInterface() = default;
 };
 
@@ -64,7 +65,7 @@ public:
     NormalTractionBoundaryConditionLocalAssembler(
         MeshLib::Element const& e,
         std::size_t const local_matrix_size,
-        bool is_axially_symmetric,
+        bool const is_axially_symmetric,
         unsigned const integration_order,
         Parameter<double> const& pressure)
         : _integration_method(integration_order), _pressure(pressure)
@@ -126,7 +127,8 @@ public:
     void assemble(std::size_t const id,
                   NumLib::LocalToGlobalIndexMap const& dof_table_boundary,
                   double const t, const GlobalVector& /*x*/,
-                  GlobalMatrix& /*K*/, GlobalVector& local_rhs)
+                  GlobalMatrix& /*K*/, GlobalVector& local_rhs,
+                  GlobalMatrix* /*Jac*/) override
     {
         _local_rhs.setZero();
 

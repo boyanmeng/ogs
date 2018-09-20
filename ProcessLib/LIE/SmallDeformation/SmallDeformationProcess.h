@@ -19,12 +19,9 @@ namespace LIE
 {
 namespace SmallDeformation
 {
-
 template <int DisplacementDim>
 class SmallDeformationProcess final : public Process
 {
-    using Base = Process;
-
     static_assert(DisplacementDim == 2 || DisplacementDim == 3,
                   "Currently LIE::SmallDeformationProcess "
                   "supports only 2D or 3D.");
@@ -46,6 +43,9 @@ public:
     //! @{
     bool isLinear() const override;
     //! @}
+
+    void computeSecondaryVariableConcrete(double const t,
+                                          GlobalVector const& x) override;
 
 private:
     using LocalAssemblerInterface = SmallDeformationLocalAssemblerInterface;
@@ -69,9 +69,6 @@ private:
     void preTimestepConcreteProcess(GlobalVector const& x, double const t,
                                     double const dt,
                                     const int /*process_id*/) override;
-
-    void postTimestepConcreteProcess(GlobalVector const& x,
-                                     int const process_id) override;
 
 private:
     SmallDeformationProcessData<DisplacementDim> _process_data;

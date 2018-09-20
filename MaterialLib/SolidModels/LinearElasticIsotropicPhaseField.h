@@ -9,7 +9,8 @@
 
 #pragma once
 
-#include "KelvinVector.h"
+#include "MathLib/KelvinVector.h"
+
 #include "LinearElasticIsotropic.h"
 #include "PhaseFieldExtension.h"
 
@@ -24,9 +25,11 @@ class LinearElasticIsotropicPhaseField final
 {
 public:
     static int const KelvinVectorSize =
-        ProcessLib::KelvinVectorDimensions<DisplacementDim>::value;
-    using KelvinVector = ProcessLib::KelvinVectorType<DisplacementDim>;
-    using KelvinMatrix = ProcessLib::KelvinMatrixType<DisplacementDim>;
+        MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value;
+    using KelvinVector =
+        MathLib::KelvinVector::KelvinVectorType<DisplacementDim>;
+    using KelvinMatrix =
+        MathLib::KelvinVector::KelvinMatrixType<DisplacementDim>;
 
     explicit LinearElasticIsotropicPhaseField(
         typename LinearElasticIsotropic<DisplacementDim>::MaterialProperties&&
@@ -56,10 +59,10 @@ public:
         KelvinVector const& eps,
         KelvinVector const& sigma_prev,
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
-            material_state_variables) override
+            material_state_variables, double const T) override
     {
         return LinearElasticIsotropic<DisplacementDim>::integrateStress(
-            t, x, dt, eps_prev, eps, sigma_prev, material_state_variables);
+            t, x, dt, eps_prev, eps, sigma_prev, material_state_variables, T);
     }
 
     double computeFreeEnergyDensity(
@@ -91,10 +94,10 @@ public:
                                  KelvinMatrix& C_tensile,
                                  KelvinMatrix& C_compressive,
                                  KelvinVector& sigma_real,
-                                 double const degradation) const override
+                                 double const degradation,
+                                 double& elastic_energy) const override
     {
-        using Invariants =
-            MaterialLib::SolidModels::Invariants<KelvinVectorSize>;
+        using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
         // calculation of deviatoric parts
         auto const& P_dev = Invariants::deviatoric_projection;
         KelvinVector const epsd_curr = P_dev * eps;
@@ -118,6 +121,7 @@ public:
             sigma_compressive.noalias() = KelvinVector::Zero();
             C_tensile.template topLeftCorner<3, 3>().setConstant(K);
             C_tensile.noalias() += 2 * mu * P_dev * KelvinMatrix::Identity();
+            elastic_energy = degradation * strain_energy_tensile;
         }
         else
         {
@@ -127,6 +131,8 @@ public:
                 K * eps_curr_trace * Invariants::identity2;
             C_tensile.noalias() = 2 * mu * P_dev * KelvinMatrix::Identity();
             C_compressive.template topLeftCorner<3, 3>().setConstant(K);
+            elastic_energy = K / 2 * eps_curr_trace * eps_curr_trace +
+                             mu * epsd_curr.transpose() * epsd_curr;
         }
 
         sigma_real.noalias() = degradation * sigma_tensile + sigma_compressive;

@@ -18,9 +18,11 @@
 #include "ProcessLib/BoundaryCondition/BoundaryConditionCollection.h"
 #include "ProcessLib/Output/CachedSecondaryVariable.h"
 #include "ProcessLib/Output/ExtrapolatorData.h"
+#include "ProcessLib/Output/IntegrationPointWriter.h"
 #include "ProcessLib/Output/SecondaryVariable.h"
 #include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/SourceTerms/NodalSourceTerm.h"
+#include "ProcessLib/SourceTerms/SourceTermCollection.h"
 
 #include "AbstractJacobianAssembler.h"
 #include "ProcessVariable.h"
@@ -59,7 +61,8 @@ public:
                      const double delta_t, const int process_id);
 
     /// Postprocessing after a complete timestep.
-    void postTimestep(GlobalVector const& x, int const process_id);
+    void postTimestep(GlobalVector const& x, const double t,
+                      const double delta_t, int const process_id);
 
     /// Calculates secondary variables, e.g. stress and strain for deformation
     /// analysis, only after nonlinear solver being successfully conducted.
@@ -100,11 +103,11 @@ public:
                               GlobalMatrix& Jac) final;
 
     std::vector<NumLib::IndexValueVector<GlobalIndexType>> const*
-    getKnownSolutions(double const t) const final
+    getKnownSolutions(double const t, GlobalVector const& x) const final
     {
         const auto pcs_id =
             (_coupled_solutions) ? _coupled_solutions->process_id : 0;
-        return _boundary_conditions[pcs_id].getKnownSolutions(t);
+        return _boundary_conditions[pcs_id].getKnownSolutions(t, x);
     }
 
     virtual NumLib::LocalToGlobalIndexMap const& getDOFTable(
@@ -125,13 +128,20 @@ public:
         return _secondary_variables;
     }
 
+    std::vector<std::unique_ptr<IntegrationPointWriter>> const&
+    getIntegrationPointWriter() const
+    {
+        return _integration_point_writer;
+    }
+
     // Used as a call back for CalculateSurfaceFlux process.
 
-    virtual std::vector<double> getFlux(std::size_t /*element_id*/,
-                                        MathLib::Point3d const& /*p*/,
-                                        GlobalVector const& /*x*/) const
+    virtual Eigen::Vector3d getFlux(std::size_t /*element_id*/,
+                                    MathLib::Point3d const& /*p*/,
+                                    double const /*t*/,
+                                    GlobalVector const& /*x*/) const
     {
-        return std::vector<double>{};
+        return Eigen::Vector3d{};
     }
 
 protected:
@@ -186,6 +196,8 @@ private:
     }
 
     virtual void postTimestepConcreteProcess(GlobalVector const& /*x*/,
+                                             const double /*t*/,
+                                             const double /*delta_t*/,
                                              int const /*process_id*/)
     {
     }
@@ -263,6 +275,12 @@ protected:
     /// implemented in MathLib::GaussLegendre.
     unsigned const _integration_order;
 
+    /// An optional vector containing descriptions for integration point data
+    /// output and setting of the integration point initial conditions.
+    /// The integration point writer are implemented in specific processes.
+    std::vector<std::unique_ptr<IntegrationPointWriter>>
+        _integration_point_writer;
+
     GlobalSparsityPattern _sparsity_pattern;
 
 private:
@@ -278,9 +296,10 @@ private:
     /// scheme, the size of vector is the number of the coupled processes.
     std::vector<BoundaryConditionCollection> _boundary_conditions;
 
-    /// Vector for nodal source terms. The outer vector is for processes,
-    /// which has the same size as that for boundary conditions.
-    std::vector<std::vector<std::unique_ptr<NodalSourceTerm>>> _source_terms;
+    /// Vector for nodal source term collections. For the monolithic scheme
+    /// or a single process, the size of the vector is one. For the staggered
+    /// scheme, the size of vector is the number of the coupled processes.
+    std::vector<SourceTermCollection> _source_term_collections;
 
     ExtrapolatorData _extrapolator_data;
 };

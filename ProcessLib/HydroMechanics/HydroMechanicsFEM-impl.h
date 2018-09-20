@@ -13,7 +13,7 @@
 
 #include "HydroMechanicsFEM.h"
 
-#include "MaterialLib/SolidModels/KelvinVector.h"
+#include "MathLib/KelvinVector.h"
 #include "NumLib/Function/Interpolation.h"
 #include "ProcessLib/CoupledSolutionsForStaggeredScheme.h"
 
@@ -64,6 +64,9 @@ HydroMechanicsLocalAssembler<ShapeFunctionDisplacement, ShapeFunctionPressure,
             sm_u.integralMeasure * sm_u.detJ;
 
         // Initialize current time step values
+        static const int kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
         ip_data.sigma_eff.setZero(kelvin_vector_size);
         ip_data.eps.setZero(kelvin_vector_size);
 
@@ -190,15 +193,17 @@ void HydroMechanicsLocalAssembler<ShapeFunctionDisplacement,
         auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
         auto const porosity = _process_data.porosity(t, x_position)[0];
         auto const& b = _process_data.specific_body_force;
-        auto const& identity2 = MaterialLib::SolidModels::Invariants<
-            KelvinVectorDimensions<DisplacementDim>::value>::identity2;
+        auto const& identity2 = MathLib::KelvinVector::Invariants<
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value>::identity2;
 
         //
         // displacement equation, displacement part
         //
         eps.noalias() = B * u;
 
-        auto C = _ip_data[ip].updateConstitutiveRelation(t, x_position, dt, u);
+        auto C = _ip_data[ip].updateConstitutiveRelation(
+            t, x_position, dt, u, _process_data.reference_temperature);
 
         local_Jac
             .template block<displacement_size, displacement_size>(
@@ -478,12 +483,14 @@ void HydroMechanicsLocalAssembler<ShapeFunctionDisplacement,
         auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
         auto const porosity = _process_data.porosity(t, x_position)[0];
         auto const& b = _process_data.specific_body_force;
-        auto const& identity2 = MaterialLib::SolidModels::Invariants<
-            KelvinVectorDimensions<DisplacementDim>::value>::identity2;
+        auto const& identity2 = MathLib::KelvinVector::Invariants<
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value>::identity2;
 
         eps.noalias() = B * u;
 
-        auto C = _ip_data[ip].updateConstitutiveRelation(t, x_position, dt, u);
+        auto C = _ip_data[ip].updateConstitutiveRelation(
+            t, x_position, dt, u, _process_data.reference_temperature);
 
         local_Jac.noalias() += B.transpose() * C * B * w;
 
@@ -569,7 +576,8 @@ void HydroMechanicsLocalAssembler<ShapeFunctionDisplacement,
         auto& eps = _ip_data[ip].eps;
         eps.noalias() = B * u;
 
-        _ip_data[ip].updateConstitutiveRelation(t, x_position, dt, u);
+        _ip_data[ip].updateConstitutiveRelation(
+            t, x_position, dt, u, _process_data.reference_temperature);
     }
 }
 

@@ -18,11 +18,18 @@
 
 #include <logog/include/logog.hpp>
 
-#include "BaseLib/FileTools.h"
-#include "BaseLib/uniqueInsert.h"
+#ifdef OGS_USE_PYTHON
+#include <pybind11/eval.h>
+#endif
 
+#include "BaseLib/Algorithm.h"
+#include "BaseLib/FileTools.h"
+
+#include "GeoLib/GEOObjects.h"
 #include "MathLib/Curve/CreatePiecewiseLinearCurve.h"
-#include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
+#include "MeshGeoToolsLib/ConstructMeshesFromGeometries.h"
+#include "MeshGeoToolsLib/CreateSearchLength.h"
+#include "MeshGeoToolsLib/SearchLength.h"
 #include "MeshLib/Mesh.h"
 
 #include "NumLib/ODESolver/ConvergenceCriterion.h"
@@ -34,34 +41,150 @@
 
 #include "ProcessLib/UncoupledProcessesTimeLoop.h"
 
+#ifdef OGS_BUILD_PROCESS_COMPONENTTRANSPORT
 #include "ProcessLib/ComponentTransport/CreateComponentTransportProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_GROUNDWATERFLOW
 #include "ProcessLib/GroundwaterFlow/CreateGroundwaterFlowProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_HT
 #include "ProcessLib/HT/CreateHTProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_HEATCONDUCTION
 #include "ProcessLib/HeatConduction/CreateHeatConductionProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_HYDROMECHANICS
 #include "ProcessLib/HydroMechanics/CreateHydroMechanicsProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_LIE
 #include "ProcessLib/LIE/HydroMechanics/CreateHydroMechanicsProcess.h"
 #include "ProcessLib/LIE/SmallDeformation/CreateSmallDeformationProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_LIQUIDFLOW
 #include "ProcessLib/LiquidFlow/CreateLiquidFlowProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_PHASEFIELD
 #include "ProcessLib/PhaseField/CreatePhaseFieldProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSCOMPONENTTRANSPORT
 #include "ProcessLib/RichardsComponentTransport/CreateRichardsComponentTransportProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSFLOW
 #include "ProcessLib/RichardsFlow/CreateRichardsFlowProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSMECHANICS
+#include "ProcessLib/RichardsMechanics/CreateRichardsMechanicsProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_SMALLDEFORMATION
 #include "ProcessLib/SmallDeformation/CreateSmallDeformationProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_TES
 #include "ProcessLib/TES/CreateTESProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMALTWOPHASEFLOWWITHPP
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/CreateThermalTwoPhaseFlowWithPPProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMOMECHANICALPHASEFIELD
+#include "ProcessLib/ThermoMechanicalPhaseField/CreateThermoMechanicalPhaseFieldProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMOMECHANICS
 #include "ProcessLib/ThermoMechanics/CreateThermoMechanicsProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_TWOPHASEFLOWWITHPP
 #include "ProcessLib/TwoPhaseFlowWithPP/CreateTwoPhaseFlowWithPPProcess.h"
+#endif
+#ifdef OGS_BUILD_PROCESS_TWOPHASEFLOWWITHPRHO
 #include "ProcessLib/TwoPhaseFlowWithPrho/CreateTwoPhaseFlowWithPrhoProcess.h"
+#endif
 
-namespace detail
+namespace
 {
-static void readGeometry(std::string const& fname,
-                         GeoLib::GEOObjects& geo_objects)
+void readGeometry(std::string const& fname, GeoLib::GEOObjects& geo_objects)
 {
     DBUG("Reading geometry file \'%s\'.", fname.c_str());
     GeoLib::IO::BoostXmlGmlInterface gml_reader(geo_objects);
     gml_reader.readFile(fname);
 }
+
+std::unique_ptr<MeshLib::Mesh> readSingleMesh(
+    BaseLib::ConfigTree const& mesh_config_parameter,
+    std::string const& project_directory)
+{
+    std::string const mesh_file = BaseLib::copyPathToFileName(
+        mesh_config_parameter.getValue<std::string>(), project_directory);
+    DBUG("Reading mesh file \'%s\'.", mesh_file.c_str());
+
+    auto mesh = std::unique_ptr<MeshLib::Mesh>(
+        MeshLib::IO::readMeshFromFile(mesh_file));
+    if (!mesh)
+    {
+        OGS_FATAL("Could not read mesh from \'%s\' file. No mesh added.",
+                  mesh_file.c_str());
+    }
+
+#ifdef DOXYGEN_DOCU_ONLY
+    //! \ogs_file_attr{prj__meshes__mesh__axially_symmetric}
+    mesh_config_parameter.getConfigAttributeOptional<bool>("axially_symmetric");
+#endif  // DOXYGEN_DOCU_ONLY
+
+    if (auto const axially_symmetric =
+            //! \ogs_file_attr{prj__mesh__axially_symmetric}
+        mesh_config_parameter.getConfigAttributeOptional<bool>(
+            "axially_symmetric"))
+    {
+        mesh->setAxiallySymmetric(*axially_symmetric);
+    }
+
+    return mesh;
 }
+
+std::vector<std::unique_ptr<MeshLib::Mesh>> readMeshes(
+    BaseLib::ConfigTree const& config, std::string const& project_directory)
+{
+    std::vector<std::unique_ptr<MeshLib::Mesh>> meshes;
+
+    //! \ogs_file_param{prj__meshes}
+    auto optional_meshes = config.getConfigSubtreeOptional("meshes");
+    if (optional_meshes)
+    {
+        DBUG("Reading multiple meshes.");
+        for (auto mesh_config :
+             //! \ogs_file_param{prj__meshes__mesh}
+             optional_meshes->getConfigParameterList("mesh"))
+        {
+            meshes.push_back(readSingleMesh(mesh_config, project_directory));
+        }
+    }
+    else
+    {  // Read single mesh with geometry.
+        WARN(
+            "Consider switching from mesh and geometry input to multiple "
+            "meshes input. See "
+            "https://www.opengeosys.org/docs/tools/model-preparation/"
+            "constructmeshesfromgeometry/ tool for conversion.");
+        //! \ogs_file_param{prj__mesh}
+        meshes.push_back(readSingleMesh(config.getConfigParameter("mesh"),
+                                        project_directory));
+
+        std::string const geometry_file = BaseLib::copyPathToFileName(
+            //! \ogs_file_param{prj__geometry}
+            config.getConfigParameter<std::string>("geometry"),
+            project_directory);
+        GeoLib::GEOObjects geoObjects;
+        readGeometry(geometry_file, geoObjects);
+
+        std::unique_ptr<MeshGeoToolsLib::SearchLength> search_length_algorithm =
+            MeshGeoToolsLib::createSearchLengthAlgorithm(config, *meshes[0]);
+        auto additional_meshes =
+            MeshGeoToolsLib::constructAdditionalMeshesFromGeoObjects(
+                geoObjects, *meshes[0], std::move(search_length_algorithm));
+
+        std::move(begin(additional_meshes), end(additional_meshes),
+                  std::back_inserter(meshes));
+    }
+    return meshes;
+}
+}  // namespace
 
 ProjectData::ProjectData() = default;
 
@@ -69,33 +192,23 @@ ProjectData::ProjectData(BaseLib::ConfigTree const& project_config,
                          std::string const& project_directory,
                          std::string const& output_directory)
 {
-    std::string const geometry_file = BaseLib::copyPathToFileName(
-        //! \ogs_file_param{prj__geometry}
-        project_config.getConfigParameter<std::string>("geometry"),
-        project_directory);
-    detail::readGeometry(geometry_file, *_geoObjects);
+    _mesh_vec = readMeshes(project_config, project_directory);
 
+    if (auto const python_script =
+            //! \ogs_file_param{prj__python_script}
+        project_config.getConfigParameterOptional<std::string>("python_script"))
     {
-        //! \ogs_file_param{prj__mesh}
-        auto const mesh_param = project_config.getConfigParameter("mesh");
+#ifdef OGS_USE_PYTHON
+        namespace py = pybind11;
+        auto const script_path =
+            BaseLib::copyPathToFileName(*python_script, project_directory);
 
-        std::string const mesh_file = BaseLib::copyPathToFileName(
-            mesh_param.getValue<std::string>(), project_directory);
-
-        MeshLib::Mesh* const mesh = MeshLib::IO::readMeshFromFile(mesh_file);
-        if (!mesh)
-        {
-            OGS_FATAL("Could not read mesh from \'%s\' file. No mesh added.",
-                      mesh_file.c_str());
-        }
-
-        if (auto const axially_symmetric =
-                //! \ogs_file_attr{prj__mesh__axially_symmetric}
-            mesh_param.getConfigAttributeOptional<bool>("axially_symmetric"))
-        {
-            mesh->setAxiallySymmetric(*axially_symmetric);
-        }
-        _mesh_vec.push_back(mesh);
+        // Evaluate in scope of main module
+        py::object scope = py::module::import("__main__").attr("__dict__");
+        py::eval_file(script_path, scope);
+#else
+        OGS_FATAL("OpenGeoSys has not been built with Python support.");
+#endif  // OGS_USE_PYTHON
     }
 
     //! \ogs_file_param{prj__curves}
@@ -122,119 +235,10 @@ ProjectData::ProjectData(BaseLib::ConfigTree const& project_config,
                   output_directory);
 }
 
-ProjectData::~ProjectData()
-{
-    delete _geoObjects;
-
-    for (MeshLib::Mesh* m : _mesh_vec)
-        delete m;
-}
-
-void ProjectData::addMesh(MeshLib::Mesh* mesh)
-{
-    std::string name = mesh->getName();
-    isMeshNameUniqueAndProvideUniqueName(name);
-    mesh->setName(name);
-    _mesh_vec.push_back(mesh);
-}
-
-std::vector<MeshLib::Mesh*>::const_iterator ProjectData::findMeshByName(
-    std::string const& name) const
-{
-    return const_cast<ProjectData&>(*this).findMeshByName(name);
-}
-
-std::vector<MeshLib::Mesh*>::iterator ProjectData::findMeshByName(
-    std::string const& name)
-{
-    return std::find_if(_mesh_vec.begin(), _mesh_vec.end(),
-                        [&name](MeshLib::Mesh* mesh) {
-                            return mesh && (name == mesh->getName());
-                        });
-}
-
-const MeshLib::Mesh* ProjectData::getMesh(const std::string& name) const
-{
-    auto it = findMeshByName(name);
-    return (it == _mesh_vec.end() ? nullptr : *it);
-}
-
-bool ProjectData::removeMesh(const std::string& name)
-{
-    bool mesh_found = false;
-    auto it = findMeshByName(name);
-    while (it != _mesh_vec.end())
-    {
-        delete *it;
-        *it = nullptr;
-        it = findMeshByName(name);
-        mesh_found = true;
-    }
-
-    _mesh_vec.erase(std::remove(_mesh_vec.begin(), _mesh_vec.end(), nullptr),
-                    _mesh_vec.end());
-    return mesh_found;
-}
-
-bool ProjectData::meshExists(const std::string& name) const
-{
-    return findMeshByName(name) != _mesh_vec.end();
-}
-
-bool ProjectData::isMeshNameUniqueAndProvideUniqueName(std::string& name) const
-{
-    int count(0);
-    bool isUnique(false);
-    std::string cpName;
-
-    while (!isUnique)
-    {
-        isUnique = true;
-        cpName = name;
-
-        count++;
-        // If the original name already exists we start to add numbers to name
-        // for
-        // as long as it takes to make the name unique.
-        if (count > 1)
-            cpName = cpName + "-" + std::to_string(count);
-
-        for (auto mesh : _mesh_vec)
-            if (cpName == mesh->getName())
-                isUnique = false;
-    }
-
-    // At this point cpName is a unique name and isUnique is true.
-    // If cpName is not the original name, "name" is changed and isUnique is set
-    // to false,
-    // indicating that a vector with the original name already exists.
-    if (count > 1)
-    {
-        isUnique = false;
-        name = cpName;
-    }
-    return isUnique;
-}
-
 void ProjectData::parseProcessVariables(
     BaseLib::ConfigTree const& process_variables_config)
 {
-    DBUG("Parse process variables:")
-    if (_geoObjects == nullptr)
-    {
-        ERR("Geometric objects are required to define process variables.");
-        ERR("No geometric objects present.");
-        return;
-    }
-
-    // TODO at the moment we have only one mesh, later there
-    // can be several meshes. Then we have to check for correct mesh here and
-    // assign the referenced mesh below.
-    if (_mesh_vec.empty() || _mesh_vec[0] == nullptr)
-    {
-        ERR("A mesh is required to define process variables.");
-        return;
-    }
+    DBUG("Parse process variables:");
 
     std::set<std::string> names;
 
@@ -242,9 +246,20 @@ void ProjectData::parseProcessVariables(
          //! \ogs_file_param{prj__process_variables__process_variable}
          : process_variables_config.getConfigSubtreeList("process_variable"))
     {
-        // TODO Extend to referenced meshes.
-        auto pv = ProcessLib::ProcessVariable{var_config, *_mesh_vec[0],
-                                              *_geoObjects, _parameters};
+        // Either the mesh name is given, or the first mesh's name will be
+        // taken. Taking the first mesh's value is deprecated.
+        auto const mesh_name =
+            //! \ogs_file_param{prj__process_variables__process_variable__mesh}
+            var_config.getConfigParameter<std::string>("mesh",
+                                                       _mesh_vec[0]->getName());
+
+        auto& mesh = *BaseLib::findElementOrError(
+            begin(_mesh_vec), end(_mesh_vec),
+            [&mesh_name](auto const& m) { return m->getName() == mesh_name; },
+            "Expected to find a mesh named " + mesh_name + ".");
+
+        auto pv = ProcessLib::ProcessVariable{var_config, mesh, _mesh_vec,
+                                              _parameters};
         if (!names.insert(pv.getName()).second)
             OGS_FATAL("A process variable with name `%s' already exists.",
                       pv.getName().c_str());
@@ -281,6 +296,9 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                                  std::string const& project_directory,
                                  std::string const& output_directory)
 {
+    (void)project_directory; // to avoid compilation warning
+    (void)output_directory; // to avoid compilation warning
+
     DBUG("Reading processes:");
     //! \ogs_file_param{prj__processes__process}
     for (auto process_config : processes_config.getConfigSubtreeList("process"))
@@ -303,6 +321,7 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
             //! \ogs_file_param{prj__processes__process__jacobian_assembler}
             process_config.getConfigSubtreeOptional("jacobian_assembler"));
 
+#ifdef OGS_BUILD_PROCESS_GROUNDWATERFLOW
         if (type == "GROUNDWATER_FLOW")
         {
             // The existence check of the in the configuration referenced
@@ -313,30 +332,42 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
             process = ProcessLib::GroundwaterFlow::createGroundwaterFlowProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
-                process_config, project_directory, output_directory);
+                process_config, _mesh_vec, output_directory);
         }
-        else if (type == "LIQUID_FLOW")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_LIQUIDFLOW
+            if (type == "LIQUID_FLOW")
         {
             process = ProcessLib::LiquidFlow::createLiquidFlowProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
                 process_config);
         }
-        else if (type == "TES")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_TES
+            if (type == "TES")
         {
             process = ProcessLib::TES::createTESProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
                 process_config);
         }
-        else if (type == "HEAT_CONDUCTION")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_HEATCONDUCTION
+            if (type == "HEAT_CONDUCTION")
         {
             process = ProcessLib::HeatConduction::createHeatConductionProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
                 process_config);
         }
-        else if (type == "HYDRO_MECHANICS")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_HYDROMECHANICS
+            if (type == "HYDRO_MECHANICS")
         {
             //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS__dimension}
             switch (process_config.getConfigParameter<int>("dimension"))
@@ -361,7 +392,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                         "dimension");
             }
         }
-        else if (type == "HYDRO_MECHANICS_WITH_LIE")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_LIE
+            if (type == "HYDRO_MECHANICS_WITH_LIE")
         {
             //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__dimension}
             switch (process_config.getConfigParameter<int>("dimension"))
@@ -386,14 +420,20 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                         "given dimension");
             }
         }
-        else if (type == "HT")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_HT
+            if (type == "HT")
         {
             process = ProcessLib::HT::createHTProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
-                process_config);
+                process_config, _mesh_vec, output_directory);
         }
-        else if (type == "ComponentTransport")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_COMPONENTTRANSPORT
+            if (type == "ComponentTransport")
         {
             process =
                 ProcessLib::ComponentTransport::createComponentTransportProcess(
@@ -401,7 +441,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     _process_variables, _parameters, integration_order,
                     process_config);
         }
-        else if (type == "PHASE_FIELD")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_PHASEFIELD
+            if (type == "PHASE_FIELD")
         {
             switch (_mesh_vec[0]->getDimension())
             {
@@ -421,7 +464,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     break;
             }
         }
-        else if (type == "RichardsComponentTransport")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSCOMPONENTTRANSPORT
+            if (type == "RichardsComponentTransport")
         {
             process = ProcessLib::RichardsComponentTransport::
                 createRichardsComponentTransportProcess(
@@ -429,7 +475,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     _process_variables, _parameters, integration_order,
                     process_config);
         }
-        else if (type == "SMALL_DEFORMATION")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_SMALLDEFORMATION
+            if (type == "SMALL_DEFORMATION")
         {
             switch (_mesh_vec[0]->getDimension())
             {
@@ -453,7 +502,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                         "given dimension");
             }
         }
-        else if (type == "SMALL_DEFORMATION_WITH_LIE")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_LIE
+            if (type == "SMALL_DEFORMATION_WITH_LIE")
         {
             //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__dimension}
             switch (process_config.getConfigParameter<int>("dimension"))
@@ -478,7 +530,33 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                         "given dimension");
             }
         }
-        else if (type == "THERMO_MECHANICS")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMOMECHANICALPHASEFIELD
+            if (type == "THERMO_MECHANICAL_PHASE_FIELD")
+        {
+            switch (_mesh_vec[0]->getDimension())
+            {
+                case 2:
+                    process = ProcessLib::ThermoMechanicalPhaseField::
+                        createThermoMechanicalPhaseFieldProcess<2>(
+                            *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters, integration_order,
+                            process_config);
+                    break;
+                case 3:
+                    process = ProcessLib::ThermoMechanicalPhaseField::
+                        createThermoMechanicalPhaseFieldProcess<3>(
+                            *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters, integration_order,
+                            process_config);
+                    break;
+            }
+        }
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMOMECHANICS
+            if (type == "THERMO_MECHANICS")
         {
             switch (_mesh_vec[0]->getDimension())
             {
@@ -498,15 +576,44 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     break;
             }
         }
-        else if (type == "RICHARDS_FLOW")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSFLOW
+            if (type == "RICHARDS_FLOW")
         {
             process = ProcessLib::RichardsFlow::createRichardsFlowProcess(
                 *_mesh_vec[0], std::move(jacobian_assembler),
                 _process_variables, _parameters, integration_order,
                 process_config, _curves);
         }
-
-        else if (type == "TWOPHASE_FLOW_PP")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_RICHARDSMECHANICS
+            if (type == "RICHARDS_MECHANICS")
+        {
+            //! \ogs_file_param{prj__processes__process__RICHARDS_MECHANICS__dimension}
+            switch (process_config.getConfigParameter<int>("dimension"))
+            {
+                case 2:
+                    process = ProcessLib::RichardsMechanics::
+                        createRichardsMechanicsProcess<2>(
+                            *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters, integration_order,
+                            process_config);
+                    break;
+                case 3:
+                    process = ProcessLib::RichardsMechanics::
+                        createRichardsMechanicsProcess<3>(
+                            *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters, integration_order,
+                            process_config);
+                    break;
+            }
+        }
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_TWOPHASEFLOWWITHPP
+            if (type == "TWOPHASE_FLOW_PP")
         {
             process =
                 ProcessLib::TwoPhaseFlowWithPP::createTwoPhaseFlowWithPPProcess(
@@ -514,8 +621,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     _process_variables, _parameters, integration_order,
                     process_config, _curves);
         }
-
-        else if (type == "TWOPHASE_FLOW_PRHO")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_TWOPHASEFLOWWITHPRHO
+            if (type == "TWOPHASE_FLOW_PRHO")
         {
             process = ProcessLib::TwoPhaseFlowWithPrho::
                 createTwoPhaseFlowWithPrhoProcess(
@@ -523,8 +632,10 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     _process_variables, _parameters, integration_order,
                     process_config, _curves);
         }
-
-        else if (type == "THERMAL_TWOPHASE_WITH_PP")
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMALTWOPHASEFLOWWITHPP
+            if (type == "THERMAL_TWOPHASE_WITH_PP")
         {
             process = ProcessLib::ThermalTwoPhaseFlowWithPP::
                 createThermalTwoPhaseFlowWithPPProcess(
@@ -532,8 +643,8 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     _process_variables, _parameters, integration_order,
                     process_config, _curves);
         }
-
         else
+#endif
         {
             OGS_FATAL("Unknown process type: %s", type.c_str());
         }

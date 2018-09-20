@@ -18,7 +18,7 @@
 
 #include "MeshLib/Elements/Elements.h"
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
-#include "NumLib/Fem/Integration/GaussIntegrationPolicy.h"
+#include "NumLib/Fem/Integration/GaussLegendreIntegrationPolicy.h"
 
 #ifndef OGS_MAX_ELEMENT_DIM
 static_assert(false, "The macro OGS_MAX_ELEMENT_DIM is undefined.");
@@ -270,9 +270,8 @@ public:
                 for (int j = 0; j < _dof_table.getNumberOfVariableComponents(i);
                      j++)
                 {
-                    auto& mss = _dof_table.getMeshSubsets(i, j);
-                    assert(mss.size() == 1);
-                    auto mesh_id = mss.getMeshSubset(0).getMeshID();
+                    auto const& ms = _dof_table.getMeshSubset(i, j);
+                    auto const mesh_id = ms.getMeshID();
                     for (unsigned k = 0; k < mesh_item.getNumberOfNodes(); k++)
                     {
                         MeshLib::Location l(mesh_id,
@@ -303,7 +302,7 @@ private:
         ConstructorArgs&&...)>;
 
     template <typename ShapeFunction>
-    using IntegrationMethod = typename NumLib::GaussIntegrationPolicy<
+    using IntegrationMethod = typename NumLib::GaussLegendreIntegrationPolicy<
         typename ShapeFunction::MeshElement>::IntegrationMethod;
 
     template <typename ShapeFunction>

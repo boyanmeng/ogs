@@ -12,9 +12,12 @@
 #include "MaterialLib/Fluid/FluidProperties/CreateFluidProperties.h"
 #include "MaterialLib/PorousMedium/CreatePorousMediaProperties.h"
 
+#include "MeshLib/IO/readMeshFromFile.h"
+
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Parameter/ConstantParameter.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
+#include "ProcessLib/SurfaceFlux/SurfaceFluxData.h"
 
 #include "HTProcess.h"
 #include "HTMaterialProperties.h"
@@ -30,7 +33,9 @@ std::unique_ptr<Process> createHTProcess(
     std::vector<ProcessVariable> const& variables,
     std::vector<std::unique_ptr<ParameterBase>> const& parameters,
     unsigned const integration_order,
-    BaseLib::ConfigTree const& config)
+    BaseLib::ConfigTree const& config,
+    std::vector<std::unique_ptr<MeshLib::Mesh>> const& meshes,
+    std::string const& output_directory)
 {
     //! \ogs_file_param{prj__processes__process__type}
     config.checkConfigParameter("type", "HT");
@@ -194,6 +199,17 @@ std::unique_ptr<Process> createHTProcess(
         DBUG("Use \'%s\' as Biot's constant.", biot_constant->name.c_str());
     }
 
+    std::unique_ptr<ProcessLib::SurfaceFluxData> surfaceflux;
+    auto calculatesurfaceflux_config =
+        //! \ogs_file_param{prj__processes__process__calculatesurfaceflux}
+        config.getConfigSubtreeOptional("calculatesurfaceflux");
+    if (calculatesurfaceflux_config)
+    {
+        surfaceflux = ProcessLib::SurfaceFluxData::
+            createSurfaceFluxData(*calculatesurfaceflux_config, meshes,
+                                           output_directory);
+    }
+
     std::unique_ptr<HTMaterialProperties> material_properties =
         std::make_unique<HTMaterialProperties>(
             std::move(porous_media_properties),
@@ -223,7 +239,7 @@ std::unique_ptr<Process> createHTProcess(
         mesh, std::move(jacobian_assembler), parameters, integration_order,
         std::move(process_variables), std::move(material_properties),
         std::move(secondary_variables), std::move(named_function_caller),
-        use_monolithic_scheme);
+        use_monolithic_scheme, std::move(surfaceflux));
 }
 
 }  // namespace HT

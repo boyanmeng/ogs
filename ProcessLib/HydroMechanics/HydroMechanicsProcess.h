@@ -26,8 +26,6 @@ struct LocalAssemblerInterface;
 template <int DisplacementDim>
 class HydroMechanicsProcess final : public Process
 {
-    using Base = Process;
-
 public:
     HydroMechanicsProcess(
         MeshLib::Mesh& mesh,
@@ -86,7 +84,8 @@ private:
                                     double const dt,
                                     const int process_id) override;
 
-    void postTimestepConcreteProcess(GlobalVector const& x,
+    void postTimestepConcreteProcess(GlobalVector const& x, const double t,
+                                     const double delta_t,
                                      int const process_id) override;
 
     void postNonLinearSolverConcreteProcess(GlobalVector const& x, const double t,
@@ -130,6 +129,9 @@ private:
     {
         return _use_monolithic_scheme || process_id == 1;
     }
+
+    MeshLib::PropertyVector<double>* _nodal_forces = nullptr;
+    MeshLib::PropertyVector<double>* _hydraulic_flow = nullptr;
 };
 
 extern template class HydroMechanicsProcess<2>;

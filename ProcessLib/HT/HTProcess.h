@@ -12,6 +12,7 @@
 #include <array>
 
 #include "NumLib/Extrapolation/LocalLinearLeastSquaresExtrapolator.h"
+#include "ProcessLib/SurfaceFlux/SurfaceFluxData.h"
 #include "ProcessLib/Process.h"
 
 namespace NumLib
@@ -59,7 +60,8 @@ public:
         std::unique_ptr<HTMaterialProperties>&& material_properties,
         SecondaryVariableCollection&& secondary_variables,
         NumLib::NamedFunctionCaller&& named_function_caller,
-        bool const use_monolithic_scheme);
+        bool const use_monolithic_scheme,
+        std::unique_ptr<ProcessLib::SurfaceFluxData>&& surfaceflux);
 
     //! \name ODESystem interface
     //! @{
@@ -67,7 +69,17 @@ public:
     bool isLinear() const override { return false; }
     //! @}
 
+    Eigen::Vector3d getFlux(std::size_t element_id,
+                            MathLib::Point3d const& p,
+                            double const t,
+                            GlobalVector const& x) const override;
+
     void setCoupledTermForTheStaggeredSchemeToLocalAssemblers() override;
+
+    void postTimestepConcreteProcess(GlobalVector const& x,
+                                     const double t,
+                                     const double delta_t,
+                                     int const process_id) override;
 
 private:
     void initializeConcreteProcess(
@@ -104,6 +116,8 @@ private:
 
     /// Solutions of the previous time step
     std::array<std::unique_ptr<GlobalVector>, 2> _xs_previous_timestep;
+
+    std::unique_ptr<ProcessLib::SurfaceFluxData> _surfaceflux;
 };
 
 }  // namespace HT

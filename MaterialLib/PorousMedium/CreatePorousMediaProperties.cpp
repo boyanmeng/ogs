@@ -11,13 +11,12 @@
 
 #include "CreatePorousMediaProperties.h"
 
-#include "BaseLib/reorderVector.h"
+#include "BaseLib/Algorithm.h"
+#include "MeshLib/Mesh.h"
 
 #include "Permeability/createPermeabilityModel.h"
 #include "Porosity/createPorosityModel.h"
 #include "Storage/createStorageModel.h"
-
-#include "MeshLib/Mesh.h"
 
 namespace MaterialLib
 {
@@ -86,6 +85,28 @@ PorousMediaProperties createPorousMediaProperties(
         std::copy(mesh_material_ids->cbegin(), mesh_material_ids->cend(),
                   material_ids.begin());
     }
+    int const max_material_id =
+        *std::max_element(material_ids.cbegin(), material_ids.cend());
+
+    if (max_material_id > static_cast<int>(mat_ids.size() - 1))
+        OGS_FATAL(
+            "The maximum value of MaterialIDs in mesh is %d. As the "
+            "given number of porous media definitions in the project "
+            "file is %d, the maximum value of MaterialIDs in mesh must be %d "
+            "(index starts with zero).",
+            max_material_id, mat_ids.size(), max_material_id - 1);
+
+    if (max_material_id < static_cast<int>(mat_ids.size() - 1))
+        WARN(
+            "There are %d porous medium definitions in the project file but "
+            "only %d different values in the MaterialIDs vector/data_array in "
+            "the mesh.",
+            mat_ids.size(), max_material_id - 1);
+
+    if (mat_ids.back() != static_cast<int>(mat_ids.size()) - 1)
+        OGS_FATAL(
+            "The ids in the porous media definitions in the project file have "
+            "to be sequential, starting with the id zero.");
 
     return PorousMediaProperties{std::move(porosity_models),
                                  std::move(intrinsic_permeability_models),

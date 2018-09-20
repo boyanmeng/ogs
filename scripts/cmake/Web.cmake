@@ -43,15 +43,16 @@ endif()
 
 if(DEFINED ENV{JENKINS_URL})
     if($ENV{JOB_NAME} STREQUAL "ufz/ogs/master")
-        set(HUGO_BASE_URL "https://benchmarks.opengeosys.org")
+        set(HUGO_BASE_URL "https://docs.opengeosys.org")
     else()
         set(HUGO_BASE_URL "$ENV{JOB_URL}Web/")
     endif()
-    set(HUGO_ARGS ${HUGO_ARGS} --baseURL ${HUGO_BASE_URL} --canonifyURLs)
+    set(HUGO_ARGS ${HUGO_ARGS} --baseURL ${HUGO_BASE_URL})
 endif()
 
 add_custom_target(web
-    COMMAND ${NPM} run build:release -- ${HUGO_ARGS}
+    COMMAND node_modules/.bin/webpack -p
+    COMMAND hugo ${HUGO_ARGS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/web
     DEPENDS web-install ${IMPORT_TARGET} ${BIB_CONVERT_TARGET}
 )

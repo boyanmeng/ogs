@@ -20,10 +20,18 @@ include(${PROJECT_SOURCE_DIR}/scripts/cmake/OGSEnabledElements.cmake)
 
 # Create the library
 add_library(ApplicationsFileIO ${SOURCES})
+if(BUILD_SHARED_LIBS)
+    install(TARGETS ApplicationsFileIO LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 target_link_libraries(ApplicationsFileIO
     PUBLIC BaseLib DataHolderLib GeoLib MathLib logog
     PRIVATE MeshLib
 )
+
+if(OGS_BUILD_GUI)
+    # Needed for the XmlPrjInterface, which links the DE/Base/OGSError.h.
+    target_link_libraries(ApplicationsFileIO PUBLIC QtBase)
+endif()
 
 if(Shapelib_FOUND)
     target_link_libraries(ApplicationsFileIO PRIVATE ${Shapelib_LIBRARIES})
@@ -33,17 +41,17 @@ if(OGS_BUILD_SWMM)
     target_link_libraries(ApplicationsFileIO PRIVATE SwmmInterface)
 endif()
 
-if(TARGET Eigen)
-    add_dependencies(ApplicationsFileIO Eigen)
-endif()
-
-if(TARGET Boost)
-    add_dependencies(ApplicationsFileIO Boost)
-endif()
-
 if(OGS_USE_PCH)
     cotire(ApplicationsFileIO)
 endif()
 
-include(${PROJECT_SOURCE_DIR}/scripts/cmake/packaging/InstallXmlSchemaFiles.cmake)
-InstallXmlSchemaFiles("XmlIO/*.xsd")
+
+configure_file(XmlIO/OpenGeoSysCND.xsd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/OpenGeoSysCND.xsd COPYONLY)
+configure_file(XmlIO/OpenGeoSysNum.xsd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/OpenGeoSysNum.xsd COPYONLY)
+configure_file(XmlIO/OpenGeoSysProject.xsd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/OpenGeoSysProject.xsd COPYONLY)
+install(FILES
+    XmlIO/OpenGeoSysCND.xsd
+    XmlIO/OpenGeoSysNum.xsd
+    XmlIO/OpenGeoSysProject.xsd
+    DESTINATION bin COMPONENT ogs_cli
+)

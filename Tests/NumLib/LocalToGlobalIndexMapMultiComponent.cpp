@@ -10,15 +10,16 @@
 
 #include <memory>
 
-#include "NumLib/DOF/LocalToGlobalIndexMap.h"
+#include "GeoLib/GEOObjects.h"
+#include "GeoLib/Polyline.h"
 #include "MeshLib/Elements/Element.h"
 #include "MeshLib/Location.h"
 #include "MeshLib/Mesh.h"
-#include "MeshLib/MeshSubsets.h"
+#include "MeshLib/MeshEditing/DuplicateMeshComponents.h"
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
 #include "MeshLib/MeshSearch/NodeSearch.h"
-#include "GeoLib/Polyline.h"
-#include "GeoLib/GEOObjects.h"
+#include "MeshLib/MeshSubset.h"
+#include "NumLib/DOF/LocalToGlobalIndexMap.h"
 
 #include "MeshGeoToolsLib/MeshNodeSearcher.h"
 #include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
@@ -35,7 +36,7 @@ public:
     {
         mesh.reset(MeL::MeshGenerator::generateRegularQuadMesh(2.0, mesh_subdivs));
         mesh_items_all_nodes =
-            std::make_unique<MeL::MeshSubset>(*mesh, &mesh->getNodes());
+            std::make_unique<MeL::MeshSubset>(*mesh, mesh->getNodes());
 
         auto ply_pnts = std::make_unique<std::vector<GeoLib::Point*>>();
         ply_pnts->push_back(new GeoLib::Point(0.0, 0.0, 0.0));
@@ -60,23 +61,13 @@ public:
                 *mesh, std::move(search_length));
         MGTL::BoundaryElementsSearcher searcher_elements(*mesh, searcher_nodes);
 
-        auto elems = searcher_elements.getBoundaryElements(*ply);
+        boundary_mesh = createMeshFromElementSelection(
+            "boundary_mesh",
+            MeshLib::cloneElements(
+                searcher_elements.getBoundaryElements(*ply)));
 
-        // deep copy because the searcher destroys the elements.
-        std::transform(elems.cbegin(), elems.cend(),
-                       std::back_inserter(boundary_elements),
-                       [](MeL::Element const* e) { return e->clone(); });
-
-        std::vector<MeL::Node*> nodes = MeL::getUniqueNodes(boundary_elements);
-
-        mesh_items_boundary.reset(
-            mesh_items_all_nodes->getIntersectionByNodes(nodes));
-    }
-
-    ~NumLibLocalToGlobalIndexMapMultiDOFTest() override
-    {
-        for (auto e : boundary_elements)
-            delete e;
+        mesh_items_boundary = std::make_unique<MeshLib::MeshSubset>(
+            *boundary_mesh, boundary_mesh->getNodes());
     }
 
     void initComponents(const int num_components,
@@ -85,22 +76,21 @@ public:
     {
         assert(selected_component < static_cast<int>(num_components));
 
-        std::vector<MeshLib::MeshSubsets> components;
+        std::vector<MeshLib::MeshSubset> components;
         for (int i = 0; i < num_components; ++i)
         {
-            components.emplace_back(mesh_items_all_nodes.get());
+            components.emplace_back(*mesh_items_all_nodes);
         }
         std::vector<int> vec_var_n_components(1, num_components);
         dof_map = std::make_unique<NL::LocalToGlobalIndexMap>(
             std::move(components), vec_var_n_components, order);
 
-        MeL::MeshSubsets components_boundary{mesh_items_boundary.get()};
+        MeL::MeshSubset components_boundary{*mesh_items_boundary};
 
         dof_map_boundary.reset(dof_map->deriveBoundaryConstrainedMap(
             0,  // variable id
             {selected_component},
-            std::move(components_boundary),
-            boundary_elements));
+            std::move(components_boundary)));
     }
 
     // Multi-component version.
@@ -110,22 +100,21 @@ public:
     {
         assert(static_cast<int>(selected_components.size()) <= num_components);
 
-        std::vector<MeshLib::MeshSubsets> components;
+        std::vector<MeshLib::MeshSubset> components;
         for (int i = 0; i < num_components; ++i)
         {
-            components.emplace_back(mesh_items_all_nodes.get());
+            components.emplace_back(*mesh_items_all_nodes);
         }
         std::vector<int> vec_var_n_components(1, num_components);
         dof_map = std::make_unique<NL::LocalToGlobalIndexMap>(
             std::move(components), vec_var_n_components, order);
 
-        MeL::MeshSubsets components_boundary{mesh_items_boundary.get()};
+        MeL::MeshSubset components_boundary{*mesh_items_boundary};
 
         dof_map_boundary.reset(dof_map->deriveBoundaryConstrainedMap(
             0,  // variable id
             selected_components,
-            std::move(components_boundary),
-            boundary_elements));
+            std::move(components_boundary)));
     }
 
     template <NL::ComponentOrder order>
@@ -141,15 +130,18 @@ public:
                   compute_global_index);
 
     std::unique_ptr<const MeshLib::Mesh> mesh;
-    std::unique_ptr<const MeL::MeshSubset> mesh_items_all_nodes;
+    std::unique_ptr<MeL::MeshSubset const> mesh_items_all_nodes;
 
     GeoLib::GEOObjects geo_objs;
 
     std::unique_ptr<NL::LocalToGlobalIndexMap> dof_map;
     std::unique_ptr<NL::LocalToGlobalIndexMap> dof_map_boundary;
 
+    std::unique_ptr<const MeshLib::Mesh> boundary_mesh;
     std::unique_ptr<MeL::MeshSubset const> mesh_items_boundary;
-    std::vector<MeL::Element*> boundary_elements;
+
+    /// Intersection of boundary nodes and bulk mesh subset.
+    std::vector<MeshLib::Node*> nodes_subset;
 };
 
 
@@ -188,7 +180,7 @@ void NumLibLocalToGlobalIndexMapMultiDOFTest::test(
     ASSERT_EQ(dof_map->size(), mesh->getNumberOfElements());
 
     ASSERT_EQ(dof_map_boundary->getNumberOfComponents(), 1);
-    ASSERT_EQ(dof_map_boundary->size(), boundary_elements.size());
+    ASSERT_EQ(dof_map_boundary->size(), boundary_mesh->getNumberOfElements());
 
     // check mesh elements
     for (unsigned e=0; e<dof_map->size(); ++e)
@@ -250,7 +242,7 @@ void NumLibLocalToGlobalIndexMapMultiDOFTest::test(
 
     ASSERT_EQ(dof_map_boundary->getNumberOfComponents(),
               selected_components.size());
-    ASSERT_EQ(dof_map_boundary->size(), boundary_elements.size());
+    ASSERT_EQ(dof_map_boundary->size(), boundary_mesh->getNumberOfElements());
 
     // check mesh elements
     for (unsigned e = 0; e < dof_map->size(); ++e)

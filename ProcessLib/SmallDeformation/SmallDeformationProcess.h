@@ -17,11 +17,44 @@ namespace ProcessLib
 {
 namespace SmallDeformation
 {
+struct SigmaIntegrationPointWriter final : public IntegrationPointWriter
+{
+    explicit SigmaIntegrationPointWriter(
+        int const n_components,
+        int const integration_order,
+        std::function<std::vector<std::vector<double>>()>
+            callback)
+        : _n_components(n_components),
+          _integration_order(integration_order),
+          _callback(callback)
+    {
+    }
+
+    int numberOfComponents() const override { return _n_components; }
+    int integrationOrder() const override { return _integration_order; }
+
+    std::string name() const override
+    {
+        // TODO (naumov) remove ip suffix. Probably needs modification of the
+        // mesh properties, s.t. there is no "overlapping" with cell/point data.
+        // See getOrCreateMeshProperty.
+        return "sigma_ip";
+    }
+
+    std::vector<std::vector<double>> values() const override
+    {
+        return _callback();
+    }
+
+private:
+    int const _n_components;
+    int const _integration_order;
+    std::function<std::vector<std::vector<double>>()> _callback;
+};
+
 template <int DisplacementDim>
 class SmallDeformationProcess final : public Process
 {
-    using Base = Process;
-
 public:
     SmallDeformationProcess(
         MeshLib::Mesh& mesh,
@@ -62,7 +95,8 @@ private:
         GlobalVector const& x, double const t, double const dt,
         const int process_id) override;
 
-    void postTimestepConcreteProcess(GlobalVector const& x,
+    void postTimestepConcreteProcess(GlobalVector const& x, const double t,
+                                     const double delta_t,
                                      int const process_id) override;
 
 private:
@@ -73,7 +107,7 @@ private:
     std::unique_ptr<NumLib::LocalToGlobalIndexMap>
         _local_to_global_index_map_single_component;
     MeshLib::PropertyVector<double>* _nodal_forces = nullptr;
-    std::unique_ptr<GlobalVector> _material_forces;
+    MeshLib::PropertyVector<double>* _material_forces = nullptr;
 };
 
 extern template class SmallDeformationProcess<2>;

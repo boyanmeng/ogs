@@ -14,25 +14,26 @@ namespace ProcessLib
 void BoundaryConditionCollection::applyNaturalBC(const double t,
                                                  GlobalVector const& x,
                                                  GlobalMatrix& K,
-                                                 GlobalVector& b)
+                                                 GlobalVector& b,
+                                                 GlobalMatrix* Jac)
 {
     for (auto const& bc : _boundary_conditions)
-        bc->applyNaturalBC(t, x, K, b);
+        bc->applyNaturalBC(t, x, K, b, Jac);
 }
 
 void BoundaryConditionCollection::addBCsForProcessVariables(
     std::vector<std::reference_wrapper<ProcessVariable>> const&
         process_variables,
     NumLib::LocalToGlobalIndexMap const& dof_table,
-    unsigned const integration_order)
+    unsigned const integration_order, Process const& process)
 {
     for (int variable_id = 0;
          variable_id < static_cast<int>(process_variables.size());
          ++variable_id)
     {
         ProcessVariable& pv = process_variables[variable_id];
-        auto bcs = pv.createBoundaryConditions(dof_table, variable_id,
-                                               integration_order, _parameters);
+        auto bcs = pv.createBoundaryConditions(
+            dof_table, variable_id, integration_order, _parameters, process);
 
         std::move(bcs.begin(), bcs.end(),
                   std::back_inserter(_boundary_conditions));
@@ -43,4 +44,4 @@ void BoundaryConditionCollection::addBCsForProcessVariables(
     // object if needed.
     _dirichlet_bcs.resize(_boundary_conditions.size());
 }
-}
+}  // namespace ProcessLib

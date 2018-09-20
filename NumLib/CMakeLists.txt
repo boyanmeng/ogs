@@ -16,6 +16,9 @@ APPEND_SOURCE_FILES(SOURCES Extrapolation)
 
 # Create the library
 add_library(NumLib ${SOURCES})
+if(BUILD_SHARED_LIBS)
+    install(TARGETS NumLib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 include(GenerateExportHeader)
 generate_export_header(NumLib)
 target_include_directories(NumLib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
@@ -26,13 +29,6 @@ target_link_libraries(NumLib
     PUBLIC BaseLib GeoLib MathLib MeshLib logog
     PRIVATE MeshGeoToolsLib
 )
-
-if(TARGET Eigen)
-    add_dependencies(NumLib Eigen)
-endif()
-if(TARGET Boost)
-    add_dependencies(NumLib Boost)
-endif()
 
 if(OGS_USE_PCH)
     cotire(NumLib)

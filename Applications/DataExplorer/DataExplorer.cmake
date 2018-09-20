@@ -57,14 +57,22 @@ target_link_libraries(DataExplorer
     QtDiagramView
     VtkVis
     Threads::Threads
-    vtkGUISupportQt
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
     Qt5::Xml
     Qt5::Network
     logog
+    ${VTK_LIBRARIES}
 )
+
+if(NOT APPLE AND OGS_USE_CONAN)
+    # HACK for unresolved external
+    target_link_libraries(DataExplorer vtkGUISupportQt-8.1)
+    if(UNIX)
+        target_link_libraries(DataExplorer Qt5::X11Extras)
+    endif()
+endif()
 
 # Workaround for Windows conan tiff-package
 if(OGS_USE_CONAN AND WIN32)
@@ -78,10 +86,6 @@ if(CMAKE_CROSSCOMPILING)
         ${QT_GUI_DEPS_LIBRARIES}
         ${QT_NETWORK_DEPS_LIBRARIES}
     )
-endif()
-
-if(VTK_NETCDF_FOUND)
-    target_link_libraries(DataExplorer vtkNetCDF vtkNetCDF_cxx )
 endif()
 
 if(GEOTIFF_FOUND)
@@ -117,7 +121,3 @@ cpack_add_component(ogs_gui
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} "DataExplorer" "OGS Data Explorer" PARENT_SCOPE)
 set(CPACK_NSIS_MENU_LINKS ${CPACK_NSIS_MENU_LINKS} "bin/DataExplorer.exe" "Data Explorer" PARENT_SCOPE)
 
-if(NOT APPLE AND OGS_PACKAGE_DEPENDENCIES)
-    include(packaging/InstallDependencies)
-    InstallDependencies(DataExplorer)
-endif()

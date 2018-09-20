@@ -3,7 +3,7 @@
 #####################
 
 # Specify minimum CMake version
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.2)
 
 # Set CMake policies
 cmake_policy(SET CMP0011 NEW)
@@ -22,10 +22,8 @@ endif()
 # Project name
 project( OGS-6 )
 
-list(APPEND CMAKE_PREFIX_PATH
-    $ENV{HOMEBREW_ROOT}             # Homebrew package manager on Mac OS
-    $ENV{CMAKE_LIBRARY_SEARCH_PATH} # Environment variable, Windows
-    ${CMAKE_LIBRARY_SEARCH_PATH})   # CMake option, Windows
+include(scripts/cmake/CMakeSetup.cmake)
+include(ParseCMakeArgs)
 
 ###########################
 ### Preliminary Options ###
@@ -38,7 +36,10 @@ set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, \
 option(OGS_ENABLE_AVX2 "Enable the use of AVX2 instructions" OFF)
 option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
 option(OGS_USE_PCH "Should pre-compiled headers be used?" ON)
-option(OGS_USE_CONAN "Should Conan package manager be used?" OFF)
+if(DEFINED CMAKE_CXX_CLANG_TIDY)
+    set(OGS_USE_PCH OFF CACHE INTERNAL "")
+endif()
+option(OGS_USE_CONAN "Should Conan package manager be used?" ON)
 set(OGS_CONAN_BUILD "missing" CACHE STRING "Possible values: all, missing, \
     never or list of libs to build" )
 if(OGS_USE_PETSC)
@@ -46,22 +47,21 @@ if(OGS_USE_PETSC)
 endif()
 
 ### CMake includes ###
-include(scripts/cmake/PreFind.cmake)
-include(scripts/cmake/CheckTypeSizes.cmake)
-include(scripts/cmake/Functions.cmake)
-include(scripts/cmake/SubmoduleSetup.cmake)
-include(scripts/cmake/CMakeSetup.cmake)
-include(scripts/cmake/ConanSetup.cmake)
-include(scripts/cmake/CompilerSetup.cmake)
-include(scripts/cmake/Find.cmake)
-include(scripts/cmake/CCacheSetup.cmake)
-include(scripts/cmake/ProjectSetup.cmake)
-include(scripts/cmake/DocumentationSetup.cmake)
-include(scripts/cmake/test/Test.cmake)
+include(PreFind)
+include(CheckTypeSizes)
+include(Functions)
+include(SubmoduleSetup)
+include(ConanSetup)
+include(CompilerSetup)
+include(Find)
+include(CCacheSetup)
+include(ProjectSetup)
+include(DocumentationSetup)
+include(test/Test)
 if(OGS_COVERAGE AND NOT IS_SUBPROJECT)
-    include(scripts/cmake/Coverage.cmake)
+    include(Coverage)
 endif()
-include(scripts/cmake/Web.cmake)
+include(Web)
 
 ####################
 ### More Options ###
@@ -82,14 +82,40 @@ if(OGS_BUILD_GUI)
 endif()
 option(OGS_BUILD_UTILS "Should the utilities programms be built?" OFF)
 
+
+# A list of processes to be build. Also used in the ProcessLib to select
+# processes to be build.
+set(ProcessesList
+    ComponentTransport
+    GroundwaterFlow
+    HT
+    HeatConduction
+    HydroMechanics
+    LiquidFlow
+    LIE
+    PhaseField
+    RichardsComponentTransport
+    RichardsFlow
+    RichardsMechanics
+    SmallDeformation
+    TES
+    ThermalTwoPhaseFlowWithPP
+    ThermoMechanicalPhaseField
+    ThermoMechanics
+    TwoPhaseFlowWithPP
+    TwoPhaseFlowWithPrho)
+
+# Add a cmake option for each process.
+foreach(process ${ProcessesList})
+    option(OGS_BUILD_PROCESS_${process} "Build the ${process} process." ON)
+endforeach()
+
 if(WIN32)
     option(OGS_BUILD_SWMM "Should the SWMM interface be built?" OFF)
 endif()
 if(NOT WIN32 AND OGS_BUILD_SWMM)
     message(FATAL_ERROR "OGS_BUILD_SWMM requires Windows!")
 endif()
-
-option(OGS_BUILD_METIS "Should metis and the partmesh util be built?" OFF)
 
 option(OGS_NO_EXTERNAL_LIBS "Builds OGS without any external dependencies." OFF)
 
@@ -163,7 +189,6 @@ option(OGS_SYNC_SUBMODULES "Sync git submodules on CMake run. Overwrites custom 
 
 # Packaging
 option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should additional content such as manuals be downloaded and packaged?" OFF)
-option(OGS_PACKAGE_DEPENDENCIES "Packages shared libraries when enabled." OFF)
 include(scripts/cmake/packaging/Pack.cmake)
 
 # Third-party libraries, names come from Conan package names
@@ -182,6 +207,8 @@ option(OGS_ENABLE_ELEMENT_PRISM   "Build FEM elements for prisms." ON)
 option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
 
 option(OGS_CHECK_HEADER_COMPILATION "Check header for standalone compilation." OFF)
+
+option(OGS_USE_PYTHON "Interface with Python" OFF)
 
 ###################
 ### Definitions ###
@@ -232,7 +259,6 @@ if(OGS_USE_EIGEN)
         add_definitions(-DEIGEN_INITIALIZE_MATRICES_BY_NAN)
     endif()
 endif()
-
 if(MSVC AND OGS_32_BIT)
     add_definitions(-DEIGEN_MAX_ALIGN_BYTES=0 -DEIGEN_DONT_ALIGN)
 endif()
@@ -263,16 +289,12 @@ include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gtest/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/autocheck/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tclap/include )
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vtkGUISupportQt)
+include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/json/include )
 
 include(scripts/cmake/CheckHeaderCompilation.cmake)
 
 add_subdirectory( Applications )
 add_subdirectory( BaseLib )
-# TODO This is a hack but we have to make sure that Boost is built first
-if(TARGET Boost)
-    add_dependencies(BaseLib Boost)
-endif()
 add_subdirectory( GeoLib )
 add_subdirectory( MathLib )
 add_subdirectory( MeshLib )

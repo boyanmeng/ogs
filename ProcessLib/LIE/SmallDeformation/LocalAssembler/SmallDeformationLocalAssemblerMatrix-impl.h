@@ -16,6 +16,7 @@
 
 #include <Eigen/Eigen>
 
+#include "MaterialLib/PhysicalConstant.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
@@ -73,17 +74,17 @@ SmallDeformationLocalAssemblerMatrix<ShapeFunction, IntegrationMethod,
             sm.integralMeasure * sm.detJ;
 
         // Initialize current time step values
-        ip_data._sigma.setZero(KelvinVectorDimensions<DisplacementDim>::value);
-        ip_data._eps.setZero(KelvinVectorDimensions<DisplacementDim>::value);
+        static const int kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        ip_data._sigma.setZero(kelvin_vector_size);
+        ip_data._eps.setZero(kelvin_vector_size);
 
         // Previous time step values are not initialized and are set later.
-        ip_data._sigma_prev.resize(
-            KelvinVectorDimensions<DisplacementDim>::value);
-        ip_data._eps_prev.resize(
-            KelvinVectorDimensions<DisplacementDim>::value);
+        ip_data._sigma_prev.resize(kelvin_vector_size);
+        ip_data._eps_prev.resize(kelvin_vector_size);
 
-        ip_data._C.resize(KelvinVectorDimensions<DisplacementDim>::value,
-                          KelvinVectorDimensions<DisplacementDim>::value);
+        ip_data._C.resize(kelvin_vector_size, kelvin_vector_size);
 
         _secondary_data.N[ip] = sm.N;
     }
@@ -145,14 +146,15 @@ void SmallDeformationLocalAssemblerMatrix<ShapeFunction, IntegrationMethod,
                     local_x.data(), ShapeFunction::NPOINTS * DisplacementDim);
 
         auto&& solution = _ip_data[ip]._solid_material.integrateStress(
-            t, x_position, _process_data.dt, eps_prev, eps, sigma_prev, *state);
+            t, x_position, _process_data.dt, eps_prev, eps, sigma_prev, *state,
+            _process_data._reference_temperature);
 
         if (!solution)
         {
             OGS_FATAL("Computation of local constitutive relation failed.");
         }
 
-        KelvinMatrixType<DisplacementDim> C;
+        MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
         std::tie(sigma, state, C) = std::move(*solution);
 
         local_b.noalias() -= B.transpose() * sigma * w;
@@ -164,7 +166,8 @@ template <typename ShapeFunction, typename IntegrationMethod,
           int DisplacementDim>
 void SmallDeformationLocalAssemblerMatrix<ShapeFunction, IntegrationMethod,
                                           DisplacementDim>::
-    postTimestepConcrete(std::vector<double> const& /*local_x*/)
+    computeSecondaryVariableConcreteWithVector(
+        double const /*t*/, Eigen::VectorXd const& /*local_x*/)
 {
     // Compute average value per element
     const int n = DisplacementDim == 2 ? 4 : 6;

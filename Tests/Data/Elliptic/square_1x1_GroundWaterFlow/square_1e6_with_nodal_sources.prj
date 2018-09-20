@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <OpenGeoSysProject>
     <mesh>square_1x1_quad_1e6.vtu</mesh>
-    <geometry>square_1x1.gml</geometry>
+    <geometry>square_1x1_midpoint.gml</geometry>
     <processes>
         <process>
             <name>GW23</name>
@@ -41,7 +41,7 @@
         </processes>
         <output>
             <type>VTK</type>
-            <prefix>square_1e6</prefix>
+            <prefix>square_1e6_with_nodal_sources</prefix>
         </output>
     </time_loop>
     <parameters>
@@ -64,6 +64,11 @@
             <name>p_Dirichlet_right</name>
             <type>Constant</type>
             <value>0</value>
+        </parameter>
+        <parameter>
+            <name>pressure_source_term</name>
+            <type>Constant</type>
+            <value>1</value>
         </parameter>
     </parameters>
     <process_variables>
@@ -91,7 +96,7 @@
                     <geometrical_set>square_1x1_geometry</geometrical_set>
                     <geometry>middle_point</geometry>
                     <type>Nodal</type>
-                    <value>1</value>
+                    <parameter>pressure_source_term</parameter>
                 </source_term>
             </source_terms>
         </process_variable>

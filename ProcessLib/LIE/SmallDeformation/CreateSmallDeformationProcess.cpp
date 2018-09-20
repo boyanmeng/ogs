@@ -11,9 +11,10 @@
 
 #include <cassert>
 
+#include "MaterialLib/FractureModels/CreateCohesiveZoneModeI.h"
 #include "MaterialLib/FractureModels/CreateLinearElasticIsotropic.h"
 #include "MaterialLib/FractureModels/CreateMohrCoulomb.h"
-#include "MaterialLib/SolidModels/CreateLinearElasticIsotropic.h"
+#include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
 
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"  // required for findParameter
@@ -98,29 +99,9 @@ std::unique_ptr<Process> createSmallDeformationProcess(
     process_variables.push_back(std::move(per_process_variables));
 
     // Constitutive relation.
-    // read type;
-    auto const constitutive_relation_config =
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__constitutive_relation}
-        config.getConfigSubtree("constitutive_relation");
-
-    auto const type =
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__constitutive_relation__type}
-        constitutive_relation_config.peekConfigParameter<std::string>("type");
-
-    std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>
-        material = nullptr;
-    if (type == "LinearElasticIsotropic")
-    {
-        material =
-            MaterialLib::Solids::createLinearElasticIsotropic<DisplacementDim>(
-                parameters, constitutive_relation_config);
-    }
-    else
-    {
-        OGS_FATAL(
-            "Cannot construct constitutive relation of given type \'%s\'.",
-            type.c_str());
-    }
+    auto material =
+        MaterialLib::Solids::createConstitutiveRelation<DisplacementDim>(
+            parameters, config);
 
     // Fracture constitutive relation.
     // read type;
@@ -144,6 +125,12 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         fracture_model =
             MaterialLib::Fracture::createMohrCoulomb<DisplacementDim>(
                 parameters, fracture_model_config);
+    }
+    else if (frac_type == "CohesiveZoneModeI")
+    {
+        fracture_model =
+            MaterialLib::Fracture::CohesiveZoneModeI::createCohesiveZoneModeI<
+                DisplacementDim>(parameters, fracture_model_config);
     }
     else
     {
@@ -180,9 +167,15 @@ std::unique_ptr<Process> createSmallDeformationProcess(
             "are not consistent");
     }
 
+    // Reference temperature
+    const auto& reference_temperature =
+        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__reference_temperature}
+        config.getConfigParameter<double>(
+            "reference_temperature", std::numeric_limits<double>::quiet_NaN());
+
     SmallDeformationProcessData<DisplacementDim> process_data(
         std::move(material), std::move(fracture_model),
-        std::move(vec_fracture_property));
+        std::move(vec_fracture_property), reference_temperature);
 
     SecondaryVariableCollection secondary_variables;
 

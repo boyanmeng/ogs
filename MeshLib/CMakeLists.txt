@@ -22,6 +22,9 @@ endif()
 
 # Create the library
 add_library(MeshLib ${SOURCES})
+if(BUILD_SHARED_LIBS)
+    install(TARGETS MeshLib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 if(OGS_USE_PCH)
     cotire(MeshLib)
 endif()
@@ -34,12 +37,4 @@ if(OGS_USE_MPI)
     target_link_libraries(MeshLib
         PUBLIC vtkIOParallelXML vtkParallelMPI
     )
-endif()
-
-if(TARGET Eigen)
-    add_dependencies(MeshLib Eigen)
-endif()
-
-if(TARGET Boost)
-    add_dependencies(MeshLib Boost)
 endif()

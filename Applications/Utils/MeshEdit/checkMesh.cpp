@@ -33,7 +33,14 @@ int main(int argc, char *argv[])
 {
     ApplicationsLib::LogogSetup logog_setup;
 
-    TCLAP::CmdLine cmd("Checks mesh properties", ' ', BaseLib::BuildInfo::git_describe);
+    TCLAP::CmdLine cmd(
+        "Checks mesh properties.\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
     TCLAP::UnlabeledValueArg<std::string> mesh_arg("mesh-file","input mesh file",true,"","string");
     cmd.add( mesh_arg );
     TCLAP::SwitchArg valid_arg("v","validation","validate the mesh");
@@ -112,18 +119,20 @@ int main(int argc, char *argv[])
         auto vec_bounds (MeshLib::MeshInformation::getValueBounds<int>(*mesh, vec_name));
         if (vec_bounds.second != std::numeric_limits<int>::max())
         {
-            INFO("\t%s: [%d, %d]", vec_name.c_str(), vec_bounds.first, vec_bounds.second)
+            INFO("\t%s: [%d, %d]", vec_name.c_str(), vec_bounds.first,
+                 vec_bounds.second);
         }
         else
         {
             auto vec_bounds (MeshLib::MeshInformation::getValueBounds<double>(*mesh, vec_name));
             if (vec_bounds.second != std::numeric_limits<double>::max())
             {
-                INFO("\t%s: [%g, %g]", vec_name.c_str(), vec_bounds.first, vec_bounds.second)
+                INFO("\t%s: [%g, %g]", vec_name.c_str(), vec_bounds.first,
+                     vec_bounds.second);
             }
             else
             {
-                INFO("\t%s: Unknown properties", vec_name.c_str())
+                INFO("\t%s: Unknown properties", vec_name.c_str());
             }
         }
     }

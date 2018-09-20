@@ -9,14 +9,14 @@
  *  Created on March 31, 2017, 4:13 PM
  */
 
-#include <algorithm>
+#include "EvolutionaryPIDcontroller.h"
+
 #include <functional>
 #include <limits>
 #include <vector>
-
-#include "EvolutionaryPIDcontroller.h"
-
 #include <logog/include/logog.hpp>
+
+#include "BaseLib/Algorithm.h"
 
 namespace NumLib
 {
@@ -142,18 +142,28 @@ double EvolutionaryPIDcontroller::limitStepSize(
 
 double EvolutionaryPIDcontroller::checkSpecificTimeReached(const double h_new)
 {
-    if (_specific_times.empty())
+    if (_fixed_output_times.empty())
         return h_new;
 
-    const double specific_time = _specific_times.back();
-    const double zero_threshold = std::numeric_limits<double>::epsilon();
+    const double specific_time = _fixed_output_times.back();
     if ((specific_time > _ts_current.current()) &&
-        (_ts_current.current() + h_new - specific_time > zero_threshold))
+        (_ts_current.current() + h_new - specific_time > 0.0))
     {
-        _specific_times.pop_back();
+        _fixed_output_times.pop_back();
         return specific_time - _ts_current.current();
     }
 
     return h_new;
+}
+
+void EvolutionaryPIDcontroller::addFixedOutputTimes(
+    std::vector<double> const& extra_fixed_output_times)
+{
+    _fixed_output_times.insert(_fixed_output_times.end(),
+                               extra_fixed_output_times.begin(),
+                               extra_fixed_output_times.end());
+
+    // Remove possible duplicated elements and sort in descending order.
+    BaseLib::makeVectorUnique(_fixed_output_times, std::greater<double>());
 }
 }  // end of namespace NumLib

@@ -14,12 +14,9 @@
 
 #include "numlib_export.h"
 
-#include "ComponentGlobalIndexDict.h"
+#include "MeshLib/MeshSubset.h"
 
-namespace MeshLib
-{
-    class MeshSubsets;
-}
+#include "ComponentGlobalIndexDict.h"
 
 namespace NumLib
 {
@@ -40,19 +37,25 @@ public:
 public:
     /// \param components   a vector of components
     /// \param order        type of ordering values in a vector
-    MeshComponentMap(std::vector<MeshLib::MeshSubsets> const& components,
+    MeshComponentMap(std::vector<MeshLib::MeshSubset> const& components,
                      ComponentOrder order);
 
     /// Creates a multi-component subset of the current mesh component map.
     /// The order (BY_LOCATION/BY_COMPONENT) of components is the same as of the
     /// current map.
     ///
-    /// \note For each component the given MeshSubsets object will be used.
+    /// \attention For each component the same new_mesh_subset will be used.
     ///
-    /// \param component_ids  The vector of global components id.
-    /// \param components components that should remain in the created subset
-    MeshComponentMap getSubset(std::vector<int> const& component_ids,
-                               MeshLib::MeshSubsets const& components) const;
+    /// \param bulk_mesh_subsets components that should remain in the created
+    /// subset, one for each global component.
+    /// \param new_mesh_subset The constraining mesh subset with a mapping of
+    /// node ids to the bulk mesh nodes.
+    /// \param new_global_component_ids The components for which the
+    /// bulk_mesh_subsets should be intersected with the new_mesh_subset.
+    MeshComponentMap getSubset(
+        std::vector<MeshLib::MeshSubset> const& bulk_mesh_subsets,
+        MeshLib::MeshSubset const& new_mesh_subset,
+        std::vector<int> const& new_global_component_ids) const;
 
     /// The number of dofs including the those located in the ghost nodes.
     std::size_t dofSizeWithGhosts() const
@@ -67,14 +70,14 @@ public:
     /// | l        | comp_id_1   |
     /// | l        |  ...        |
     /// | l        | comp_id_n   |
-    std::vector<std::size_t> getComponentIDs(const Location &l) const;
+    std::vector<int> getComponentIDs(const Location& l) const;
 
     /// Global index of the given component id at given location \c l.
     ///
     /// | Location | ComponentID | GlobalIndex |
     /// | -------- | ----------- | ----------- |
     /// | l        | comp_id     | gi          |
-    GlobalIndexType getGlobalIndex(Location const &l, std::size_t const comp_id) const;
+    GlobalIndexType getGlobalIndex(Location const& l, int const comp_id) const;
 
     /// Global indices for all components at the given location \c l.
     ///
@@ -137,7 +140,7 @@ public:
     /// When domain decomposition is not used, it is equal to getGlobalIndex().
     /// The range is needed to compute the offset for non-ghost locations and
     /// also to map ghost locations.
-    GlobalIndexType getLocalIndex(Location const& l, std::size_t const comp_id,
+    GlobalIndexType getLocalIndex(Location const& l, int const comp_id,
                                   std::size_t const range_begin,
                                   std::size_t const range_end) const;
 
@@ -170,7 +173,7 @@ private:
     /// \attention The line for the location l and component id must exist,
     /// the behaviour is undefined otherwise.
     /// \return a copy of the line.
-    detail::Line getLine(Location const& l, std::size_t const component_id) const;
+    detail::Line getLine(Location const& l, int const component_id) const;
 
     void renumberByLocation(GlobalIndexType offset=0);
 

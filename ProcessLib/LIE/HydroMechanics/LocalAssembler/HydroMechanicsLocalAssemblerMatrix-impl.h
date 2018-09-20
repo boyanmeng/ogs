@@ -11,7 +11,8 @@
 
 #include "HydroMechanicsLocalAssemblerMatrix.h"
 
-#include "MaterialLib/SolidModels/KelvinVector.h"
+#include "MathLib/KelvinVector.h"
+#include "MaterialLib/PhysicalConstant.h"
 #include "MeshLib/ElementStatus.h"
 #include "NumLib/Fem/CoordinatesMapping/NaturalNodeCoordinates.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
@@ -222,10 +223,6 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
         auto q = ip_data.darcy_velocity.head(GlobalDim);
 
-        double const S = _process_data.specific_storage(t, x_position)[0];
-        double const k_over_mu =
-            _process_data.intrinsic_permeability(t, x_position)[0] /
-            _process_data.fluid_viscosity(t, x_position)[0];
         auto const alpha = _process_data.biot_coefficient(t, x_position)[0];
         auto const rho_sr = _process_data.solid_density(t, x_position)[0];
         auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
@@ -233,21 +230,19 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
         double const rho = rho_sr * (1 - porosity) + porosity * rho_fr;
         auto const& identity2 =
-            MaterialLib::SolidModels::Invariants<kelvin_vector_size>::identity2;
+            MathLib::KelvinVector::Invariants<kelvin_vector_size>::identity2;
 
         eps.noalias() = B * u;
 
         auto&& solution = _ip_data[ip].solid_material.integrateStress(
             t, x_position, _process_data.dt, eps_prev, eps, sigma_eff_prev,
-            *state);
+            *state, _process_data.reference_temperature);
 
         if (!solution)
             OGS_FATAL("Computation of local constitutive relation failed.");
 
-        KelvinMatrixType<GlobalDim> C;
+        MathLib::KelvinVector::KelvinMatrixType<GlobalDim> C;
         std::tie(sigma_eff, state, C) = std::move(*solution);
-
-        q.noalias() = -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
 
         J_uu.noalias() += B.transpose() * C * B * ip_w;
 
@@ -262,12 +257,23 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         //
         // pressure equation, pressure part.
         //
-        laplace_p.noalias() += dNdx_p.transpose() * k_over_mu * dNdx_p * ip_w;
+        if (!_process_data.deactivate_matrix_in_flow)  // Only for hydraulically
+                                                       // active matrix
+        {
+            double const k_over_mu =
+                _process_data.intrinsic_permeability(t, x_position)[0] /
+                _process_data.fluid_viscosity(t, x_position)[0];
+            double const S = _process_data.specific_storage(t, x_position)[0];
 
-        storage_p.noalias() += N_p.transpose() * S * N_p * ip_w;
+            q.noalias() = -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
 
-        rhs_p.noalias() +=
-            dNdx_p.transpose() * rho_fr * k_over_mu * gravity_vec * ip_w;
+            laplace_p.noalias() +=
+                dNdx_p.transpose() * k_over_mu * dNdx_p * ip_w;
+            storage_p.noalias() += N_p.transpose() * S * N_p * ip_w;
+
+            rhs_p.noalias() +=
+                dNdx_p.transpose() * rho_fr * k_over_mu * gravity_vec * ip_w;
+        }
     }
 
     // displacement equation, pressure part
@@ -314,8 +320,6 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& u)
 {
-    auto const& gravity_vec = _process_data.specific_body_force;
-
     SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
@@ -326,19 +330,12 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
         auto& ip_data = _ip_data[ip];
 
-        auto const& dNdx_p = ip_data.dNdx_p;
         auto const& eps_prev = ip_data.eps_prev;
         auto const& sigma_eff_prev = ip_data.sigma_eff_prev;
 
         auto& eps = ip_data.eps;
         auto& sigma_eff = ip_data.sigma_eff;
         auto& state = ip_data.material_state_variables;
-        double const k_over_mu =
-            _process_data.intrinsic_permeability(t, x_position)[0] /
-            _process_data.fluid_viscosity(t, x_position)[0];
-        auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
-
-        auto q = ip_data.darcy_velocity.head(GlobalDim);
 
         auto const& N_u = ip_data.N_u;
         auto const& dNdx_u = ip_data.dNdx_u;
@@ -357,15 +354,27 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
         auto&& solution = _ip_data[ip].solid_material.integrateStress(
             t, x_position, _process_data.dt, eps_prev, eps, sigma_eff_prev,
-            *state);
+            *state, _process_data.reference_temperature);
 
         if (!solution)
             OGS_FATAL("Computation of local constitutive relation failed.");
 
-        KelvinMatrixType<GlobalDim> C;
+        MathLib::KelvinVector::KelvinMatrixType<GlobalDim> C;
         std::tie(sigma_eff, state, C) = std::move(*solution);
 
-        q.noalias() = -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
+        if (!_process_data.deactivate_matrix_in_flow)  // Only for hydraulically
+                                                       // active matrix
+        {
+            double const k_over_mu =
+                _process_data.intrinsic_permeability(t, x_position)[0] /
+                _process_data.fluid_viscosity(t, x_position)[0];
+            auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
+            auto const& gravity_vec = _process_data.specific_body_force;
+            auto const& dNdx_p = ip_data.dNdx_p;
+
+            ip_data.darcy_velocity.head(GlobalDim).noalias() =
+                -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
+        }
     }
 
     int n = GlobalDim == 2 ? 4 : 6;

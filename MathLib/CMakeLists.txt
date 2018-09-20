@@ -6,7 +6,9 @@ APPEND_SOURCE_FILES(SOURCES InterpolationAlgorithms)
 APPEND_SOURCE_FILES(SOURCES Integration)
 APPEND_SOURCE_FILES(SOURCES LinAlg)
 APPEND_SOURCE_FILES(SOURCES LinAlg/Dense)
-APPEND_SOURCE_FILES(SOURCES ODE)
+if(CVODE_FOUND)
+    APPEND_SOURCE_FILES(SOURCES ODE)
+endif()
 APPEND_SOURCE_FILES(SOURCES Nonlinear)
 
 if(OGS_USE_EIGEN)
@@ -24,6 +26,9 @@ endif()
 
 # Create the library
 add_library(MathLib ${SOURCES})
+if(BUILD_SHARED_LIBS)
+    install(TARGETS MathLib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(MathLib)
@@ -31,7 +36,7 @@ target_include_directories(MathLib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 set_target_properties(MathLib PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(MathLib PUBLIC BaseLib logog)
+target_link_libraries(MathLib PUBLIC BaseLib logog ${OpenMP_CXX_LIBRARIES})
 
 if (CVODE_FOUND)
     target_link_libraries(MathLib PUBLIC ${CVODE_LIBRARIES})
@@ -50,14 +55,8 @@ if (OGS_USE_MKL)
 endif()
 
 if (OGS_USE_PETSC)
+    target_include_directories(MathLib PUBLIC ${PETSC_INCLUDE_DIRS})
     target_link_libraries(MathLib PUBLIC ${PETSC_LIBRARIES})
-endif()
-
-if(TARGET Boost)
-    add_dependencies(MathLib Boost)
-endif()
-if(TARGET Eigen)
-    add_dependencies(MathLib Eigen)
 endif()
 
 if(OGS_USE_PCH)

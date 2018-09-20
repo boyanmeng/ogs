@@ -63,20 +63,22 @@ public:
      */
     std::vector<MeshLib::Element*> const& getBoundaryElementsAtPoint(
         GeoLib::Point const& point);
+
     /**
      * generate boundary elements on the given polyline.
      * @param ply the GeoLib::Polyline the nearest mesh nodes are searched for
      * @return a vector of boundary element objects
      */
-    std::vector<MeshLib::Element*> const& getBoundaryElementsAlongPolyline(GeoLib::Polyline const& ply);
+    std::vector<MeshLib::Element*> const& getBoundaryElementsAlongPolyline(
+        GeoLib::Polyline const& ply);
 
     /**
      * generate boundary elements on the given surface.
      * @param sfc the GeoLib::Surface the nearest mesh nodes are searched for
      * @return a vector of boundary element objects
      */
-    std::vector<MeshLib::Element*> const& getBoundaryElementsOnSurface(GeoLib::Surface const& sfc);
-
+    std::vector<MeshLib::Element*> const& getBoundaryElementsOnSurface(
+        GeoLib::Surface const& sfc);
 
 private:
     MeshLib::Mesh const& _mesh;

@@ -9,27 +9,34 @@
 
 #include "CreateNodalSourceTerm.h"
 
-#include "BaseLib/FileTools.h"
+#include <logog/include/logog.hpp>
+
+#include "BaseLib/ConfigTree.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
+
 #include "NodalSourceTerm.h"
 
 namespace ProcessLib
 {
 std::unique_ptr<NodalSourceTerm> createNodalSourceTerm(
-    BaseLib::ConfigTree const& config,
-    const NumLib::LocalToGlobalIndexMap& dof_table, std::size_t const mesh_id,
-    std::size_t const node_id, const int variable_id, const int component_id)
+    BaseLib::ConfigTree const& config, MeshLib::Mesh const& st_mesh,
+    const NumLib::LocalToGlobalIndexMap& dof_table,
+    std::size_t const bulk_mesh_id, const int variable_id,
+    const int component_id,
+    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters)
 {
     DBUG("Constructing NodalSourceTerm from config.");
     //! \ogs_file_param{prj__process_variables__process_variable__source_terms__source_term__type}
     config.checkConfigParameter("type", "Nodal");
 
-    //! \ogs_file_param{prj__process_variables__process_variable__source_terms__source_term__Nodal__value}
-    auto const nodal_value = config.getConfigParameter<double>("value");
-    DBUG("Using value %f as nodal source term", nodal_value);
+    //! \ogs_file_param{prj__process_variables__process_variable__source_terms__source_term__Nodal__parameter}
+    auto const param_name = config.getConfigParameter<std::string>("parameter");
+    DBUG("Using parameter %s as nodal source term.", param_name.c_str());
 
-    return std::make_unique<NodalSourceTerm>(
-        dof_table, mesh_id, node_id, variable_id, component_id, nodal_value);
+    auto& param = findParameter<double>(param_name, parameters, 1);
+
+    return std::make_unique<NodalSourceTerm>(dof_table, bulk_mesh_id, st_mesh,
+                                             variable_id, component_id, param);
 }
 
 }  // namespace ProcessLib

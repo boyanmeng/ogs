@@ -22,29 +22,6 @@
 
 namespace
 {
-//! Determines if there should be output at the given \c timestep.
-template <typename CountsSteps>
-bool shallDoOutput(unsigned timestep, CountsSteps const& repeats_each_steps)
-{
-    unsigned each_steps = 1;
-
-    for (auto const& pair : repeats_each_steps)
-    {
-        each_steps = pair.each_steps;
-
-        if (timestep > pair.repeat * each_steps)
-        {
-            timestep -= pair.repeat * each_steps;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return timestep % each_steps == 0;
-}
-
 //! Converts a vtkXMLWriter's data mode string to an int. See
 /// Output::_output_file_data_mode.
 int convertVtkDataMode(std::string const& data_mode)
@@ -70,16 +47,52 @@ int convertVtkDataMode(std::string const& data_mode)
 
 namespace ProcessLib
 {
+bool Output::shallDoOutput(unsigned timestep, double const t)
+{
+    unsigned each_steps = 1;
+
+    for (auto const& pair : _repeats_each_steps)
+    {
+        each_steps = pair.each_steps;
+
+        if (timestep > pair.repeat * each_steps)
+        {
+            timestep -= pair.repeat * each_steps;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    bool make_output = timestep % each_steps == 0;
+
+    if (_fixed_output_times.empty())
+        return make_output;
+
+    const double specific_time = _fixed_output_times.back();
+    const double zero_threshold = std::numeric_limits<double>::min();
+    if (std::fabs(specific_time - t) < zero_threshold)
+    {
+        _fixed_output_times.pop_back();
+        make_output = true;
+    }
+
+    return make_output;
+}
+
 Output::Output(std::string output_directory, std::string prefix,
                bool const compress_output, std::string const& data_mode,
                bool const output_nonlinear_iteration_results,
-               std::vector<PairRepeatEachSteps> repeats_each_steps)
+               std::vector<PairRepeatEachSteps> repeats_each_steps,
+               std::vector<double>&& fixed_output_times)
     : _output_directory(std::move(output_directory)),
       _output_file_prefix(std::move(prefix)),
       _output_file_compression(compress_output),
       _output_file_data_mode(convertVtkDataMode(data_mode)),
       _output_nonlinear_iteration_results(output_nonlinear_iteration_results),
-      _repeats_each_steps(std::move(repeats_each_steps))
+      _repeats_each_steps(std::move(repeats_each_steps)),
+      _fixed_output_times(std::move(fixed_output_times))
 {
 }
 
@@ -89,34 +102,35 @@ void Output::addProcess(ProcessLib::Process const& process,
     auto const filename = BaseLib::joinPaths(
         _output_directory,
         _output_file_prefix + "_pcs_" + std::to_string(process_id) + ".pvd");
-    _single_process_data.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(&process),
-                                 std::forward_as_tuple(filename));
+    _process_to_process_data.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(&process),
+                                     std::forward_as_tuple(filename));
 }
 
-Output::SingleProcessData* Output::findSingleProcessData(Process const& process,
-                                                         const int process_id)
+// TODO return a reference.
+Output::ProcessData* Output::findProcessData(Process const& process,
+                                             const int process_id)
 {
-    auto spd_range = _single_process_data.equal_range(&process);
+    auto range = _process_to_process_data.equal_range(&process);
     int counter = 0;
-    SingleProcessData* spd_ptr = nullptr;
-    for (auto spd_it = spd_range.first; spd_it != spd_range.second; ++spd_it)
+    ProcessData* process_data = nullptr;
+    for (auto spd_it = range.first; spd_it != range.second; ++spd_it)
     {
         if (counter == process_id)
         {
-            spd_ptr = &spd_it->second;
+            process_data = &spd_it->second;
             break;
         }
         counter++;
     }
-    if (spd_ptr == nullptr)
+    if (process_data == nullptr)
     {
         OGS_FATAL(
             "The given process is not contained in the output"
             " configuration. Aborting.");
     }
 
-    return spd_ptr;
+    return process_data;
 }
 
 void Output::doOutputAlways(Process const& process,
@@ -132,12 +146,14 @@ void Output::doOutputAlways(Process const& process,
     // Need to add variables of process to vtu even no output takes place.
     processOutputData(t, x, process.getMesh(), process.getDOFTable(process_id),
                       process.getProcessVariables(process_id),
-                      process.getSecondaryVariables(), process_output);
+                      process.getSecondaryVariables(),
+                      process.getIntegrationPointWriter(),
+                      process_output);
 
     // For the staggered scheme for the coupling, only the last process, which
     // gives the latest solution within a coupling loop, is allowed to make
     // output.
-    if (!(process_id == static_cast<int>(_single_process_data.size()) - 1 ||
+    if (!(process_id == static_cast<int>(_process_to_process_data.size()) - 1 ||
           process.isMonolithicSchemeUsed()))
         return;
 
@@ -149,8 +165,8 @@ void Output::doOutputAlways(Process const& process,
 
     DBUG("output to %s", output_file_path.c_str());
 
-    SingleProcessData* spd_ptr = findSingleProcessData(process, process_id);
-    spd_ptr->pvd_file.addVTUFile(output_file_name, t);
+    ProcessData* process_data = findProcessData(process, process_id);
+    process_data->pvd_file.addVTUFile(output_file_name, t);
     INFO("[time] Output of timestep %d took %g s.", timestep,
          time_output.elapsed());
 
@@ -165,7 +181,7 @@ void Output::doOutput(Process const& process,
                       const double t,
                       GlobalVector const& x)
 {
-    if (shallDoOutput(timestep, _repeats_each_steps))
+    if (shallDoOutput(timestep, t))
     {
         doOutputAlways(process, process_id, process_output, timestep, t, x);
     }
@@ -183,7 +199,7 @@ void Output::doOutputLastTimestep(Process const& process,
                                   const double t,
                                   GlobalVector const& x)
 {
-    if (!shallDoOutput(timestep, _repeats_each_steps))
+    if (!shallDoOutput(timestep, t))
     {
         doOutputAlways(process, process_id, process_output, timestep, t, x);
     }
@@ -210,17 +226,19 @@ void Output::doOutputNonlinearIteration(Process const& process,
     processOutputData(t, x, process.getMesh(),
                       process.getDOFTable(process_id),
                       process.getProcessVariables(process_id),
-                      process.getSecondaryVariables(), process_output);
+                      process.getSecondaryVariables(),
+                      process.getIntegrationPointWriter(),
+                      process_output);
 
     // For the staggered scheme for the coupling, only the last process, which
     // gives the latest solution within a coupling loop, is allowed to make
     // output.
-    if (!(process_id == static_cast<int>(_single_process_data.size()) - 1 ||
+    if (!(process_id == static_cast<int>(_process_to_process_data.size()) - 1 ||
           process.isMonolithicSchemeUsed()))
         return;
 
     // Only check whether a process data is available for output.
-    findSingleProcessData(process, process_id);
+    findProcessData(process, process_id);
 
     std::string const output_file_name =
         _output_file_prefix + "_pcs_" + std::to_string(process_id) + "_ts_" +

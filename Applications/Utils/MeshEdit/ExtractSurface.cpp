@@ -17,8 +17,9 @@
 
 #include "Applications/ApplicationsLib/LogogSetup.h"
 
-#include "BaseLib/StringTools.h"
+#include "BaseLib/BuildInfo.h"
 #include "BaseLib/FileTools.h"
+#include "BaseLib/StringTools.h"
 
 #include "MeshLib/IO/readMeshFromFile.h"
 #include "MeshLib/IO/writeMeshToFile.h"
@@ -35,8 +36,13 @@ int main (int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Tool extracts the surface of the given mesh. The documentation is "
         "available at "
-        "https://docs.opengeosys.org/docs/tools/meshing/extract-surface",
-        ' ', "0.1");
+        "https://docs.opengeosys.org/docs/tools/meshing/extract-surface.\n\n"
+        "OpenGeoSys-6 software, version " +
+            BaseLib::BuildInfo::git_describe +
+            ".\n"
+            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "(http://www.opengeosys.org)",
+        ' ', BaseLib::BuildInfo::git_describe);
     TCLAP::ValueArg<std::string> mesh_in(
         "i", "mesh-input-file",
         "the name of the file containing the input mesh", true, "",
@@ -61,19 +67,19 @@ int main (int argc, char* argv[])
         "n", "node-property-name",
         "the name of the data array the subsurface/bulk node id will be stored "
         "to",
-        false, "OriginalSubsurfaceNodeIDs", "string");
+        false, "bulk_node_ids", "string");
     cmd.add(node_prop_name);
     TCLAP::ValueArg<std::string> element_prop_name(
         "e", "element-property-name",
         "the name of the data array the subsurface/bulk element id will be "
         "stored to",
-        false, "OriginalSubsurfaceElementIDs", "string");
+        false, "bulk_element_ids", "string");
     cmd.add(element_prop_name);
     TCLAP::ValueArg<std::string> face_prop_name(
         "f", "face-property-name",
         "the name of the data array the surface face id of the subsurface/bulk "
         "element will be stored to",
-        false, "OriginalFaceIDs", "string");
+        false, "bulk_face_ids", "string");
     cmd.add(face_prop_name);
 
     TCLAP::ValueArg<double> angle_arg(
