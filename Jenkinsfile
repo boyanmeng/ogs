@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 @Library('jenkins-pipeline@1.0.12') _
 
-def stage_required = [build: false, data: false, full: false]
+def stage_required = [build: false, data: false, full: false, docker: false]
 
 pipeline {
   agent none
@@ -55,6 +55,10 @@ pipeline {
                   stage_required.data = true
                   echo "Updating Tests/Data."
                 }
+                if (path.startsWith("scripts/docker") && !stage_required.docker) {
+                  stage_required.docker = true
+                  echo "Doing Docker images build."
+                }
               }
             }
           }
@@ -95,7 +99,7 @@ pipeline {
               //       .*potential recursive class relation.*
               recordIssues tools: [[pattern: 'build/DoxygenWarnings.log',
                 tool: [$class: 'Doxygen']]],
-                unstableTotalAll: 23
+                unstableTotalAll: 24
               dir('build/docs') { stash(name: 'doxygen') }
               publishHTML(target: [allowMissing: false, alwaysLinkToLastBuild: true,
                   keepAll: true, reportDir: 'build/docs', reportFiles: 'index.html',
@@ -313,7 +317,7 @@ pipeline {
               recordIssues enabledForFailure: true, filters: [
                 excludeFile('.*qrc_icons\\.cpp.*'), excludeFile('.*QVTKWidget.*')],
                 tools: [[pattern: 'build/build.log', name: 'Clang (macOS)',
-                  tool: [$class: 'Clang']]],
+                   id: 'clang-mac', tool: [$class: 'Clang']]],
                 unstableTotalAll: 3
             }
             success {
@@ -326,6 +330,26 @@ pipeline {
     stage('Master') {
       when { environment name: 'JOB_NAME', value: 'ufz/ogs/master' }
       parallel {
+        // ********************* Push Docker Images ****************************
+        stage('Push Docker Images') {
+          when {
+            beforeAgent true
+            expression { return stage_required.docker || stage_required.full }
+          }
+          agent { label 'docker' }
+          steps {
+            script {
+              dir('scripts/docker') {
+                def gccImage = docker.build("ogs6/gcc:latest", "-f Dockerfile.gcc.full .")
+                def clangImage = docker.build("ogs6/clang:latest", "-f Dockerfile.clang.full .")
+                docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                  gccImage.push()
+                  clangImage.push()
+                }
+              }
+            }
+          }
+        }
         // ************************* Analyzers *********************************
         stage('Analyzers') {
           when {
@@ -446,6 +470,10 @@ pipeline {
               additionalBuildArgs '--pull'
             }
           }
+          environment {
+            UBSAN_OPTIONS = 'print_stacktrace=1'
+            LSAN_OPTIONS = "suppressions=$WORKSPACE/scripts/test/leak_sanitizer.suppressions"
+          }
           steps {
             script {
               sh 'conan user'
@@ -457,19 +485,21 @@ pipeline {
                   '-DOGS_BUILD_UTILS=ON '
               }
               try {
-                build { cmd = 'UBSAN_OPTIONS=print_stacktrace=1 ninja tests' }
+                build { target = 'tests' }
               }
               catch(err) { echo "Clang sanitizer for unit tests failed!" }
 
               try {
-                build { cmd = 'UBSAN_OPTIONS=print_stacktrace=1 ninja ctest' }
+                build { target = 'ctest' }
               }
               catch(err) { echo "Clang sanitizer for end-to-end tests failed!" }
             }
           }
           post {
             always {
-              recordIssues enabledForFailure: true, tools: [[tool: [$class: 'Clang']]]
+              recordIssues enabledForFailure : true,
+                filters: [includeCategory('clang-analyzer.*')],
+                tools: [[name:'Clang (StaticAnalyzer)', tool:[$class:'Clang']]]
             }
           }
         }

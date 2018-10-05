@@ -13,6 +13,7 @@
 
 #include "HydroMechanicsFEM.h"
 
+#include "MaterialLib/SolidModels/SelectSolidConstitutiveRelation.h"
 #include "MathLib/KelvinVector.h"
 #include "NumLib/Function/Interpolation.h"
 #include "ProcessLib/CoupledSolutionsForStaggeredScheme.h"
@@ -53,10 +54,14 @@ HydroMechanicsLocalAssembler<ShapeFunctionDisplacement, ShapeFunctionPressure,
                           IntegrationMethod, DisplacementDim>(
             e, is_axially_symmetric, _integration_method);
 
+    auto const& solid_material =
+        MaterialLib::Solids::selectSolidConstitutiveRelation(
+            _process_data.solid_materials, _process_data.material_ids,
+            e.getID());
+
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
-        // displacement (subscript u)
-        _ip_data.emplace_back(*_process_data.material);
+        _ip_data.emplace_back(solid_material);
         auto& ip_data = _ip_data[ip];
         auto const& sm_u = shape_matrices_u[ip];
         _ip_data[ip].integration_weight =
@@ -579,6 +584,23 @@ void HydroMechanicsLocalAssembler<ShapeFunctionDisplacement,
         _ip_data[ip].updateConstitutiveRelation(
             t, x_position, dt, u, _process_data.reference_temperature);
     }
+}
+
+template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
+          typename IntegrationMethod, int DisplacementDim>
+void HydroMechanicsLocalAssembler<ShapeFunctionDisplacement,
+                                  ShapeFunctionPressure, IntegrationMethod,
+                                  DisplacementDim>::
+    computeSecondaryVariableConcrete(double const /*t*/,
+                                     std::vector<double> const& local_x)
+{
+    auto p = Eigen::Map<typename ShapeMatricesTypePressure::template VectorType<
+        pressure_size> const>(local_x.data() + pressure_index, pressure_size);
+
+    NumLib::interpolateToHigherOrderNodes<
+        ShapeFunctionPressure, typename ShapeFunctionDisplacement::MeshElement,
+        DisplacementDim>(_element, _is_axially_symmetric, p,
+                         *_process_data.pressure_interpolated);
 }
 
 }  // namespace HydroMechanics
