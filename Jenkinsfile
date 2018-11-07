@@ -14,7 +14,7 @@ pipeline {
   stages {
      // *************************** Git Check **********************************
     stage('Git Check') {
-      agent any
+      agent { label "master"}
       steps {
         sh "git config core.whitespace -blank-at-eof"
         sh "git diff --check `git merge-base origin/master HEAD` HEAD -- . ':!*.md' ':!*.pandoc'"
@@ -78,7 +78,7 @@ pipeline {
               filename 'Dockerfile.gcc.full'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /datadrive/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache:/home/jenkins/cache'
               additionalBuildArgs '--pull'
             }
           }
@@ -143,7 +143,7 @@ pipeline {
               filename 'Dockerfile.gcc.minimal'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /datadrive/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache:/home/jenkins/cache'
               additionalBuildArgs '--pull'
             }
           }
@@ -380,7 +380,7 @@ pipeline {
                 }
               }
               build { target = 'check-header' }
-              build { }
+              build { target = 'all' }
             }
           }
         }
@@ -509,7 +509,7 @@ pipeline {
             beforeAgent true
             expression { return stage_required.data }
           }
-          agent any
+          agent { label "master"}
           steps {
             script {
               dir('ogs') { checkout scm }

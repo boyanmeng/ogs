@@ -200,33 +200,32 @@ AddTest(
     EXECUTABLE_ARGS goswami_input.prj
     WRAPPER time
     TESTER vtkdiff
-    REQUIREMENTS NOT OGS_USE_MPI AND DISABLE_GOSWAMI_UNTIL_CONSTRAINED_NEUMANN_BC
+    REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    ComponentTransport_pcs_0_ts_100_t_150.000000_expected.vtu ComponentTransport_pcs_0_ts_100_t_150.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_150_t_350.000000_expected.vtu ComponentTransport_pcs_0_ts_150_t_350.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_200_t_750.000000_expected.vtu ComponentTransport_pcs_0_ts_200_t_750.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_250_t_1150.000000_expected.vtu ComponentTransport_pcs_0_ts_250_t_1150.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_300_t_1950.000000_expected.vtu ComponentTransport_pcs_0_ts_300_t_1950.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_350_t_2750.000000_expected.vtu ComponentTransport_pcs_0_ts_350_t_2750.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_366_t_3000.000000_expected.vtu ComponentTransport_pcs_0_ts_366_t_3000.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_50_t_50.000000_expected.vtu ComponentTransport_pcs_0_ts_50_t_50.000000.vtu concentration concentration 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_100_t_150.000000_expected.vtu ComponentTransport_pcs_0_ts_100_t_150.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_150_t_350.000000_expected.vtu ComponentTransport_pcs_0_ts_150_t_350.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_200_t_750.000000_expected.vtu ComponentTransport_pcs_0_ts_200_t_750.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_250_t_1150.000000_expected.vtu ComponentTransport_pcs_0_ts_250_t_1150.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_300_t_1950.000000_expected.vtu ComponentTransport_pcs_0_ts_300_t_1950.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_350_t_2750.000000_expected.vtu ComponentTransport_pcs_0_ts_350_t_2750.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_366_t_3000.000000_expected.vtu ComponentTransport_pcs_0_ts_366_t_3000.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_50_t_50.000000_expected.vtu ComponentTransport_pcs_0_ts_50_t_50.000000.vtu pressure pressure 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_100_t_150.000000_expected.vtu ComponentTransport_pcs_0_ts_100_t_150.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_150_t_350.000000_expected.vtu ComponentTransport_pcs_0_ts_150_t_350.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_200_t_750.000000_expected.vtu ComponentTransport_pcs_0_ts_200_t_750.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_250_t_1150.000000_expected.vtu ComponentTransport_pcs_0_ts_250_t_1150.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_300_t_1950.000000_expected.vtu ComponentTransport_pcs_0_ts_300_t_1950.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_350_t_2750.000000_expected.vtu ComponentTransport_pcs_0_ts_350_t_2750.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_366_t_3000.000000_expected.vtu ComponentTransport_pcs_0_ts_366_t_3000.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    ComponentTransport_pcs_0_ts_50_t_50.000000_expected.vtu ComponentTransport_pcs_0_ts_50_t_50.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
-    VIS ComponentTransport_pcs_0_ts_366_t_3000.000000.vtu
+    Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000.vtu concentration concentration 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000.vtu pressure pressure 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1185_t_600.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_1785_t_1200.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2385_t_1800.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_2985_t_2400.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_3585_t_3000.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4185_t_3600.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_4785_t_4200.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
+    Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000_expected.vtu Goswami_Component_Transport_pcs_0_ts_5385_t_4800.000000.vtu darcy_velocity darcy_velocity 1e-1 1e-5
 )
 
 AddTest(
@@ -395,4 +394,30 @@ AddTest(
     3D1P-GWFlow_1_reference.vtu out_ogs5_H_pcs_0_ts_1_t_10000000.000000.vtu pressure_ogs5 pressure 2.4e1 1.4e-2
     3D1P-GWFlow_1_reference.vtu out_ogs5_H_pcs_0_ts_1_t_10000000.000000.vtu NODAL_VELOCITY1 darcy_velocity 1e-10 1.4e-2
     VIS out_ogs5_H_pcs_0_ts_1_t_10000000.000000.vtu
+)
+
+
+AddTest(
+    NAME 1D_ComponentTransport_VariableDependentBoundary
+    PATH Parabolic/ComponentTransport/VariableNeumannBoundary
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS vdbc_input.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    vdbc_pcs_0_ts_0_t_0.000000_expected.vtu vdbc_pcs_0_ts_0_t_0.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_1590_t_6000.000000_expected.vtu vdbc_pcs_0_ts_1590_t_6000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_3990_t_30000.000000_expected.vtu vdbc_pcs_0_ts_3990_t_30000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_9990_t_90000.000000_expected.vtu vdbc_pcs_0_ts_9990_t_90000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_15990_t_150000.000000_expected.vtu vdbc_pcs_0_ts_15990_t_150000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_21990_t_210000.000000_expected.vtu vdbc_pcs_0_ts_21990_t_210000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_25990_t_250000.000000_expected.vtu vdbc_pcs_0_ts_25990_t_250000.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_0_t_0.000000_expected.vtu vdbc_pcs_0_ts_0_t_0.000000.vtu pressure pressure 1e-5 1e-4
+    vdbc_pcs_0_ts_1590_t_6000.000000_expected.vtu vdbc_pcs_0_ts_1590_t_6000.000000.vtu concentration concentration 1e-5 1e-4
+    vdbc_pcs_0_ts_3990_t_30000.000000_expected.vtu vdbc_pcs_0_ts_3990_t_30000.000000.vtu concentration concentration 1e-5 1e-4
+    vdbc_pcs_0_ts_9990_t_90000.000000_expected.vtu vdbc_pcs_0_ts_9990_t_90000.000000.vtu concentration concentration 1e-5 1e-4
+    vdbc_pcs_0_ts_15990_t_150000.000000_expected.vtu vdbc_pcs_0_ts_15990_t_150000.000000.vtu concentration concentration 1e-5 1e-4
+    vdbc_pcs_0_ts_21990_t_210000.000000_expected.vtu vdbc_pcs_0_ts_21990_t_210000.000000.vtu concentration concentration 1e-5 1e-4
+    vdbc_pcs_0_ts_25990_t_250000.000000_expected.vtu vdbc_pcs_0_ts_25990_t_250000.000000.vtu concentration concentration 1e-5 1e-4
 )

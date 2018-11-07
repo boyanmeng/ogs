@@ -34,7 +34,7 @@ AddTest(
     PATH LIE/PostProcessing
     EXECUTABLE postLIE
     EXECUTABLE_ARGS -i single_joint_pcs_0.pvd -o ${Data_BINARY_DIR}/LIE/PostProcessing/post_single_joint_pcs_0.pvd
-    REQUIREMENTS NOT OGS_USE_MPI
+    REQUIREMENTS NOT OGS_USE_MPI AND OGS_BUILD_PROCESS_LIE
     TESTER vtkdiff
     DIFF_DATA
     expected_post_single_joint_pcs_0_ts_1_t_1.000000.vtu post_single_joint_pcs_0_ts_1_t_1.000000.vtu u u 1e-14 1e-14
@@ -66,6 +66,32 @@ AddTest(
     2D_mesh_top.vtu check_2D_mesh_top.vtu bulk_element_ids bulk_element_ids 0 0
     2D_mesh_bottom.vtu check_2D_mesh_bottom.vtu bulk_node_ids bulk_node_ids 0 0
     2D_mesh_bottom.vtu check_2D_mesh_bottom.vtu bulk_element_ids bulk_element_ids 0 0
+)
+
+AddTest(
+    NAME identifySubdomains_riverTriangleMesh
+    PATH MeshGeoToolsLib/IdentifySubdomains
+    EXECUTABLE identifySubdomains
+    EXECUTABLE_ARGS -m river_domain_triangle.vtu -o ${Data_BINARY_DIR}/MeshGeoToolsLib/IdentifySubdomains/triangle_ -- river_bc.vtu
+    REQUIREMENTS NOT OGS_USE_MPI
+    TESTER vtkdiff
+    DIFF_DATA
+    river_bc_triangle.vtu triangle_river_bc.vtu bulk_node_ids bulk_node_ids 0 0
+    #river_bc_triangle.vtu triangle_river_bc.vtu bulk_element_ids bulk_element_ids 0 0   # TODO (naumov) Needs extension of vtkdiff to FieldData
+    river_bc_triangle.vtu triangle_river_bc.vtu number_bulk_elements number_bulk_elements 0 0
+)
+
+AddTest(
+    NAME identifySubdomains_riverPrismMesh
+    PATH MeshGeoToolsLib/IdentifySubdomains
+    EXECUTABLE identifySubdomains
+    EXECUTABLE_ARGS -s 1e-3 -m river_domain_prism.vtu -o ${Data_BINARY_DIR}/MeshGeoToolsLib/IdentifySubdomains/prism_ -- river_bc.vtu
+    REQUIREMENTS NOT OGS_USE_MPI
+    TESTER vtkdiff
+    DIFF_DATA
+    river_bc_prism.vtu prism_river_bc.vtu bulk_node_ids bulk_node_ids 0 0
+    #river_bc_prism.vtu prism_river_bc.vtu bulk_element_ids bulk_element_ids 0 0 # TODO (naumov) Needs extension of vtkdiff to FieldData
+    river_bc_prism.vtu prism_river_bc.vtu number_bulk_elements number_bulk_elements 0 0
 )
 
 # Mac is producing slightly different partitioning, so the results are not
@@ -156,4 +182,15 @@ AddTest(
               2Dmesh_POINT4_partitioned_node_properties_val3.bin
               2Dmesh_POINT5_partitioned_node_properties_cfg3.bin
               2Dmesh_POINT5_partitioned_node_properties_val3.bin
+)
+
+# Regression test for https://github.com/ufz/ogs/issues/1845 fixed in
+# https://github.com/ufz/ogs/pull/2237
+# checkMesh crashed when encountered Line3 element.
+AddTest(
+    NAME checkMesh_LIE_HM_TaskB
+    PATH LIE/HydroMechanics
+    EXECUTABLE checkMesh
+    EXECUTABLE_ARGS -p -v TaskB_mesh.vtu
+    REQUIREMENTS NOT OGS_USE_MPI
 )
