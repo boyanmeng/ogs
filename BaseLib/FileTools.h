@@ -161,4 +161,13 @@ std::string appendPathSeparator(std::string const& path);
  */
 std::string joinPaths(std::string const& pathA, std::string const& pathB);
 
-} // end namespace BaseLib
+/// Returns the directory where the prj file resides.
+std::string const& getProjectDirectory();
+
+/// Sets the project directory.
+void setProjectDirectory(std::string const& dir);
+
+/// Remove files. If a file does not exist nothing will happen, other errors
+/// lead to OGS_FATAL call.
+void removeFiles(std::vector<std::string> const& files);
+}  // end namespace BaseLib

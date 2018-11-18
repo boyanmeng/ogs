@@ -61,7 +61,6 @@ include(test/Test)
 if(OGS_COVERAGE AND NOT IS_SUBPROJECT)
     include(Coverage)
 endif()
-include(Web)
 
 ####################
 ### More Options ###
@@ -230,6 +229,8 @@ option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
 option(OGS_CHECK_HEADER_COMPILATION "Check header for standalone compilation." OFF)
 
 option(OGS_USE_PYTHON "Interface with Python" OFF)
+
+option(OGS_USE_MFRONT "Enable solid material models by MFront (https://tfel.sourceforge.net)" OFF)
 
 ###################
 ### Definitions ###

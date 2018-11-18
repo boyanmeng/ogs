@@ -19,6 +19,15 @@
 #include <sys/stat.h>
 #include <boost/algorithm/string.hpp>
 
+namespace
+{
+/// The directory where the prj file resides.
+static std::string project_directory = "";
+
+/// Whether the project directory has already been set.
+static bool project_directory_is_set = false;
+}  // anonymous namespace
+
 namespace BaseLib
 {
 /**
@@ -176,4 +185,45 @@ std::string joinPaths(std::string const& pathA, std::string const& pathB)
     return appendPathSeparator(pathA) + pathB;
 }
 
+std::string const& getProjectDirectory()
+{
+    if (!project_directory_is_set)
+    {
+        OGS_FATAL("The project directory has not yet been set.");
+    }
+    return project_directory;
+}
+
+void setProjectDirectory(std::string const& dir)
+{
+    if (project_directory_is_set)
+    {
+        OGS_FATAL("The project directory has already been set.");
+    }
+    project_directory = dir;
+    project_directory_is_set = true;
+}
+
+void removeFiles(std::vector<std::string> const& files)
+{
+    for (auto const& file : files)
+    {
+        int const success = std::remove(file.c_str());
+        if (success == 0)
+        {
+            DBUG("Removed '%s'", file.c_str());
+        }
+        else
+        {
+            if (errno == ENOENT)  // File does not exists
+            {
+                continue;
+            }
+            ERR("Removing file '%s' failed with error %d.", file.c_str(),
+                errno);
+            std::perror("Error: ");
+            OGS_FATAL("Unrecoverable error happened while removing a file.");
+        }
+    }
+}
 } // end namespace BaseLib
