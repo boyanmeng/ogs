@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -19,7 +19,9 @@ CentralDifferencesJacobianAssembler::CentralDifferencesJacobianAssembler(
     : _absolute_epsilons(std::move(absolute_epsilons))
 {
     if (_absolute_epsilons.empty())
+    {
         OGS_FATAL("No values for the absolute epsilons have been given.");
+    }
 }
 
 void CentralDifferencesJacobianAssembler::assembleWithJacobian(
@@ -170,4 +172,4 @@ createCentralDifferencesJacobianAssembler(BaseLib::ConfigTree const& config)
         std::move(abs_eps));
 }
 
-}  // ProcessLib
+}  // namespace ProcessLib

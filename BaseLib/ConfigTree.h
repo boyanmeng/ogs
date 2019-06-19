@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,8 +20,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 extern template class boost::property_tree::basic_ptree<
-    std::string, std::string, std::less<std::string>>;
-
+    std::string, std::string, std::less<>>;
 
 namespace BaseLib
 {
@@ -158,8 +157,10 @@ public:
         ConfigTree operator*() {
             auto st = SubtreeIterator::operator*();
             if (st.hasChildren())
-                _parent.error("The requested parameter <" + _tagname + ">"
-                              " has child elements.");
+            {
+                _parent.error("The requested parameter <" + _tagname +
+                              "> has child elements.");
+            }
             return st;
         }
     };
@@ -268,6 +269,9 @@ public:
     //! After being moved from, \c other is in an undefined state and must not be
     //! used anymore!
     ConfigTree& operator=(ConfigTree &&);
+
+    //! Used to get the project file name.
+    std::string const& getProjectFileName() const { return _filename; }
 
     /*! \name Methods for directly accessing parameter values
      *
@@ -543,12 +547,7 @@ private:
      *
      * This method only acts as a helper method and throws std::runtime_error.
      */
-#if defined(_MSC_VER) && _MSC_VER < 1500
-    __declspec(noreturn)
-#else
-    [[noreturn]]
-#endif
-        void error(std::string const& message) const;
+    [[noreturn]] void error(std::string const& message) const;
 
     //! Called for printing warning messages. Will call the warning callback.
     //! This method only acts as a helper method.
@@ -643,6 +642,6 @@ private:
     friend void checkAndInvalidate(std::unique_ptr<ConfigTree> const& conf);
 };
 
-}
+}  // namespace BaseLib
 
 #include "ConfigTree-impl.h"

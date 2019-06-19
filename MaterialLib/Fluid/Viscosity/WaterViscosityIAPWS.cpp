@@ -1,6 +1,6 @@
 /**
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -195,5 +195,5 @@ double computedBarMu_dbarRho(const double barT, double bar_rho)
            (mu1_factor + bar_rho * dmu1_factor_dbar_rho);
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -48,7 +48,7 @@ inline double dShapeFunctionHexHQ_Middle(const double r, const double s, const d
     return 0.0;
 }
 
-}
+}  // namespace
 
 namespace NumLib
 {
@@ -88,7 +88,6 @@ void ShapeHex20::computeShapeFunction(const T_X &rst, T_N &N)
 template <class T_X, class T_N>
 void ShapeHex20::computeGradShapeFunction(const T_X &rst, T_N &dNdr)
 {
-    int co;
     const double r = rst[0];
     const double s = rst[1];
     const double t = rst[2];
@@ -111,19 +110,28 @@ void ShapeHex20::computeGradShapeFunction(const T_X &rst, T_N &dNdr)
         dNdr[20 * i + 14] = sign2[i] * sign3[i] * dShapeFunctionHexHQ_Middle(r,-s,-t,i);
         dNdr[20 * i + 12] = sign3[i] * dShapeFunctionHexHQ_Middle(r,s,-t,i);
 
-        co = (i + 2) % 3;
-        dNdr[20 * i + 11] = dShapeFunctionHexHQ_Middle(s,t,r,co);
-        dNdr[20 * i + 15] = sign3[i] * dShapeFunctionHexHQ_Middle(s,-t,r,co);
-        dNdr[20 * i + 13] = sign1[i] * sign3[i] * dShapeFunctionHexHQ_Middle(s,-t,-r,co);
-        dNdr[20 * i + 9] =  sign1[i] * dShapeFunctionHexHQ_Middle(s,t,-r,co);
+        {
+            int const co = (i + 2) % 3;
+            dNdr[20 * i + 11] = dShapeFunctionHexHQ_Middle(s, t, r, co);
+            dNdr[20 * i + 15] =
+                sign3[i] * dShapeFunctionHexHQ_Middle(s, -t, r, co);
+            dNdr[20 * i + 13] =
+                sign1[i] * sign3[i] * dShapeFunctionHexHQ_Middle(s, -t, -r, co);
+            dNdr[20 * i + 9] =
+                sign1[i] * dShapeFunctionHexHQ_Middle(s, t, -r, co);
+        }
 
-        co = (i + 1) % 3;
-        dNdr[20 * i + 16] = dShapeFunctionHexHQ_Middle(t,r,s,co);
-        dNdr[20 * i + 17] = sign1[i] * dShapeFunctionHexHQ_Middle(t,-r,s,co);
-        dNdr[20 * i + 18] = sign1[i] * sign2[i] * dShapeFunctionHexHQ_Middle(t,-r,-s,co);
-        dNdr[20 * i + 19] = sign2[i] * dShapeFunctionHexHQ_Middle(t,r,-s,co);
+        {
+            int const co = (i + 1) % 3;
+            dNdr[20 * i + 16] = dShapeFunctionHexHQ_Middle(t, r, s, co);
+            dNdr[20 * i + 17] =
+                sign1[i] * dShapeFunctionHexHQ_Middle(t, -r, s, co);
+            dNdr[20 * i + 18] =
+                sign1[i] * sign2[i] * dShapeFunctionHexHQ_Middle(t, -r, -s, co);
+            dNdr[20 * i + 19] =
+                sign2[i] * dShapeFunctionHexHQ_Middle(t, r, -s, co);
+        }
     }
 }
 
-}
-
+}  // namespace NumLib

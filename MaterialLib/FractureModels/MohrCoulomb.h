@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,7 +12,7 @@
 #include <Eigen/Eigen>
 #include <utility>
 
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 #include "FractureModelBase.h"
 
@@ -20,7 +20,8 @@ namespace MaterialLib
 {
 namespace Fracture
 {
-
+namespace MohrCoulomb
+{
 template <int DisplacementDim>
 class MohrCoulomb final : public FractureModelBase<DisplacementDim>
 {
@@ -28,8 +29,8 @@ public:
     /// Variables specific to the material model
     struct MaterialProperties
     {
-        using P = ProcessLib::Parameter<double>;
-        using X = ProcessLib::SpatialPosition;
+        using P = ParameterLib::Parameter<double>;
+        using X = ParameterLib::SpatialPosition;
 
         MaterialProperties(
                 P const& normal_stiffness_, P const& shear_stiffness_,
@@ -98,7 +99,7 @@ public:
      */
     void computeConstitutiveRelation(
         double const t,
-        ProcessLib::SpatialPosition const& x,
+        ParameterLib::SpatialPosition const& x,
         double const aperture0,
         Eigen::Ref<Eigen::VectorXd const>
             sigma0,
@@ -129,6 +130,7 @@ private:
     MaterialProperties _mp;
 };
 
+}  // namespace MohrCoulomb
 }  // namespace Fracture
 }  // namespace MaterialLib
 
@@ -136,7 +138,10 @@ namespace MaterialLib
 {
 namespace Fracture
 {
+namespace MohrCoulomb
+{
 extern template class MohrCoulomb<2>;
 extern template class MohrCoulomb<3>;
+}  // namespace MohrCoulomb
 }  // namespace Fracture
 }  // namespace MaterialLib

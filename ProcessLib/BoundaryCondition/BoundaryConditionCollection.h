@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -19,8 +19,9 @@ namespace ProcessLib
 class BoundaryConditionCollection final
 {
 public:
-    BoundaryConditionCollection(
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters)
+    explicit BoundaryConditionCollection(
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters)
         : _parameters(parameters)
     {
     }
@@ -62,8 +63,8 @@ public:
 private:
     mutable std::vector<NumLib::IndexValueVector<GlobalIndexType>> _dirichlet_bcs;
     std::vector<std::unique_ptr<BoundaryCondition>> _boundary_conditions;
-    std::vector<std::unique_ptr<ParameterBase>> const& _parameters;
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+        _parameters;
 };
 
-
-}  // ProcessLib
+}  // namespace ProcessLib

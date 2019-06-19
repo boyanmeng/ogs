@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -50,9 +50,13 @@ std::vector<double> GradualSubdivision::operator()() const
     if (vec_x.back() < _length) {
         double last_dx = vec_x[vec_x.size() - 1] - vec_x[vec_x.size() - 2];
         if (_length - vec_x.back() < last_dx)
+        {
             vec_x[vec_x.size() - 1] = _length;
+        }
         else
+        {
             vec_x.push_back(_length);
+        }
     }
     return vec_x;
 }

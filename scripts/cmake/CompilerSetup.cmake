@@ -1,13 +1,18 @@
 # C++ standard setup
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(MSVC_VERSION LESS 1910 OR APPLE) # < VS 15.0; macOS: https://github.com/sakra/cotire/issues/139
+# < VS 15.0; macOS: https://github.com/sakra/cotire/issues/139
+if(MSVC_VERSION LESS 1910 OR APPLE OR ${CMAKE_CXX_COMPILER} MATCHES "clcache")
     set(OGS_USE_PCH OFF CACHE INTERNAL "")
 endif()
 if(OGS_USE_PCH)
     include(cotire) # compile time reducer
+endif()
+
+if(${CMAKE_CXX_COMPILER} MATCHES "clcache" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(WARNING "clcache does not cache in Debug config!")
 endif()
 
 # Set compiler helper variables
@@ -80,8 +85,8 @@ if(COMPILER_IS_GCC OR COMPILER_IS_CLANG OR COMPILER_IS_INTEL)
     endif()
 
     if(COMPILER_IS_GCC)
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-            message(FATAL_ERROR "GCC minimum required version is 4.9! You are \
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.3")
+            message(FATAL_ERROR "GCC minimum required version is 7.3! You are \
                 using ${CMAKE_CXX_COMPILER_VERSION}.")
         endif()
         add_compile_options(-fext-numeric-literals)
@@ -122,6 +127,10 @@ if(MSVC)
         # This fixes compile errors with
         # std::numeric_limits<T>::min() / max()
         -DNOMINMAX
+        -DBOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE # when VC is newer than Boost
+        # Disables all warnings coming from include with <>-syntax
+        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
+        /experimental:external /external:anglebrackets /external:W0
     )
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
 endif()

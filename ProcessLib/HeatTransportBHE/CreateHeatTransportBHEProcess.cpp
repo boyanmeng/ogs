@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -11,11 +11,12 @@
 
 #include <vector>
 
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
-#include "ProcessLib/Utils/ProcessUtils.h"
 
 #include "BHE/BHETypes.h"
 #include "BHE/CreateBHE1U.h"
+#include "BHE/CreateBHECoaxial.h"
 #include "HeatTransportBHEProcess.h"
 #include "HeatTransportBHEProcessData.h"
 
@@ -27,7 +28,7 @@ std::unique_ptr<Process> createHeatTransportBHEProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config,
     std::map<std::string,
@@ -56,7 +57,7 @@ std::unique_ptr<Process> createHeatTransportBHEProcess(
     for (std::string const& pv_name : range)
     {
         if (pv_name != "temperature_soil" &&
-            pv_name.find("temperature_BHE") != 0)
+            pv_name.find("temperature_BHE") == std::string::npos)
         {
             OGS_FATAL(
                 "Found a process variable name '%s'. It should be "
@@ -75,7 +76,7 @@ std::unique_ptr<Process> createHeatTransportBHEProcess(
                 "list for config tag <%s>.",
                 pv_name.c_str(), "process_variable");
         }
-        DBUG("Found process variable \'%s\' for config tag <%s>.",
+        DBUG("Found process variable '%s' for config tag <%s>.",
              variable->getName().c_str(), "process_variable");
 
         per_process_variables.emplace_back(
@@ -86,85 +87,84 @@ std::unique_ptr<Process> createHeatTransportBHEProcess(
     // BHE----------------------------------------------------------
 
     // solid phase thermal conductivity parameter.
-    auto& thermal_conductivity_solid = findParameter<double>(
+    auto& thermal_conductivity_solid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__thermal_conductivity_solid}
-        "thermal_conductivity_solid", parameters, 1);
+        "thermal_conductivity_solid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as solid phase thermal conductivity parameter.",
+    DBUG("Use '%s' as solid phase thermal conductivity parameter.",
          thermal_conductivity_solid.name.c_str());
 
     // solid phase thermal conductivity parameter.
-    auto& thermal_conductivity_fluid = findParameter<double>(
+    auto& thermal_conductivity_fluid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__thermal_conductivity_fluid}
-        "thermal_conductivity_fluid", parameters, 1);
+        "thermal_conductivity_fluid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as fluid phase thermal conductivity parameter.",
+    DBUG("Use '%s' as fluid phase thermal conductivity parameter.",
          thermal_conductivity_fluid.name.c_str());
 
     // gas phase thermal conductivity parameter.
-    auto& thermal_conductivity_gas = findParameter<double>(
+    auto& thermal_conductivity_gas = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__thermal_conductivity_gas}
-        "thermal_conductivity_gas", parameters, 1);
+        "thermal_conductivity_gas", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as gas phase thermal conductivity parameter.",
+    DBUG("Use '%s' as gas phase thermal conductivity parameter.",
          thermal_conductivity_gas.name.c_str());
 
     // solid phase heat capacity parameter.
-    auto& heat_capacity_solid = findParameter<double>(
+    auto& heat_capacity_solid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__heat_capacity_solid}
-        "heat_capacity_solid", parameters, 1);
+        "heat_capacity_solid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as solid phase heat capacity parameter.",
+    DBUG("Use '%s' as solid phase heat capacity parameter.",
          heat_capacity_solid.name.c_str());
 
     // fluid phase heat capacity parameter.
-    auto& heat_capacity_fluid = findParameter<double>(
+    auto& heat_capacity_fluid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__heat_capacity_fluid}
-        "heat_capacity_fluid", parameters, 1);
+        "heat_capacity_fluid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as fluid phase heat capacity parameter.",
+    DBUG("Use '%s' as fluid phase heat capacity parameter.",
          heat_capacity_fluid.name.c_str());
 
     // gas phase heat capacity parameter.
-    auto& heat_capacity_gas = findParameter<double>(
+    auto& heat_capacity_gas = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__heat_capacity_gas}
-        "heat_capacity_gas", parameters, 1);
+        "heat_capacity_gas", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as gas phase heat capacity parameter.",
+    DBUG("Use '%s' as gas phase heat capacity parameter.",
          heat_capacity_gas.name.c_str());
 
     // solid phase density parameter.
-    auto& density_solid = findParameter<double>(
+    auto& density_solid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__density_solid}
-        "density_solid", parameters, 1);
+        "density_solid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as solid phase density parameter.",
+    DBUG("Use '%s' as solid phase density parameter.",
          density_solid.name.c_str());
 
     // fluid phase density parameter.
-    auto& density_fluid = findParameter<double>(
+    auto& density_fluid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__density_fluid}
-        "density_fluid", parameters, 1);
+        "density_fluid", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as fluid phase density parameter.",
+    DBUG("Use '%s' as fluid phase density parameter.",
          density_fluid.name.c_str());
 
     // gas phase density parameter.
-    auto& density_gas = findParameter<double>(
+    auto& density_gas = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HEAT_TRANSPORT_BHE__density_gas}
-        "density_gas", parameters, 1);
+        "density_gas", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as gas phase density parameter.",
-         density_gas.name.c_str());
+    DBUG("Use '%s' as gas phase density parameter.", density_gas.name.c_str());
 
     // reading BHE parameters --------------------------------------------------
     std::vector<BHE::BHETypes> bhes;
@@ -184,7 +184,21 @@ std::unique_ptr<Process> createHeatTransportBHEProcess(
 
         if (bhe_type == "1U")
         {
-            bhes.push_back(BHE::createBHE1U(bhe_config, curves));
+            bhes.emplace_back(BHE::createBHE1U(bhe_config, curves));
+            continue;
+        }
+
+        if (bhe_type == "CXA")
+        {
+            bhes.emplace_back(
+                BHE::createBHECoaxial<BHE::BHE_CXA>(bhe_config, curves));
+            continue;
+        }
+
+        if (bhe_type == "CXC")
+        {
+            bhes.emplace_back(
+                BHE::createBHECoaxial<BHE::BHE_CXC>(bhe_config, curves));
             continue;
         }
         OGS_FATAL("Unknown BHE type '%s'.", bhe_type.c_str());

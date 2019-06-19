@@ -11,7 +11,7 @@
             <type>ComponentTransport</type>
             <integration_order>2</integration_order>
             <process_variables>
-                <concentration>concentration</concentration>
+                <concentration>Si</concentration>
                 <pressure>pressure</pressure>
             </process_variables>
             <fluid>
@@ -43,9 +43,6 @@
                 </porous_medium>
             </porous_medium>
             <fluid_reference_density>rho_fluid</fluid_reference_density>
-            <solute_dispersivity_longitudinal>beta_l</solute_dispersivity_longitudinal>
-            <solute_dispersivity_transverse>beta_t</solute_dispersivity_transverse>
-            <molecular_diffusion_coefficient>Dm</molecular_diffusion_coefficient>
             <retardation_factor>retardation</retardation_factor>
             <decay_rate>decay</decay_rate>
             <specific_body_force>0 -9.81</specific_body_force>
@@ -54,6 +51,39 @@
             </secondary_variables>
         </process>
     </processes>
+    <media>
+        <medium id="0">
+            <phases>
+                <phase>
+                    <type>AqueousLiquid</type>
+                    <components>
+                        <component>
+                            <name>Si</name>
+                            <properties>
+                                <property>
+                                    <name>molecular_diffusion</name>
+                                    <type>Constant</type>
+                                    <value>0</value>
+                                </property>
+                            </properties>
+                        </component>
+                    </components>
+                </phase>
+            </phases>
+            <properties>
+                <property>
+                    <name>longitudinal_dispersivity</name>
+                    <type>Constant</type>
+                    <value>5e-3</value>
+                </property>
+                <property>
+                    <name>transversal_dispersivity</name>
+                    <type>Constant</type>
+                    <value>0.0005</value>
+                </property>
+            </properties>
+        </medium>
+    </media>
     <time_loop>
         <processes>
             <process ref="ComponentTransport">
@@ -66,13 +96,6 @@
                 <time_discretization>
                     <type>BackwardEuler</type>
                 </time_discretization>
-                <output>
-                    <variables>
-                        <variable>concentration</variable>
-                        <variable>pressure</variable>
-                        <variable>darcy_velocity</variable>
-                    </variables>
-                </output>
                 <time_stepping>
                     <type>FixedTimeStepping</type>
                     <t_initial>0.0</t_initial>
@@ -115,6 +138,11 @@
                     <each_steps>600</each_steps>
                 </pair>
             </timesteps>
+            <variables>
+                <variable>Si</variable>
+                <variable>pressure</variable>
+                <variable>darcy_velocity</variable>
+            </variables>
         </output>
     </time_loop>
     <parameters>
@@ -122,11 +150,6 @@
             <name>rho_fluid</name>
             <type>Constant</type>
             <value>1000</value>
-        </parameter>
-        <parameter>
-            <name>Dm</name>
-            <type>Constant</type>
-            <value>0</value>
         </parameter>
         <parameter>
             <name>retardation</name>
@@ -137,16 +160,6 @@
             <name>decay</name>
             <type>Constant</type>
             <value>0</value>
-        </parameter>
-        <parameter>
-            <name>beta_l</name>
-            <type>Constant</type>
-            <value>5e-3</value>
-        </parameter>
-        <parameter>
-            <name>beta_t</name>
-            <type>Constant</type>
-            <value>0.0005</value>
         </parameter>
         <parameter>
             <name>c_ini</name>
@@ -168,23 +181,47 @@
             <type>Constant</type>
             <values>1.2388e-9 0 0 1.2388e-9</values>
         </parameter>
+        <parameter>
+            <name>concentration_left</name>
+            <type>MeshNode</type>
+            <mesh>goswami_input_leftBoundary</mesh>
+            <field_name>c_ini</field_name>
+        </parameter>
+        <parameter>
+            <name>concentration_right</name>
+            <type>MeshNode</type>
+            <mesh>goswami_input_rightBoundary</mesh>
+            <field_name>c_ini</field_name>
+        </parameter>
+        <parameter>
+            <name>pressure_left</name>
+            <type>MeshNode</type>
+            <mesh>goswami_input_leftBoundary</mesh>
+            <field_name>p_ini</field_name>
+        </parameter>
+        <parameter>
+            <name>pressure_right</name>
+            <type>MeshNode</type>
+            <mesh>goswami_input_rightBoundary</mesh>
+            <field_name>p_ini</field_name>
+        </parameter>
     </parameters>
     <process_variables>
         <process_variable>
-            <name>concentration</name>
+            <name>Si</name>
             <components>1</components>
             <order>1</order>
             <initial_condition>c_ini</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>goswami_input_leftBoundary</mesh>
-                    <field_name>c_ini</field_name>
+                    <parameter>concentration_left</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>goswami_input_rightBoundary</mesh>
-                    <field_name>c_ini</field_name>
+                    <parameter>concentration_right</parameter>
                 </boundary_condition>
             </boundary_conditions>
         </process_variable>
@@ -195,14 +232,14 @@
             <initial_condition>p_ini</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>goswami_input_leftBoundary</mesh>
-                    <field_name>p_ini</field_name>
+                    <parameter>pressure_left</parameter>
                 </boundary_condition>
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>goswami_input_rightBoundary</mesh>
-                    <field_name>p_ini</field_name>
+                    <parameter>pressure_right</parameter>
                 </boundary_condition>
             </boundary_conditions>
         </process_variable>
@@ -214,7 +251,7 @@
             <max_iter>200</max_iter>
             <linear_solver>general_linear_solver</linear_solver>
         </nonlinear_solver>
-        </nonlinear_solvers>
+    </nonlinear_solvers>
     <linear_solvers>
         <linear_solver>
             <name>general_linear_solver</name>

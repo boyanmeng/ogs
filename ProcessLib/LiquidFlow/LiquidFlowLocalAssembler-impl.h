@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -28,7 +28,7 @@ void LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
              std::vector<double>& local_K_data,
              std::vector<double>& local_b_data)
 {
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element.getID());
     const int material_id = _material_properties.getMaterialID(pos);
 
@@ -39,14 +39,18 @@ void LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
     //  _element->getDimension()
     assert(permeability.rows() == GlobalDim || permeability.rows() == 1);
 
-    if (permeability.size() == 1)  // isotropic or 1D problem.
+    if (permeability.size() == 1)
+    {  // isotropic or 1D problem.
         assembleMatrixAndVector<IsotropicCalculator>(
             material_id, t, local_x, local_M_data, local_K_data, local_b_data,
             pos, permeability);
+    }
     else
+    {
         assembleMatrixAndVector<AnisotropicCalculator>(
             material_id, t, local_x, local_M_data, local_K_data, local_b_data,
             pos, permeability);
+    }
 }
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -58,7 +62,7 @@ void LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
                             std::vector<double>& local_M_data,
                             std::vector<double>& local_K_data,
                             std::vector<double>& local_b_data,
-                            SpatialPosition const& pos,
+                            ParameterLib::SpatialPosition const& pos,
                             Eigen::MatrixXd const& permeability)
 {
     auto const local_matrix_size = local_x.size();
@@ -124,7 +128,7 @@ LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
         Eigen::Matrix<double, GlobalDim, Eigen::Dynamic, Eigen::RowMajor>>(
         velocity_cache, GlobalDim, num_intpts);
 
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element.getID());
     const int material_id = _material_properties.getMaterialID(pos);
     const Eigen::MatrixXd& permeability = _material_properties.getPermeability(
@@ -134,12 +138,16 @@ LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
     //  the assert must be changed to perm.rows() == _element->getDimension()
     assert(permeability.rows() == GlobalDim || permeability.rows() == 1);
 
-    if (permeability.size() == 1)  // isotropic or 1D problem.
+    if (permeability.size() == 1)
+    {  // isotropic or 1D problem.
         computeDarcyVelocityLocal<IsotropicCalculator>(local_x, permeability,
                                                        velocity_cache_vectors);
+    }
     else
+    {
         computeDarcyVelocityLocal<AnisotropicCalculator>(
             local_x, permeability, velocity_cache_vectors);
+    }
     return velocity_cache;
 }
 
@@ -222,7 +230,9 @@ void LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
     darcy_velocity_at_ips.col(ip).noalias() = -K * ip_data.dNdx * local_p;
     // gravity term
     if (gravitational_axis_id >= 0)
+    {
         darcy_velocity_at_ips.col(ip)[gravitational_axis_id] -= K * rho_g;
+    }
 }
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -271,5 +281,5 @@ void LiquidFlowLocalAssembler<ShapeFunction, IntegrationMethod, GlobalDim>::
     }
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace LiquidFlow
+}  // namespace ProcessLib

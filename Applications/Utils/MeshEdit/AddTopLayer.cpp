@@ -3,7 +3,7 @@
  * \brief Adds a top layer to an existing mesh.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,11 +30,11 @@ int main (int argc, char* argv[])
         "The documentation is available at "
         "https://docs.opengeosys.org/docs/tools/meshing/addtoplayer.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_arg("i", "input-mesh-file",
         "the name of the file containing the mesh", true,
         "", "file name");
@@ -51,11 +51,11 @@ int main (int argc, char* argv[])
 
     cmd.parse(argc, argv);
 
-    INFO("Reading mesh \"%s\" ... ", mesh_arg.getValue().c_str());
+    INFO("Reading mesh '%s' ... ", mesh_arg.getValue().c_str());
     auto subsfc_mesh = std::unique_ptr<MeshLib::Mesh>(
         MeshLib::IO::readMeshFromFile(mesh_arg.getValue()));
     if (!subsfc_mesh) {
-        ERR("Error reading mesh \"%s\".", mesh_arg.getValue().c_str());
+        ERR("Error reading mesh '%s'.", mesh_arg.getValue().c_str());
         return EXIT_FAILURE;
     }
     INFO("done.");
@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    INFO("Writing mesh \"%s\" ... ", mesh_out_arg.getValue().c_str());
+    INFO("Writing mesh '%s' ... ", mesh_out_arg.getValue().c_str());
     MeshLib::IO::writeMeshToFile(*result, mesh_out_arg.getValue());
     INFO("done.");
 

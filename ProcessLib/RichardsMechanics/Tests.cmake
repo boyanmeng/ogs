@@ -73,6 +73,42 @@ AddTest(
 )
 
 AddTest(
+    NAME RichardsMechanics_square_1e2_flow_fully_saturated_anisotropic
+    PATH RichardsMechanics
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS flow_fully_saturated_anisotropic.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu displacement displacement 2e-14 0
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu sigma sigma 1e-14 0
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu epsilon epsilon 1e-15 0
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu pressure pressure 1e-15 1e-15
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu velocity velocity 1e-15 1e-15
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu HydraulicFlow HydraulicFlow 1e-15 0
+    GLOB flow_fully_saturated_anisotropic_pcs_0_ts_*.vtu NodalForces NodalForces 1e-15 0
+)
+
+AddTest(
+    NAME RichardsMechanics_square_1e2_flow_fully_saturated_coordinate_system
+    PATH RichardsMechanics
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS flow_fully_saturated_coordinate_system.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu displacement displacement 2e-14 0
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu sigma sigma 1e-14 0
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu epsilon epsilon 1e-15 0
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu pressure pressure 1e-15 1e-15
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu velocity velocity 1e-15 1e-15
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu HydraulicFlow HydraulicFlow 1e-15 0
+    GLOB flow_fully_saturated_coordinate_system_pcs_0_ts_*.vtu NodalForces NodalForces 1e-15 0
+)
+
+AddTest(
     NAME RichardsMechanics_RichardsFlow_2d_small
     PATH RichardsMechanics
     EXECUTABLE ogs
@@ -91,6 +127,8 @@ AddTest(
     GLOB RichardsFlow_2d_small_pcs_0_ts_*.vtu velocity velocity 1e-15 1e-15
     GLOB RichardsFlow_2d_small_pcs_0_ts_*.vtu HydraulicFlow HydraulicFlow 1e-13 0
     GLOB RichardsFlow_2d_small_pcs_0_ts_*.vtu NodalForces NodalForces 1e-9 0
+    GLOB Richards_2d_geometry_OBSERVATION_POINT_pcs_0_ts_*.vtu displacement displacement 2e-14 0
+    GLOB Richards_2d_geometry_OBSERVATION_POINT_pcs_0_ts_*.vtu pressure pressure 1e-7 1e-15
 )
 AddTest(
     NAME RichardsMechanics_RichardsFlow_2d_quasinewton
@@ -100,6 +138,7 @@ AddTest(
     WRAPPER time
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
+    RUNTIME 49
     DIFF_DATA
     GLOB RichardsFlow_2d_quasinewton_pcs_0_ts_*.vtu displacement displacement 2e-14 0
     GLOB RichardsFlow_2d_quasinewton_pcs_0_ts_*.vtu sigma sigma 1e-8 0

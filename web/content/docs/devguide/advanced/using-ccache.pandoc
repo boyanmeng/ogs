@@ -10,7 +10,7 @@ weight = 1036
 +++
 
 ::: {.note}
-### <i class="fas fa-exclamation-triangle"></i> GCC-like compilers only
+### <i class="far fa-exclamation-triangle"></i> GCC-like compilers only
 
 Tested on GCC and Clang.
 :::
@@ -33,7 +33,7 @@ See the [ccache docs](https://ccache.samba.org/manual.html#_configuration_settin
 
 Set the option `run_second_cpp = true` or `export CCACHE_CPP2=true` to suppress lots of [false positive compiler warnings](http://peter.eisentraut.org/blog/2014/12/01/ccache-and-clang-part-3/).
 
-## Usage on envinf1
+## Usage on eve
 
 Just load the module:
 

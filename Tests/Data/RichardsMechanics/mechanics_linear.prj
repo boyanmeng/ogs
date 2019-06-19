@@ -26,7 +26,6 @@
                 <youngs_modulus>E</youngs_modulus>
                 <poissons_ratio>nu</poissons_ratio>
             </constitutive_relation>
-            <intrinsic_permeability>k</intrinsic_permeability>
             <solid_bulk_modulus>K_SR</solid_bulk_modulus>
             <fluid_bulk_modulus>K_LR</fluid_bulk_modulus>
             <biot_coefficient>alpha</biot_coefficient>
@@ -103,16 +102,6 @@
                 <time_discretization>
                     <type>BackwardEuler</type>
                 </time_discretization>
-                <output>
-                    <variables>
-                        <variable>displacement</variable>
-                        <variable>pressure</variable>
-                        <variable>sigma</variable>
-                        <variable>epsilon</variable>
-                        <variable>velocity</variable>
-                        <variable>saturation</variable>
-                    </variables>
-                </output>
                 <time_stepping>
                     <type>FixedTimeStepping</type>
                     <t_initial>0</t_initial>
@@ -135,6 +124,14 @@
                     <each_steps>10000000</each_steps>
                 </pair>
             </timesteps>
+            <variables>
+                <variable>displacement</variable>
+                <variable>pressure</variable>
+                <variable>sigma</variable>
+                <variable>epsilon</variable>
+                <variable>velocity</variable>
+                <variable>saturation</variable>
+            </variables>
         </output>
     </time_loop>
     <parameters>

@@ -4,7 +4,7 @@
  * \date   2016-02-19
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -75,8 +75,11 @@ TEST(FileIO, DISABLED_TetGenSmeshInterface)
     std::vector<GeoLib::Surface*> const& new_sfc (*geo_objects.getSurfaceVec(tg_new_name));
     ASSERT_EQ(ref_sfc.size(), new_sfc.size());
 
-    for (std::size_t i=0; i<ref_sfc.size(); ++i)
-        ASSERT_EQ(ref_sfc[i]->getNumberOfTriangles(), new_sfc[i]->getNumberOfTriangles());
+    for (std::size_t i = 0; i < ref_sfc.size(); ++i)
+    {
+        ASSERT_EQ(ref_sfc[i]->getNumberOfTriangles(),
+                  new_sfc[i]->getNumberOfTriangles());
+    }
 
     std::remove(output_name.c_str());
 }
@@ -92,9 +95,11 @@ TEST(FileIO, TetGenMeshReaderWithMaterials)
     ASSERT_EQ(1378, mesh->getNumberOfNodes());
     ASSERT_EQ(5114, mesh->getNumberOfElements());
 
-    std::pair<int, int> bounds (MeshLib::MeshInformation::getValueBounds<int>(*mesh, "MaterialIDs"));
-    ASSERT_EQ(-20, bounds.first);
-    ASSERT_EQ(-10, bounds.second);
+    auto const& bounds =
+        MeshLib::MeshInformation::getValueBounds<int>(*mesh, "MaterialIDs");
+    ASSERT_TRUE(boost::none != bounds);
+    ASSERT_EQ(-20, bounds->first);
+    ASSERT_EQ(-10, bounds->second);
 }
 
 // TetGen mesh without additional information
@@ -108,7 +113,7 @@ TEST(FileIO, TetGenMeshReaderWithoutMaterials)
     ASSERT_EQ(202, mesh->getNumberOfNodes());
     ASSERT_EQ(650, mesh->getNumberOfElements());
 
-    std::pair<int, int> bounds (MeshLib::MeshInformation::getValueBounds<int>(*mesh, "MaterialIDs"));
-    ASSERT_EQ(std::numeric_limits<int>::max(), bounds.first);
-    ASSERT_EQ(std::numeric_limits<int>::max(), bounds.second);
+    auto const& bounds =
+        MeshLib::MeshInformation::getValueBounds<int>(*mesh, "MaterialIDs");
+    ASSERT_TRUE(boost::none == bounds);
 }

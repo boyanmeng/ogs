@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,8 +13,8 @@
 
 #include "NumLib/DOF/DOFTableUtil.h"
 
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Process.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "MeshLib/Elements/MapBulkElementPoint.h"
@@ -89,12 +89,8 @@ public:
     {
         (void)local_matrix_size; // unused, but needed for the interface
 
-
-        using FemType =
-            NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
-
-        FemType fe(*static_cast<const typename ShapeFunction::MeshElement*>(
-            &_surface_element));
+        auto const fe = NumLib::createIsoparametricFiniteElement<
+            ShapeFunction, ShapeMatricesType>(_surface_element);
 
         auto const n_integration_points =
             _integration_method.getNumberOfPoints();
@@ -170,4 +166,4 @@ private:
     MathLib::Vector3 const _surface_element_normal;
 };
 
-}  // ProcessLib
+}  // namespace ProcessLib

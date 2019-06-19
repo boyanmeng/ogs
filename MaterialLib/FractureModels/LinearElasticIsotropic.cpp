@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,7 +18,7 @@ namespace Fracture
 template <int DisplacementDim>
 void LinearElasticIsotropic<DisplacementDim>::computeConstitutiveRelation(
     double const t,
-    ProcessLib::SpatialPosition const& x,
+    ParameterLib::SpatialPosition const& x,
     double const aperture0,
     Eigen::Ref<Eigen::VectorXd const>
         sigma0,
@@ -40,7 +40,9 @@ void LinearElasticIsotropic<DisplacementDim>::computeConstitutiveRelation(
     const int index_ns = DisplacementDim - 1;
     C.setZero();
     for (int i = 0; i < index_ns; i++)
+    {
         C(i, i) = _mp.shear_stiffness(t, x)[0];
+    }
 
     sigma.noalias() = C * w;
 

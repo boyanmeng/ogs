@@ -5,7 +5,7 @@
  * \brief  Implementation of the MshQualitySelectionDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -21,7 +21,7 @@
 
 /// Constructor
 MeshQualitySelectionDialog::MeshQualitySelectionDialog(QDialog* parent)
-: QDialog(parent), _metric (MeshLib::MeshQualityType::EDGERATIO), _histogram_path("")
+    : QDialog(parent), _histogram_path("")
 {
     setupUi(this);
     this->choiceEdges->toggle();

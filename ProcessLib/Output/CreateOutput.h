@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -11,10 +11,16 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace BaseLib
 {
 class ConfigTree;
+}
+
+namespace MeshLib
+{
+class Mesh;
 }
 
 namespace ProcessLib
@@ -25,7 +31,9 @@ class Output;
 
 namespace ProcessLib
 {
-std::unique_ptr<Output> createOutput(const BaseLib::ConfigTree& config,
-                                     const std::string& output_directory);
+std::unique_ptr<Output> createOutput(
+    const BaseLib::ConfigTree& config,
+    const std::string& output_directory,
+    std::vector<std::unique_ptr<MeshLib::Mesh>> const& meshes);
 
 }  // namespace ProcessLib

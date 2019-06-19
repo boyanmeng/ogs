@@ -2,7 +2,7 @@
  *  \brief Test viscosity models
  *
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -64,8 +64,10 @@ TEST(Material, checkTemperatureDependentViscosity)
     vars[0] = 350.0;
     const double mu_expected = 1.e-3 * std::exp(-(vars[0] - 293) / 368);
     ASSERT_NEAR(mu_expected, mu->getValue(vars), 1.e-10);
+    const double dmu_dT_expected =
+        -1.e-3/368 * std::exp(-(vars[0] - 293) / 368);
     ASSERT_NEAR(
-        -mu_expected,
+        dmu_dT_expected,
         mu->getdValue(vars, MaterialLib::Fluid::PropertyVariableType::T),
         1.e-10);
 }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,6 +27,7 @@ public:
     Iterator begin() const { return _begin; }
     Iterator end()   const { return _end; }
     std::size_t size() const { return std::distance(_begin, _end); }
+    bool empty() const { return size() == 0; }
 
 private:
     Iterator _begin;
@@ -39,7 +40,9 @@ ConfigTree::
 getConfigParameter(std::string const& param) const
 {
     if (auto p = getConfigParameterOptional<T>(param))
+    {
         return *p;
+    }
 
     error("Key <" + param + "> has not been found");
 }
@@ -50,7 +53,9 @@ ConfigTree::
 getConfigParameter(std::string const& param, T const& default_value) const
 {
     if (auto p = getConfigParameterOptional<T>(param))
+    {
         return *p;
+    }
 
     return default_value;
 }
@@ -68,7 +73,10 @@ template <typename T>
 boost::optional<T> ConfigTree::getConfigParameterOptionalImpl(
     std::string const& param, T*) const
 {
-    if (auto p = getConfigSubtreeOptional(param)) return p->getValue<T>();
+    if (auto p = getConfigSubtreeOptional(param))
+    {
+        return p->getValue<T>();
+    }
 
     return boost::none;
 }
@@ -83,7 +91,9 @@ boost::optional<std::vector<T>> ConfigTree::getConfigParameterOptionalImpl(
         std::vector<T> result;
         T value;
         while (sstr >> value)
+        {
             result.push_back(value);
+        }
         if (!sstr.eof())  // The stream is not read until the end, must be an
                         // error. result contains number of read values.
         {
@@ -184,9 +194,11 @@ ConfigTree::
 getConfigAttribute(std::string const& attr) const
 {
     if (auto a = getConfigAttributeOptional<T>(attr))
+    {
         return *a;
+    }
 
-    error("Did not find XML attribute with name \"" + attr + "\".");
+    error("Did not find XML attribute with name '" + attr + "'.");
 }
 
 template <typename T>
@@ -194,7 +206,9 @@ T ConfigTree::getConfigAttribute(std::string const& attr,
                                  T const& default_value) const
 {
     if (auto a = getConfigAttributeOptional<T>(attr))
+    {
         return *a;
+    }
 
     return default_value;
 }
@@ -213,7 +227,7 @@ getConfigAttributeOptional(std::string const& attr) const
             if (auto v = a->get_value_optional<T>()) {
                 return v;
             }
-            error("Value for XML attribute \"" + attr + "\" `" +
+            error("Value for XML attribute '" + attr + "' `" +
                   shortString(a->data()) +
                   "' not convertible to the desired type.");
         }
@@ -236,14 +250,18 @@ markVisited(std::string const& key, Attr const is_attr,
     if (!p.second) { // no insertion happened
         auto& v = p.first->second;
         if (v.type == type) {
-            if (!peek_only) ++v.count;
+            if (!peek_only)
+            {
+                ++v.count;
+            }
         } else {
-            error("There already was an attempt to obtain key <" + key
-                  + "> with type \"" + v.type.name() + "\" (now: \"" + type.name() + "\").");
+            error("There already was an attempt to obtain key <" + key +
+                  "> with type '" + v.type.name() + "' (now: '" + type.name() +
+                  "').");
         }
     }
 
     return p.first->second;
 }
 
-}
+}  // namespace BaseLib

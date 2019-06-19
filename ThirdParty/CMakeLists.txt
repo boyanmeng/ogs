@@ -17,10 +17,15 @@ if(MSVC)
     set_target_properties(logog PROPERTIES COMPILE_FLAGS /W0)
 endif()
 
-add_subdirectory(gtest)
+set(gtest_force_shared_crt ON CACHE INTERNAL "") # Use dynamic MSVC runtime
+set(INSTALL_GTEST OFF CACHE INTERNAL "")
+add_subdirectory(googletest)
 
 # This is a workaround for Travis builds.
 option(OGS_USE_OPTIONAL_SUBMODULES "Option for enabling optional submodules" OFF)
+
+#iphreeqc
+add_subdirectory(iphreeqc)
 
 # VtkFbxConverter
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VtkFbxConverter/CMakeLists.txt
@@ -46,6 +51,13 @@ if(OGS_BUILD_SWMM)
 endif()
 
 if(OGS_USE_PYTHON)
+    # pybind11 uses old CMake find functionality, pass variables to use
+    # the same Python installation.
+    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS} CACHE STRING "" FORCE)
+    set(PYTHON_LIBRARIES ${Python_LIBRARIES} CACHE STRING "" FORCE)
+    set(PYTHON_EXECUTABLE ${Python_EXECUTABLE} CACHE FILEPATH "" FORCE)
+
     add_subdirectory(pybind11)
 
     function(check_python_version_compatibility)
@@ -54,19 +66,18 @@ if(OGS_USE_PYTHON)
         endif()
 
         include(${VTK_DIR}/VTKConfig.cmake)
-
         if(NOT ${VTK_WRAP_PYTHON})
             return()
         endif()
+
         if(NOT EXISTS ${VTK_MODULES_DIR}/vtkPython.cmake)
             return()
         endif()
 
         include(${VTK_MODULES_DIR}/vtkPython.cmake)
-
-        if (NOT "${vtkPython_LIBRARIES}" STREQUAL "${PYTHON_LIBRARIES}")
+        if (NOT "${vtkPython_LIBRARIES}" STREQUAL "${Python_LIBRARIES}")
             message(SEND_ERROR "Mismatch between VTK's and OpenGeoSys' Python "
-                "libraries: ${vtkPython_LIBRARIES} vs. ${PYTHON_LIBRARIES}. "
+                "libraries: ${vtkPython_LIBRARIES} vs. ${Python_LIBRARIES}. "
                 "This will lead to compilation or linking errors. "
                 "You can fix this error by using the same Python version for "
                 "OpenGeoSys as VTK is built with.")
@@ -74,6 +85,7 @@ if(OGS_USE_PYTHON)
     endfunction()
 
     check_python_version_compatibility()
+
 endif()
 
 if(OGS_BUILD_UTILS)

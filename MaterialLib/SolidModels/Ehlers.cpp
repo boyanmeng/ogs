@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,8 +9,9 @@
 
 #include "Ehlers.h"
 #include <boost/math/special_functions/pow.hpp>
-
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
+
+#include "LinearElasticIsotropic.h"
 
 /**
  * Common convenitions for naming:
@@ -468,12 +469,46 @@ splitSolutionVector(ResidualVector const& solution)
 }
 
 template <int DisplacementDim>
+SolidEhlers<DisplacementDim>::SolidEhlers(
+    NumLib::NewtonRaphsonSolverParameters nonlinear_solver_parameters,
+    MaterialPropertiesParameters material_properties,
+    std::unique_ptr<DamagePropertiesParameters>&& damage_properties,
+    TangentType tangent_type)
+    : _nonlinear_solver_parameters(std::move(nonlinear_solver_parameters)),
+      _mp(std::move(material_properties)),
+      _damage_properties(std::move(damage_properties)),
+      _tangent_type(tangent_type)
+{
+}
+
+template <int DisplacementDim>
+double SolidEhlers<DisplacementDim>::computeFreeEnergyDensity(
+    double const /*t*/,
+    ParameterLib::SpatialPosition const& /*x*/,
+    double const /*dt*/,
+    KelvinVector const& eps,
+    KelvinVector const& sigma,
+    typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
+        material_state_variables) const
+{
+    assert(dynamic_cast<StateVariables<DisplacementDim> const*>(
+               &material_state_variables) != nullptr);
+
+    auto const& eps_p = static_cast<StateVariables<DisplacementDim> const&>(
+                            material_state_variables)
+                            .eps_p;
+    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
+    auto const& identity2 = Invariants::identity2;
+    return (eps - eps_p.D - eps_p.V / 3 * identity2).dot(sigma) / 2;
+}
+
+template <int DisplacementDim>
 boost::optional<std::tuple<typename SolidEhlers<DisplacementDim>::KelvinVector,
                            std::unique_ptr<typename MechanicsBase<
                                DisplacementDim>::MaterialStateVariables>,
                            typename SolidEhlers<DisplacementDim>::KelvinMatrix>>
 SolidEhlers<DisplacementDim>::integrateStress(
-    double const t, ProcessLib::SpatialPosition const& x, double const dt,
+    double const t, ParameterLib::SpatialPosition const& x, double const dt,
     KelvinVector const& eps_prev, KelvinVector const& eps,
     KelvinVector const& sigma_prev,
     typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -514,10 +549,8 @@ SolidEhlers<DisplacementDim>::integrateStress(
              calculateIsotropicHardening(mp.kappa, mp.hardening_coefficient,
                                          state.eps_p.eff)) < 0))
     {
-        tangentStiffness.setZero();
-        tangentStiffness.template topLeftCorner<3, 3>().setConstant(
-            mp.K - 2. / 3 * mp.G);
-        tangentStiffness.noalias() += 2 * mp.G * KelvinMatrix::Identity();
+        tangentStiffness = elasticTangentStiffness<DisplacementDim>(
+            mp.K - 2. / 3 * mp.G, mp.G);
     }
     else
     {
@@ -596,14 +629,18 @@ SolidEhlers<DisplacementDim>::integrateStress(
             auto const success_iterations = newton_solver.solve(jacobian);
 
             if (!success_iterations)
+            {
                 return {};
+            }
 
             // If the Newton loop didn't run, the linear solver will not be
             // initialized.
             // This happens usually for the first iteration of the first
             // timestep.
             if (*success_iterations == 0)
+            {
                 linear_solver.compute(jacobian);
+            }
 
             std::tie(sigma, state.eps_p, std::ignore) =
                 splitSolutionVector<ResidualVectorType, KelvinVector>(solution);
@@ -618,10 +655,30 @@ SolidEhlers<DisplacementDim>::integrateStress(
         dresidual_deps.template block<KelvinVectorSize, KelvinVectorSize>(0, 0)
             .noalias() = calculateDResidualDEps<DisplacementDim>(mp.K, mp.G);
 
-        tangentStiffness =
-            mp.G *
-            linear_solver.solve(-dresidual_deps)
-                .template block<KelvinVectorSize, KelvinVectorSize>(0, 0);
+        if (_tangent_type == TangentType::Elastic)
+        {
+            tangentStiffness =
+                elasticTangentStiffness<DisplacementDim>(mp.K, mp.G);
+        }
+        else if (_tangent_type == TangentType::Plastic ||
+                 _tangent_type == TangentType::PlasticDamageSecant)
+        {
+            tangentStiffness =
+                mp.G *
+                linear_solver.solve(-dresidual_deps)
+                    .template block<KelvinVectorSize, KelvinVectorSize>(0, 0);
+            if (_tangent_type == TangentType::PlasticDamageSecant)
+            {
+                tangentStiffness *= 1 - state.damage.value();
+            }
+        }
+        else
+        {
+            OGS_FATAL(
+                "Unimplemented tangent type behaviour for the tangent type "
+                "'%d'.",
+                _tangent_type);
+        }
     }
 
     KelvinVector sigma_final = mp.G * sigma;

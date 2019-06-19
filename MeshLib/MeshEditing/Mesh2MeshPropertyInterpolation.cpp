@@ -5,7 +5,7 @@
  * \brief  Implementation of the Mesh2MeshPropertyInterpolation class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -59,7 +59,7 @@ bool Mesh2MeshPropertyInterpolation::setPropertiesForMesh(Mesh& dest_mesh) const
     }
     else
     {
-        INFO("Create new PropertyVector \"%s\" of type double.",
+        INFO("Create new PropertyVector '%s' of type double.",
              _property_name.c_str());
         dest_properties =
             dest_mesh.getProperties().createNewPropertyVector<double>(
@@ -68,13 +68,15 @@ bool Mesh2MeshPropertyInterpolation::setPropertiesForMesh(Mesh& dest_mesh) const
         {
             WARN(
                 "Could not get or create a PropertyVector of type double"
-                " using the given name \"%s\".",
+                " using the given name '%s'.",
                 _property_name.c_str());
             return false;
         }
     }
     if (dest_properties->size() != dest_mesh.getNumberOfElements())
+    {
         dest_properties->resize(dest_mesh.getNumberOfElements());
+    }
 
     interpolatePropertiesForMesh(dest_mesh, *dest_properties);
 
@@ -102,7 +104,9 @@ void Mesh2MeshPropertyInterpolation::interpolatePropertiesForMesh(
     {
         MeshLib::Element& dest_element(*dest_elements[k]);
         if (dest_element.getGeomType() == MeshElemType::LINE)
+        {
             continue;
+        }
 
         // compute axis aligned bounding box around the current element
         const GeoLib::AABB elem_aabb(
@@ -132,10 +136,12 @@ void Mesh2MeshPropertyInterpolation::interpolatePropertiesForMesh(
         }
 
         if (cnt == 0)
+        {
             OGS_FATAL(
                 "Mesh2MeshInterpolation: Could not find values in source mesh "
                 "for the element %d.",
                 k);
+        }
         dest_properties[k] = average_value / cnt;
     }
 }
@@ -146,7 +152,7 @@ void Mesh2MeshPropertyInterpolation::interpolateElementPropertiesToNodePropertie
     // fetch the source of property values
     if (!_src_mesh.getProperties().existsPropertyVector<double>(_property_name))
     {
-        WARN("Did not find PropertyVector<double> \"%s\".",
+        WARN("Did not find PropertyVector<double> '%s'.",
              _property_name.c_str());
         return;
     }

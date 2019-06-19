@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkStationSource class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -65,7 +65,7 @@ protected:
                            vtkInformationVector* outputVector) override;
 
     /// The stations to visualize
-    const std::vector<GeoLib::Point*>* _stations;
+    const std::vector<GeoLib::Point*>* _stations{nullptr};
 
     /// The colour table for stratigraphic data. This table is either set using the setColorLookupTable() method or is generated
     /// automatically with random colours while creating the VtkStationSource-object.

@@ -5,7 +5,7 @@
  * \brief  Implementation of the Writer class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,7 +36,9 @@ std::string Writer::writeToString()
     _out.clear();
 
     if (this->write())
+    {
         return _out.str();
+    }
 
     return std::string("");
 }
@@ -52,7 +54,7 @@ int Writer::writeToFile(std::string const& filename)
         // check file stream
         if (!fileStream)
         {
-            ERR("Could not open file \"%s\"!", filename.c_str());
+            ERR("Could not open file '%s'!", filename.c_str());
             return 0;
         }
 

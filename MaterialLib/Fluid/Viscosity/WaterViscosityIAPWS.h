@@ -4,7 +4,7 @@
  *         Water Substance
  *
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -82,5 +82,5 @@ private:
     // Coefficients Hi and Hij are given in two static arrays in the cpp file.
 };
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

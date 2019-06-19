@@ -3,7 +3,7 @@
    \brief create an instance of a fluid density class.
 
    \copyright
-    Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+    Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
                Distributed under a Modified BSD License.
                See accompanying file LICENSE.txt or
                http://www.opengeosys.org/project/license
@@ -78,14 +78,14 @@ static std::unique_ptr<FluidProperty> createLinearConcentrationDependentDensity(
     //! \ogs_file_param{material__fluid__density__type}
     config.checkConfigParameter("type", "ConcentrationDependent");
 
-    const double reference_density =
-    //! \ogs_file_param{material__fluid__density__ConcentrationDependent__reference_density}
+    const auto reference_density =
+        //! \ogs_file_param{material__fluid__density__ConcentrationDependent__reference_density}
         config.getConfigParameter<double>("reference_density");
-    const double reference_concentration =
-    //! \ogs_file_param{material__fluid__density__ConcentrationDependent__reference_concentration}
+    const auto reference_concentration =
+        //! \ogs_file_param{material__fluid__density__ConcentrationDependent__reference_concentration}
         config.getConfigParameter<double>("reference_concentration");
-    const double fluid_density_difference_ratio =
-    //! \ogs_file_param{material__fluid__density__ConcentrationDependent__fluid_density_difference_ratio}
+    const auto fluid_density_difference_ratio =
+        //! \ogs_file_param{material__fluid__density__ConcentrationDependent__fluid_density_difference_ratio}
         config.getConfigParameter<double>("fluid_density_difference_ratio");
     return std::make_unique<LinearConcentrationDependentDensity>(
         reference_density,
@@ -99,20 +99,20 @@ createLinearConcentrationAndPressureDependentDensity(
     //! \ogs_file_param{material__fluid__density__type}
     config.checkConfigParameter("type", "ConcentrationAndPressureDependent");
 
-    const double reference_density =
+    const auto reference_density =
         //! \ogs_file_param{material__fluid__density__ConcentrationAndPressureDependent__reference_density}
         config.getConfigParameter<double>("reference_density");
-    const double reference_concentration =
+    const auto reference_concentration =
         //! \ogs_file_param{material__fluid__density__ConcentrationAndPressureDependent__reference_concentration}
         config.getConfigParameter<double>("reference_concentration");
-    const double fluid_density_concentration_difference_ratio =
+    const auto fluid_density_concentration_difference_ratio =
         //! \ogs_file_param{material__fluid__density__ConcentrationAndPressureDependent__fluid_density_concentration_difference_ratio}
         config.getConfigParameter<double>(
             "fluid_density_concentration_difference_ratio");
-    const double reference_pressure =
+    const auto reference_pressure =
         //! \ogs_file_param{material__fluid__density__ConcentrationAndPressureDependent__reference_pressure}
         config.getConfigParameter<double>("reference_pressure");
-    const double fluid_density_pressure_difference_ratio =
+    const auto fluid_density_pressure_difference_ratio =
         //! \ogs_file_param{material__fluid__density__ConcentrationAndPressureDependent__fluid_density_pressure_difference_ratio}
         config.getConfigParameter<double>(
             "fluid_density_pressure_difference_ratio");
@@ -139,13 +139,21 @@ std::unique_ptr<FluidProperty> createFluidDensityModel(
             config.getConfigParameter<double>("value"));
     }
     if (type == "LiquidDensity")
+    {
         return createLiquidDensity(config);
+    }
     if (type == "TemperatureDependent")
+    {
         return createLinearTemperatureDependentDensity(config);
+    }
     if (type == "ConcentrationDependent")
+    {
         return createLinearConcentrationDependentDensity(config);
+    }
     if (type == "ConcentrationAndPressureDependent")
+    {
         return createLinearConcentrationAndPressureDependentDensity(config);
+    }
     if (type == "IdealGasLaw")
     {
         //! \ogs_file_param{material__fluid__density__type}
@@ -167,5 +175,5 @@ std::unique_ptr<FluidProperty> createFluidDensityModel(
         type.data());
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -66,7 +66,7 @@ makeConfigTree(const std::string& filepath, const bool be_ruthless,
                   e.filename().c_str(), e.line(), e.message().c_str());
     }
 
-    DBUG("Project configuration from file \'%s\' read.", filepath.c_str());
+    DBUG("Project configuration from file '%s' read.", filepath.c_str());
 
     if (auto child = ptree.get_child_optional(toplevel_tag)) {
         return ConfigTreeTopLevel(filepath, be_ruthless, std::move(*child));
@@ -75,4 +75,4 @@ makeConfigTree(const std::string& filepath, const bool be_ruthless,
               filepath.c_str());
 }
 
-}
+}  // namespace BaseLib

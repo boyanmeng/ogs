@@ -1,6 +1,6 @@
 /*
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,11 +12,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <vector>
-
-#include <tclap/CmdLine.h>
-
-#include "Applications/ApplicationsLib/LogogSetup.h"
-#include "Applications/FileIO/readGeometryFromFile.h"
 
 #include "MeshLib/IO/readMeshFromFile.h"
 #include "MeshLib/IO/writeMeshToFile.h"
@@ -84,4 +79,4 @@ void resetMeshElementProperty(MeshLib::Mesh& mesh,
     }
 }
 
-}  // end namespace
+}  // namespace MeshGeoToolsLib

@@ -5,7 +5,7 @@
  * @brief Definition of the CsvInterface class.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -47,6 +47,11 @@ public:
 
     /// Returns the number of vectors currently staged for writing.
     std::size_t getNArrays() const { return _vec_names.size(); }
+
+    /// Returns a vector containing the names of columns in the file (assuming
+    /// the file *has* a header)
+    static std::vector<std::string> getColumnNames(std::string const& fname,
+                                                   char delim);
 
     /// Adds an index vector of size s to the CSV file
     void addIndexVectorForWriting(std::size_t s);
@@ -157,7 +162,7 @@ public:
         std::size_t const column_idx = CsvInterface::findColumn(line, delim, column_name);
         if (column_idx == std::numeric_limits<std::size_t>::max())
         {
-            ERR ("Column \"%s\" not found in file header.", column_name.c_str());
+            ERR("Column '%s' not found in file header.", column_name.c_str());
             return -1;
         }
         return readColumn<T>(in, delim, data_array, column_idx);
@@ -233,9 +238,9 @@ private:
      */
     void writeValue(std::size_t vec_idx, std::size_t in_vec_idx);
 
-    bool _writeCsvHeader;
+    bool _writeCsvHeader{true};
     std::vector<std::string> _vec_names;
     std::vector< boost::any > _data;
 };
 
-} // FileIO
+}  // namespace FileIO

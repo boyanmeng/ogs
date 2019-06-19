@@ -5,7 +5,7 @@
  * \brief  Definition of the SensorData class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,14 +58,14 @@ enum class TimeStepType
  *
  * \sa Station
  */
-class SensorData
+class SensorData final
 {
 public:
     /// Constructor using file name (automatically reads the file and fills all data structures)
-    SensorData(const std::string &file_name);
+    explicit SensorData(const std::string& file_name);
 
     /// Constructor using a time step vector valid for all time series that will be added later
-    SensorData(std::vector<std::size_t> time_steps);
+    explicit SensorData(std::vector<std::size_t> time_steps);
 
     /// Constructor using time step bounds for all time series that will be added later
     SensorData(std::size_t first_timestep, std::size_t last_timestep, std::size_t step_size);
@@ -104,9 +104,6 @@ public:
 
     /// Returns the unit the time steps
     TimeStepType getTimeUnit() const { return _time_unit; }
-
-    /// Returns the data unit of the given time series
-    std::string getDataUnit(SensorDataType t) const;
 
     /// Converts Sensor Data Types to Strings
     static std::string convertSensorDataType2String(SensorDataType t);

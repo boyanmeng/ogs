@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -39,11 +39,11 @@ int main (int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Converts TIN file into VTU file.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> inArg("i", "input-tin-file",
                                          "the name of the file containing the input TIN", true,
                                          "", "string");
@@ -56,13 +56,16 @@ int main (int argc, char* argv[])
 
     INFO("reading the TIN file...");
     const std::string tinFileName(inArg.getValue());
-    auto pnt_vec = std::make_unique<std::vector<GeoLib::Point*>>();
-    GeoLib::PointVec point_vec("SurfacePoints", std::move(pnt_vec));
+    GeoLib::PointVec point_vec("SurfacePoints",
+                               std::make_unique<std::vector<GeoLib::Point*>>());
     std::unique_ptr<GeoLib::Surface> sfc(
         GeoLib::IO::TINInterface::readTIN(tinFileName, point_vec));
     if (!sfc)
+    {
         return EXIT_FAILURE;
-    INFO("TIN read:  %d points, %d triangles", pnt_vec->size(), sfc->getNumberOfTriangles());
+    }
+    INFO("TIN read:  %d points, %d triangles", point_vec.size(),
+         sfc->getNumberOfTriangles());
 
     INFO("converting to mesh data");
     std::unique_ptr<MeshLib::Mesh> mesh(MeshLib::convertSurfaceToMesh(*sfc, BaseLib::extractBaseNameWithoutExtension(tinFileName), std::numeric_limits<double>::epsilon()));

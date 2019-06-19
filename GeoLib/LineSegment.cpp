@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -101,4 +101,4 @@ bool operator==(LineSegment const& s0, LineSegment const& s1)
         (MathLib::sqrDist(s0.getBeginPoint(), s1.getEndPoint()) < tol &&
          MathLib::sqrDist(s0.getEndPoint(), s1.getBeginPoint()) < tol);
 }
-}
+}  // namespace GeoLib

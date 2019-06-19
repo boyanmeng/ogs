@@ -5,7 +5,7 @@
  * \brief  Implementation of the ElementTreeModel class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -28,8 +28,7 @@
 /**
  * Constructor.
  */
-ElementTreeModel::ElementTreeModel( QObject* parent )
-    : TreeModel(parent), _mesh_source(nullptr)
+ElementTreeModel::ElementTreeModel(QObject* parent) : TreeModel(parent)
 {
     QList<QVariant> rootData;
     delete _rootItem;
@@ -65,10 +64,7 @@ void ElementTreeModel::setElement(vtkUnstructuredGridAlgorithm const*const grid,
     auto* typeItem = new TreeItem(typeData, elemItem);
     elemItem->appendChild(typeItem);
 
-    MeshLib::PropertyVector<int> const*const mat_ids =
-        mesh->getProperties().existsPropertyVector<int>("MaterialIDs")
-            ? mesh->getProperties().getPropertyVector<int>("MaterialIDs")
-            : nullptr;
+    auto const mat_ids = materialIDs(*mesh);
     QString matIdString = !mat_ids ? QString("not defined") : QString::number((*mat_ids)[elem->getID()]);
     QList<QVariant> materialData;
     materialData << "MaterialID: " << matIdString;
@@ -92,9 +88,10 @@ void ElementTreeModel::setElement(vtkUnstructuredGridAlgorithm const*const grid,
     {
         const MeshLib::Node* node = elem->getNode(i);
         QList<QVariant> nodeData;
-        nodeData << "Node " + QString::number(node->getID()) <<
-        QString::number((*node)[0]) << QString::number((*node)[1]) <<
-        QString::number((*node)[2]);
+        nodeData << "Node " + QString::number(node->getID())
+                 << QString::number((*node)[0], 'f', 6)
+                 << QString::number((*node)[1], 'f', 6)
+                 << QString::number((*node)[2], 'f', 6);
         auto* nodeItem = new TreeItem(nodeData, nodeListItem);
         nodeListItem->appendChild(nodeItem);
     }
@@ -171,17 +168,26 @@ void ElementTreeModel::setMesh(MeshLib::Mesh const& mesh)
     {
         QList<QVariant> array_info;
         array_info << QString::fromStdString(vec_name) + ": ";
-        auto vec_bounds(
-            MeshLib::MeshInformation::getValueBounds<int>(mesh, vec_name));
-        if (vec_bounds.second != std::numeric_limits<int>::max())
-            array_info << "[" + QString::number(vec_bounds.first) + "," << QString::number(vec_bounds.second) + "]" << "";
+        if (auto const vec_bounds =  // test if boost::optional is empty
+            MeshLib::MeshInformation::getValueBounds<int>(mesh, vec_name))
+        {
+            array_info << "[" + QString::number(vec_bounds->first) + ","
+                       << QString::number(vec_bounds->second) + "]";
+        }
+        else if (auto const vec_bounds =  // test if boost::optional is empty
+                 MeshLib::MeshInformation::getValueBounds<double>(mesh,
+                                                                  vec_name))
+        {
+            array_info << "[" + QString::number(vec_bounds->first) + ","
+                       << QString::number(vec_bounds->second) + "]";
+        }
         else
         {
-            auto vec_bounds(MeshLib::MeshInformation::getValueBounds<double>(
-                mesh, vec_name));
-            if (vec_bounds.second != std::numeric_limits<double>::max())
-                array_info  << "[" + QString::number(vec_bounds.first) + "," << QString::number(vec_bounds.second) + "]" << "";
+            // Makeup the same structure of output as in the valid cases above.
+            array_info << "[error,"
+                       << "error]";
         }
+
         if (array_info.size() == 1)
             array_info << "[ ?" << "? ]" << "";
         auto* vec_item = new TreeItem(array_info, _rootItem);

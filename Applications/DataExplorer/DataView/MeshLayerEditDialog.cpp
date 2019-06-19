@@ -5,7 +5,7 @@
  * \brief  Implementation of the MeshLayerEditDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -155,7 +155,7 @@ void MeshLayerEditDialog::createMeshToolSelection()
     _ogsMeshButton = new QRadioButton("Prisms", meshToolSelectionBox);
     QRadioButton* tetgenMeshButton = new QRadioButton("Tetrahedra", meshToolSelectionBox);
     tetgenMeshButton->setFixedWidth(150);
-    QLabel* minThicknessLabel = new QLabel(meshToolSelectionBox);
+    auto* minThicknessLabel = new QLabel(meshToolSelectionBox);
     minThicknessLabel->setText("Minimum thickness of layers:");
     _minThicknessEdit = new QLineEdit(meshToolSelectionBox);
     _minThicknessEdit->setText("1.0");
@@ -259,7 +259,8 @@ void MeshLayerEditDialog::accept()
 {
     if (this->_edits.isEmpty())
     {
-        OGSError::box("Please specifiy the number and\n type of layers and press \"Next\"");
+        OGSError::box(
+            "Please specifiy the number and\n type of layers and press 'Next'");
         return;
     }
 

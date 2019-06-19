@@ -5,7 +5,7 @@
  * \brief  Definition of the ElementQualityInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -65,8 +65,7 @@ public:
         if (_quality_tester)
             return _quality_tester->getHistogram(static_cast<std::size_t>(n_bins));
 
-        std::vector<double> empty_quality_vec(0);
-        return empty_quality_vec;
+        return BaseLib::Histogram<double>{{}};
     }
 
     /// Writes a histogram of the quality vector to a specified file.

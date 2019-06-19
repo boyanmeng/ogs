@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,8 +26,10 @@ TEST(CsvWriter, WriteReadTest)
     std::vector<int> int_vec { 1, 2, 4, 8, 16, 32, 64 };
     std::vector<double> dbl_vec;
     std::srand ( static_cast<unsigned>(std::time(nullptr)) );
-    for (std::size_t i=0; i<int_vec.size(); ++i)
+    for (std::size_t i = 0; i < int_vec.size(); ++i)
+    {
         dbl_vec.push_back(static_cast<double>(std::rand()) / RAND_MAX);
+    }
 
     FileIO::CsvInterface csv;
     bool added;

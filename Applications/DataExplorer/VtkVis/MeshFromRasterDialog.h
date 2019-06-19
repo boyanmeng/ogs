@@ -5,7 +5,7 @@
  * \brief  Definition of the MeshFromRasterDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,7 +35,7 @@ class MeshFromRasterDialog : public QDialog, private Ui_MeshFromRaster
 public:
     /// Constructor
     MeshFromRasterDialog(QDialog* parent = nullptr);
-    ~MeshFromRasterDialog(void) override;
+    ~MeshFromRasterDialog() override;
 
     std::string getMeshName() const { return _mesh_name; }
     std::string getArrayName() const { return _array_name; }

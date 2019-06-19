@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,4 +30,4 @@ class Storage;
 std::unique_ptr<Storage> createStorageModel(BaseLib::ConfigTree const& config);
 
 }  // end namespace
-}  // end namespace
+}  // namespace MaterialLib

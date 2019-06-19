@@ -9,15 +9,18 @@ AddTest(
     DIFF_DATA Ammer-Rivers-Mapped.gml
 )
 
-AddTest(
-    NAME MapGeometryToMeshSurface_Bode
-    PATH MeshGeoToolsLib/Bode
-    EXECUTABLE MapGeometryToMeshSurface
-    EXECUTABLE_ARGS -m BodeComplex.msh -i BodeEZG_Fliessgewaesser.gml -o ${Data_BINARY_DIR}/MeshGeoToolsLib/Bode/BodeEZG_Fliessgewaesser-Mapped.gml
-    REQUIREMENTS NOT OGS_USE_MPI
-    TESTER diff
-    DIFF_DATA BodeEZG_Fliessgewaesser-Mapped.gml
-)
+# Disable test on eve frontends
+if(NOT "${HOSTNAME}" MATCHES "frontend.*")
+    AddTest(
+        NAME MapGeometryToMeshSurface_Bode
+        PATH MeshGeoToolsLib/Bode
+        EXECUTABLE MapGeometryToMeshSurface
+        EXECUTABLE_ARGS -m BodeComplex.msh -i BodeEZG_Fliessgewaesser.gml -o ${Data_BINARY_DIR}/MeshGeoToolsLib/Bode/BodeEZG_Fliessgewaesser-Mapped.gml
+        REQUIREMENTS NOT OGS_USE_MPI
+        TESTER diff
+        DIFF_DATA BodeEZG_Fliessgewaesser-Mapped.gml
+    )
+endif()
 
 AddTest(
     NAME MapGeometryToMeshSurface_Naegelstedt
@@ -98,9 +101,9 @@ AddTest(
 # comparable.
 AddTest(
     NAME partmesh_2Dmesh_3partitions_ascii
-    PATH NodePartitionedMesh/partmesh_2Dmesh_3partitions
+    PATH NodePartitionedMesh/partmesh_2Dmesh_3partitions/ASCII
     EXECUTABLE partmesh
-    EXECUTABLE_ARGS -a -m -n 3 -i 2Dmesh.vtu -o ${Data_BINARY_DIR}/NodePartitionedMesh/partmesh_2Dmesh_3partitions
+    EXECUTABLE_ARGS -a -m -n 3 -i 2Dmesh.vtu -o ${Data_BINARY_DIR}/NodePartitionedMesh/partmesh_2Dmesh_3partitions/ASCII
     REQUIREMENTS NOT (OGS_USE_MPI OR APPLE)
     TESTER diff
     DIFF_DATA 2Dmesh_partitioned_elems_3.msh
@@ -112,10 +115,10 @@ AddTest(
 # comparable.
 AddTest(
     NAME partmesh_2Dmesh_3partitions_binary
-    PATH NodePartitionedMesh/partmesh_2Dmesh_3partitions
+    PATH NodePartitionedMesh/partmesh_2Dmesh_3partitions/Binary
     EXECUTABLE partmesh
     EXECUTABLE_ARGS -m -n 3 -i 2Dmesh.vtu
-                    -o ${Data_BINARY_DIR}/NodePartitionedMesh/partmesh_2Dmesh_3partitions --
+                    -o ${Data_BINARY_DIR}/NodePartitionedMesh/partmesh_2Dmesh_3partitions/Binary --
                     2Dmesh_PLY_EAST.vtu
                     2Dmesh_PLY_WEST.vtu
                     2Dmesh_PLY_NORTH.vtu
@@ -193,4 +196,50 @@ AddTest(
     EXECUTABLE checkMesh
     EXECUTABLE_ARGS -p -v TaskB_mesh.vtu
     REQUIREMENTS NOT OGS_USE_MPI
+)
+
+AddTest(
+    NAME mesh2raster_test
+    PATH MeshGeoToolsLib/Hamburg
+    EXECUTABLE Mesh2Raster
+    EXECUTABLE_ARGS -i 00-surface.vtu -o ${Data_BINARY_DIR}/MeshGeoToolsLib/Hamburg/00-raster.asc -c 25
+    REQUIREMENTS NOT OGS_USE_MPI
+    TESTER diff
+    DIFF_DATA 00-raster.asc
+)
+
+MeshTest(
+    NAME ExtractSurfaceLeft
+    PATH MeshLib/
+    EXECUTABLE ExtractSurface
+    EXECUTABLE_ARGS -i cube_1x1x1_hex_1e3_layers_10.vtu -o ${Data_BINARY_DIR}/MeshLib/Left.vtu -x 1 -y 0 -z 0 -a 25
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA Left.vtu Left.vtu 1e-16
+)
+
+MeshTest(
+    NAME ExtractSurfaceRight
+    PATH MeshLib/
+    EXECUTABLE ExtractSurface
+    EXECUTABLE_ARGS -i cube_1x1x1_hex_1e3_layers_10.vtu -o ${Data_BINARY_DIR}/MeshLib/Right.vtu -x -1 -y 0 -z 0 -a 25
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA Right.vtu Right.vtu 1e-16
+)
+
+MeshTest(
+    NAME ExtractSurfaceFront
+    PATH MeshLib/
+    EXECUTABLE ExtractSurface
+    EXECUTABLE_ARGS -i cube_1x1x1_hex_1e3_layers_10.vtu -o ${Data_BINARY_DIR}/MeshLib/Front.vtu -x 0 -y 1 -z 0 -a 25
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA Front.vtu Front.vtu 1e-16
+)
+
+MeshTest(
+    NAME ExtractSurfaceBack
+    PATH MeshLib/
+    EXECUTABLE ExtractSurface
+    EXECUTABLE_ARGS -i cube_1x1x1_hex_1e3_layers_10.vtu -o ${Data_BINARY_DIR}/MeshLib/Back.vtu -x 0 -y -1 -z 0 -a 25
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA Back.vtu Back.vtu 1e-16
 )

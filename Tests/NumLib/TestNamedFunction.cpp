@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -48,7 +48,7 @@ public:
 class H : public InstanceCounter<H>
 {
 public:
-    H(double const z) : _z(z) {}
+    explicit H(double const z) : _z(z) {}
     double h(double arg_x, double arg_y) { return arg_x * arg_y - _z; }
     double setZ(double const z)
     {

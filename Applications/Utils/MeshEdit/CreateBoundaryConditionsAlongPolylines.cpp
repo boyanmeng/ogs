@@ -3,7 +3,7 @@
  * \brief Create BoundaryConditions from a polylines.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -90,15 +90,16 @@ void writeBCsAndGeometry(GeoLib::GEOObjects& geometry_sets,
                          std::string const& bc_type, bool write_gml)
 {
     if (write_gml) {
-        INFO("write points to \"%s.gml\".", geo_name.c_str());
+        INFO("write points to '%s.gml'.", geo_name.c_str());
         FileIO::writeGeometryToFile(geo_name, geometry_sets, out_fname+".gml");
     }
     FileIO::writeGeometryToFile(geo_name, geometry_sets, out_fname+".gli");
 
     bool liquid_flow(false);
     if (bc_type == "LIQUID_FLOW")
+    {
         liquid_flow = true;
-
+    }
 
     GeoLib::PointVec const* pnt_vec_objs(geometry_sets.getPointVecObj(geo_name));
     std::vector<GeoLib::Point*> const& pnts(*(pnt_vec_objs->getVector()));
@@ -107,9 +108,13 @@ void writeBCsAndGeometry(GeoLib::GEOObjects& geometry_sets,
         std::string const& pnt_name(pnt_vec_objs->getItemNameByID(k));
         if (!pnt_name.empty()) {
             if (liquid_flow)
+            {
                 writeLiquidFlowPointBC(bc_out, pnt_name);
+            }
             else
+            {
                 writeGroundwaterFlowPointBC(bc_out, pnt_name, (*pnts[k])[2]);
+            }
         }
     }
     bc_out << "#STOP\n";
@@ -126,11 +131,11 @@ int main (int argc, char* argv[])
         "https://docs.opengeosys.org/docs/tools/model-preparation/"
         "create-boundary-conditions-along-a-polyline.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<bool> gml_arg("", "gml",
         "if switched on write found nodes to file in gml format", false, false, "bool");
     cmd.add(gml_arg);
@@ -165,15 +170,20 @@ int main (int argc, char* argv[])
         "", "file name");
     cmd.add(mesh_arg);
 
+    TCLAP::ValueArg<std::string> gmsh_path_arg("g", "gmsh-path",
+                                               "the path to the gmsh binary",
+                                               false, "", "path as string");
+    cmd.add(gmsh_path_arg);
+
     cmd.parse(argc, argv);
 
     // *** read mesh
-    INFO("Reading mesh \"%s\" ... ", mesh_arg.getValue().c_str());
+    INFO("Reading mesh '%s' ... ", mesh_arg.getValue().c_str());
     std::unique_ptr<MeshLib::Mesh> subsurface_mesh(
         MeshLib::IO::readMeshFromFile(mesh_arg.getValue()));
     INFO("done.");
-    INFO("Extracting top surface of mesh \"%s\" ... ",
-        mesh_arg.getValue().c_str());
+    INFO("Extracting top surface of mesh '%s' ... ",
+         mesh_arg.getValue().c_str());
     const MathLib::Vector3 dir(0,0,-1);
     double const angle(90);
     std::unique_ptr<MeshLib::Mesh> surface_mesh(
@@ -184,7 +194,8 @@ int main (int argc, char* argv[])
 
     // *** read geometry
     GeoLib::GEOObjects geometries;
-    FileIO::readGeometryFromFile(geometry_fname.getValue(), geometries);
+    FileIO::readGeometryFromFile(geometry_fname.getValue(), geometries,
+                                 gmsh_path_arg.getValue());
 
     std::string geo_name;
     {
@@ -197,7 +208,7 @@ int main (int argc, char* argv[])
     // *** get vector of polylines
     std::vector<GeoLib::Polyline*> const* plys(geometries.getPolylineVec(geo_name));
     if (!plys) {
-        ERR("Could not get vector of polylines out of geometry \"%s\".",
+        ERR("Could not get vector of polylines out of geometry '%s'.",
             geo_name.c_str());
         return EXIT_FAILURE;
     }
@@ -217,10 +228,12 @@ int main (int argc, char* argv[])
         std::vector<std::size_t> ids
             (mesh_searcher.getMeshNodeIDsAlongPolyline(*((*plys)[k])));
         if (ids.empty())
+        {
             continue;
-        std::string geo_name("Polyline-"+std::to_string(k));
-        convertMeshNodesToGeometry(surface_mesh->getNodes(), ids, geo_name,
-            geometry_sets);
+        }
+        std::string polyline_name("Polyline-" + std::to_string(k));
+        convertMeshNodesToGeometry(surface_mesh->getNodes(), ids, polyline_name,
+                                   geometry_sets);
     }
 
     // merge all together
@@ -233,7 +246,9 @@ int main (int argc, char* argv[])
 
     std::string merge_name("AllMeshNodesAlongPolylines");
     if (geometry_sets.mergeGeometries(geo_names, merge_name) == 2)
+    {
         merge_name = geo_names[0];
+    }
 
     GeoLib::PointVec const* pnt_vec(geometry_sets.getPointVecObj(merge_name));
     std::vector<GeoLib::Point*> const* merged_pnts(pnt_vec->getVector());
@@ -256,11 +271,12 @@ int main (int argc, char* argv[])
     // insert first point
     surface_pnts->push_back(
         new GeoLib::Point(pnts_with_id[0], surface_pnts->size()));
-    std::string element_name;
-    pnt_vec->getNameOfElementByID(0, element_name);
-    name_id_map->insert(
-        std::pair<std::string, std::size_t>(element_name,0)
-    );
+    {
+        std::string element_name;
+        pnt_vec->getNameOfElementByID(0, element_name);
+        name_id_map->insert(
+            std::pair<std::string, std::size_t>(element_name, 0));
+    }
     for (std::size_t k(1); k < n_merged_pnts; ++k) {
         const GeoLib::Point& p0 (pnts_with_id[k-1]);
         const GeoLib::Point& p1 (pnts_with_id[k]);

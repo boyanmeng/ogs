@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -77,11 +77,12 @@ public:
     double getThermalConductivityDrySolid(const double p, const double T) const;
     double getThermalConductivityWetSolid(const double p, const double T) const;
     /// Calculates the unsaturated heat conductivity
-    double calculateUnsatHeatConductivity(double const t,
-                                          ProcessLib::SpatialPosition const& x,
-                                          double const Sw,
-                                          double const lambda_pm_dry,
-                                          double const lambda_pm_wet) const;
+    double calculateUnsatHeatConductivity(
+        double const t,
+        ParameterLib::SpatialPosition const& x,
+        double const Sw,
+        double const lambda_pm_dry,
+        double const lambda_pm_wet) const;
     /// water vapor saturation pressure
     double calculateSaturatedVaporPressure(const double T) const;
     /// partial water vapor pressure in nonwetting phase
@@ -143,5 +144,5 @@ private:
         _water_vapor_properties;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace ThermalTwoPhaseFlowWithPP
+}  // namespace ProcessLib

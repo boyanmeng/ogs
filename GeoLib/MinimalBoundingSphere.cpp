@@ -5,7 +5,7 @@
  * \brief  Calculation of a minimum bounding sphere for a vector of points.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -21,11 +21,7 @@
 #include "MathLib/Vector3.h"
 
 namespace GeoLib {
-
-MinimalBoundingSphere::MinimalBoundingSphere()
-: _radius(-1), _center(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), std::numeric_limits<double>::max())
-{
-}
+MinimalBoundingSphere::MinimalBoundingSphere() = default;
 
 MinimalBoundingSphere::MinimalBoundingSphere(
     MathLib::Point3d const& p, double radius)
@@ -68,9 +64,13 @@ MinimalBoundingSphere::MinimalBoundingSphere(MathLib::Point3d const& p,
     {
         MinimalBoundingSphere two_pnts_sphere;
         if (a.getLength() > b.getLength())
+        {
             two_pnts_sphere = MinimalBoundingSphere(p,r);
+        }
         else
-            two_pnts_sphere = MinimalBoundingSphere(p,q);
+        {
+            two_pnts_sphere = MinimalBoundingSphere(p, q);
+        }
         _radius = two_pnts_sphere.getRadius();
         _center = two_pnts_sphere.getCenter();
     }
@@ -206,4 +206,4 @@ std::vector<MathLib::Point3d*>* MinimalBoundingSphere::getRandomSpherePoints(std
     return pnts;
 }
 
-}
+}  // namespace GeoLib

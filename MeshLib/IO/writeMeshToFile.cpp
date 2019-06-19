@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,7 +34,13 @@ int writeMeshToFile(const MeshLib::Mesh &mesh, const std::string &file_name)
     if (BaseLib::hasFileExtension("vtu", file_name))
     {
         MeshLib::IO::VtuInterface writer(&mesh);
-        writer.writeToFile(file_name);
+        auto const result = writer.writeToFile(file_name);
+        if (!result)
+        {
+            ERR("writeMeshToFile(): Could not write mesh to '%s'.",
+                file_name.c_str());
+            return -1;
+        }
         return 0;
     }
 

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -15,12 +15,12 @@
 #include "NumLib/ODESolver/NonlinearSolver.h"
 #include "NumLib/ODESolver/ODESystem.h"
 #include "NumLib/ODESolver/TimeDiscretization.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/BoundaryCondition/BoundaryConditionCollection.h"
 #include "ProcessLib/Output/CachedSecondaryVariable.h"
 #include "ProcessLib/Output/ExtrapolatorData.h"
 #include "ProcessLib/Output/IntegrationPointWriter.h"
 #include "ProcessLib/Output/SecondaryVariable.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/SourceTerms/SourceTermCollection.h"
 
 #include "AbstractJacobianAssembler.h"
@@ -47,7 +47,8 @@ public:
 
     Process(MeshLib::Mesh& mesh,
             std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
-            std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+            std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+                parameters,
             unsigned const integration_order,
             std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
                 process_variables,
@@ -71,7 +72,8 @@ public:
     void preIteration(const unsigned iter, GlobalVector const& x) final;
 
     /// compute secondary variables for the coupled equations or for output.
-    void computeSecondaryVariable(const double t, GlobalVector const& x);
+    void computeSecondaryVariable(const double t, GlobalVector const& x,
+                                  int const process_id);
 
     NumLib::IterationResult postIteration(GlobalVector const& x) final;
 
@@ -80,7 +82,7 @@ public:
     void setInitialConditions(const int process_id, const double t,
                               GlobalVector& x);
 
-    virtual MathLib::MatrixSpecifications getMatrixSpecifications(
+    MathLib::MatrixSpecifications getMatrixSpecifications(
         const int process_id) const override;
 
     void setCoupledSolutionsForStaggeredScheme(
@@ -89,9 +91,11 @@ public:
         _coupled_solutions = coupled_solutions;
     }
 
+    void updateDeactivatedSubdomains(double const time, const int process_id);
+
     bool isMonolithicSchemeUsed() const { return _use_monolithic_scheme; }
     virtual void setCoupledTermForTheStaggeredSchemeToLocalAssemblers() {}
-    void preAssemble(const double t, GlobalVector const& x) override final;
+    void preAssemble(const double t, GlobalVector const& x) final;
     void assemble(const double t, GlobalVector const& x, GlobalMatrix& M,
                   GlobalMatrix& K, GlobalVector& b) final;
 
@@ -173,6 +177,11 @@ private:
     /// processes. It is called by initialize().
     virtual void initializeBoundaryConditions();
 
+    virtual void setInitialConditionsConcreteProcess(GlobalVector const& /*x*/,
+                                                     double const /*t*/)
+    {
+    }
+
     virtual void preAssembleConcreteProcess(const double /*t*/,
                                             GlobalVector const& /*x*/)
     {
@@ -213,7 +222,8 @@ private:
     }
 
     virtual void computeSecondaryVariableConcrete(const double /*t*/,
-                                                  GlobalVector const& /*x*/)
+                                                  GlobalVector const& /*x*/,
+                                                  int const /*process_id*/)
     {
     }
 
@@ -282,7 +292,7 @@ protected:
 
     GlobalSparsityPattern _sparsity_pattern;
 
-private:
+protected:
     /// Variables used by this process.  For the monolithic scheme or a
     /// single process, the size of the outer vector is one. For the
     /// staggered scheme, the size of the outer vector is the number of the
@@ -290,7 +300,6 @@ private:
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
         _process_variables;
 
-protected:
     /// Vector for boundary conditions. For the monolithic scheme or a
     /// single process, the size of the vector is one. For the staggered
     /// scheme, the size of vector is the number of the coupled processes.

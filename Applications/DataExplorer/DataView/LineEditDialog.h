@@ -5,7 +5,7 @@
  * \brief  Definition of the LineEditDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,7 @@ class LineEditDialog : public QDialog, private Ui_LineEdit
 public:
     LineEditDialog(const GeoLib::PolylineVec& ply_vec,
                    QDialog* parent = nullptr);
-    ~LineEditDialog(void) override;
+    ~LineEditDialog() override;
 
 private:
     std::vector<std::size_t> getSelectedIndeces(QStringList list);

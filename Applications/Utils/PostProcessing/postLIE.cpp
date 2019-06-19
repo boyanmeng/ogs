@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -34,7 +34,9 @@ void postVTU(std::string const& int_vtu_filename,
     std::unique_ptr<MeshLib::Mesh const> mesh(
         MeshLib::IO::readMeshFromFile(int_vtu_filename));
     if (mesh->isNonlinear())
+    {
         mesh = MeshLib::convertToLinearMesh(*mesh, mesh->getName());
+    }
 
     // post-process
     std::vector<MeshLib::Element*> vec_matrix_elements;
@@ -42,12 +44,21 @@ void postVTU(std::string const& int_vtu_filename,
     std::vector<std::vector<MeshLib::Element*>> vec_fracture_elements;
     std::vector<std::vector<MeshLib::Element*>> vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> vec_fracture_nodes;
+    std::vector<std::pair<std::size_t, std::vector<int>>>
+        vec_branch_nodeID_matIDs;
+    std::vector<std::pair<std::size_t, std::vector<int>>>
+        vec_junction_nodeID_matIDs;
     ProcessLib::LIE::getFractureMatrixDataInMesh(
         *mesh, vec_matrix_elements, vec_fracture_mat_IDs, vec_fracture_elements,
-        vec_fracture_matrix_elements, vec_fracture_nodes);
+        vec_fracture_matrix_elements, vec_fracture_nodes,
+        vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
 
-    ProcessLib::LIE::PostProcessTool post(*mesh, vec_fracture_nodes,
-                                          vec_fracture_matrix_elements);
+    ProcessLib::LIE::PostProcessTool post(*mesh,
+                                          vec_fracture_mat_IDs,
+                                          vec_fracture_nodes,
+                                          vec_fracture_matrix_elements,
+                                          vec_branch_nodeID_matIDs,
+                                          vec_junction_nodeID_matIDs);
 
     // create a new VTU file
     INFO("create %s", out_vtu_filename.c_str());
@@ -67,7 +78,9 @@ void postPVD(std::string const& in_pvd_filename,
     for (auto& dataset : pt.get_child("VTKFile.Collection"))
     {
         if (dataset.first != "DataSet")
+        {
             continue;
+        }
 
         // get VTU file name
         auto const org_vtu_filename =
@@ -76,7 +89,9 @@ void postPVD(std::string const& in_pvd_filename,
             BaseLib::extractBaseName(org_vtu_filename);
         auto org_vtu_dir = BaseLib::extractPath(org_vtu_filename);
         if (org_vtu_dir.empty())
+        {
             org_vtu_dir = in_pvd_file_dir;
+        }
         auto const org_vtu_filepath =
             BaseLib::joinPaths(org_vtu_dir, org_vtu_filebasename);
         INFO("processing %s...", org_vtu_filepath.c_str());
@@ -106,11 +121,11 @@ int main(int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Post-process results of the LIE approach.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> arg_out_file(
         "o", "output-file", "the name of the new PVD or VTU file", true, "",
         "path");
@@ -124,12 +139,18 @@ int main(int argc, char* argv[])
 
     auto const in_file_ext = BaseLib::getFileExtension(arg_in_file.getValue());
     if (in_file_ext == "pvd")
+    {
         postPVD(arg_in_file.getValue(), arg_out_file.getValue());
+    }
     else if (in_file_ext == "vtu")
+    {
         postVTU(arg_in_file.getValue(), arg_out_file.getValue());
+    }
     else
+    {
         OGS_FATAL("The given file type (%s) is not supported.",
                   in_file_ext.c_str());
+    }
 
     return EXIT_SUCCESS;
 }

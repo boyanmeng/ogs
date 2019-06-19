@@ -5,7 +5,7 @@
  * \brief  Definition of the VisualizationWidget class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -103,9 +103,9 @@ protected slots:
     void on_screenshotPushButton_pressed();
 
 private:
-    vtkRenderer* _vtkRender;
-    vtkOrientationMarkerWidget* _markerWidget;
-    VtkCustomInteractorStyle* _interactorStyle;
-    VtkPickCallback* _vtkPickCallback;
+    vtkRenderer* _vtkRender{nullptr};
+    vtkOrientationMarkerWidget* _markerWidget{nullptr};
+    VtkCustomInteractorStyle* _interactorStyle{nullptr};
+    VtkPickCallback* _vtkPickCallback{nullptr};
     bool _isShowAllOnLoad;
 };

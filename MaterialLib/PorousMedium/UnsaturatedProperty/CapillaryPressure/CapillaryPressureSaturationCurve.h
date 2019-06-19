@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,7 +27,7 @@ class CapillaryPressureSaturationCurve final
     : public CapillaryPressureSaturation
 {
 public:
-    CapillaryPressureSaturationCurve(
+    explicit CapillaryPressureSaturationCurve(
         std::unique_ptr<MathLib::PiecewiseLinearMonotonicCurve>&& curve_data)
         : CapillaryPressureSaturation(
               curve_data->getSupportMin(),
@@ -81,5 +81,5 @@ private:
     std::unique_ptr<MathLib::PiecewiseLinearMonotonicCurve> _curve_data;
 };
 
-}  // end namespace
-}  // end namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

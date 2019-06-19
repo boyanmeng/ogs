@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -25,8 +25,9 @@ namespace autocheck
 template <typename Gen = generator<double>>
 struct RandomCirclePointGeneratorXY
 {
-    RandomCirclePointGeneratorXY(
-        MathLib::Point3d const& c = MathLib::Point3d{std::array<double, 3>{{0, 0, 0}}},
+    explicit RandomCirclePointGeneratorXY(
+        MathLib::Point3d const& c = MathLib::Point3d{std::array<double, 3>{
+            {0, 0, 0}}},
         double r = 1.0)
         : center(c), radius(r)
     {}

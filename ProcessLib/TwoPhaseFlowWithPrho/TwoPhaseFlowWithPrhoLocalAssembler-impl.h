@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -76,7 +76,7 @@ void TwoPhaseFlowWithPrhoLocalAssembler<
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element.getID());
     const int material_id =
         _process_data._material->getMaterialID(pos.getElementID().get());
@@ -87,9 +87,13 @@ void TwoPhaseFlowWithPrhoLocalAssembler<
     GlobalDimMatrixType permeability = GlobalDimMatrixType::Zero(
         _element.getDimension(), _element.getDimension());
     if (perm.rows() == _element.getDimension())
+    {
         permeability = perm;
+    }
     else if (perm.rows() == 1)
+    {
         permeability.diagonal().setConstant(perm(0, 0));
+    }
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
@@ -129,7 +133,9 @@ void TwoPhaseFlowWithPrhoLocalAssembler<
                 dSwdrho,
                 drhoh2wet,
                 drhoh2wet_drho))
+        {
             OGS_FATAL("Computation of local constitutive relation failed.");
+        }
         double const pc = _process_data._material->getCapillaryPressure(
             material_id, t, pos, pl_int_pt, temperature, Sw);
 
@@ -228,5 +234,5 @@ void TwoPhaseFlowWithPrhoLocalAssembler<
     }  // end of mass-lumping
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ProcessLib

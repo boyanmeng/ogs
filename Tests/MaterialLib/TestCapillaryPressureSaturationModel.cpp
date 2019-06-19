@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -126,9 +126,13 @@ TEST(MaterialPorousMedium, checkCapillaryPressureCurve)
         ASSERT_NEAR(dpc_dS[i], pc_model->getdPcdS(S[i]), 1.e-5);
 
         if (i == S.size() - 1)
+        {
             // Minimum Pc to maximum saturation
             ASSERT_NEAR(0.9, pc_model->getSaturation(pc[i]), 1.e-5);
+        }
         else
+        {
             ASSERT_NEAR(S[i], pc_model->getSaturation(pc[i]), 1.e-5);
+        }
     }
 }

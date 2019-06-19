@@ -16,23 +16,23 @@ if(CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
         "using Conan. Specify CMAKE_BUILD_TYPE!")
 endif()
 
-if(DEFINED OGS_LIB_Boost)
-    if(${OGS_LIB_Boost} STREQUAL "Default")
-        cmake_minimum_required(VERSION 3.4) # Conan Boost package requires this
-    endif()
+# $ cat /etc/os-release | grep VERSION_ID
+# VERSION_ID="17.10"
+if(COMPILER_IS_GCC AND CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 6 AND UBUNTU_VERSION VERSION_EQUAL 16)
+
 endif()
 
 include(${PROJECT_SOURCE_DIR}/scripts/cmake/conan/conan.cmake)
 
 set(CONAN_REQUIRES
-    Boost/1.64.0@conan/stable
-    Eigen3/3.2.9@bilke/stable
+    boost/1.66.0@conan/stable
+    Eigen3/3.3.4@bilke/stable
     VTK/8.1.1@bilke/stable
     CACHE INTERNAL ""
 )
 
 set(CONAN_OPTIONS
-    Boost:header_only=True
+    boost:header_only=True
     Qt:qtxmlpatterns=True
     VTK:minimal=True
     VTK:ioxml=True
@@ -58,11 +58,16 @@ if(OGS_USE_LIS)
     set(CONAN_REQUIRES ${CONAN_REQUIRES} lis/1.7.9@bilke/stable)
 endif()
 
+if(OGS_USE_CVODE)
+    set(CONAN_REQUIRES ${CONAN_REQUIRES} cvode/2.8.2@bilke/stable)
+endif()
+
 if(OGS_BUILD_GUI)
     set(CONAN_REQUIRES ${CONAN_REQUIRES}
         Shapelib/1.3.0@bilke/stable
         libgeotiff/1.4.2@bilke/stable
         Qt/5.11.2@bilke/stable
+        lzma/5.2.4@bincrafters/stable # 5.2.3 is not built for Xcode 10
     )
     set(CONAN_OPTIONS ${CONAN_OPTIONS}
         VTK:minimal=False
@@ -71,12 +76,6 @@ if(OGS_BUILD_GUI)
 endif()
 
 conan_check(VERSION 1.3.0)
-conan_add_remote(NAME ogs INDEX 0
-    URL https://ogs.jfrog.io/ogs/api/conan/conan)
-conan_add_remote(NAME conan-community INDEX 1
-    URL https://api.bintray.com/conan/conan-community/conan)
-conan_add_remote(NAME bincrafters INDEX 2
-    URL https://api.bintray.com/conan/bincrafters/public-conan)
 
 message(STATUS "Third-party libraries:")
 foreach(LIB ${OGS_LIBS})
@@ -88,14 +87,14 @@ endforeach()
 
 set(CONAN_IMPORTS "")
 if(APPLE)
-    set(CONAN_IMPORTS ${CONAN_IMPORTS} "lib, *.dylib* -> ./bin")
+    set(CONAN_IMPORTS ${CONAN_IMPORTS} "lib, *.dylib* -> ./lib")
 endif()
 if(MSVC)
     set(CONAN_IMPORTS ${CONAN_IMPORTS} "bin, *.dll* -> ./bin")
-    set(CONAN_IMPORTS ${CONAN_IMPORTS} "plugins/platforms, *.dll* -> ./bin/platforms")
 endif()
 if(UNIX AND NOT APPLE)
     set(CONAN_IMPORTS ${CONAN_IMPORTS} "lib, *.so* -> ./lib")
+    set(CONAN_IMPORTS ${CONAN_IMPORTS} "plugins/platforms, *.so* -> ./bin/platforms")
 endif()
 
 file(TIMESTAMP ${PROJECT_BINARY_DIR}/conan_install_timestamp.txt file_timestamp "%Y.%m.%d")
@@ -105,6 +104,12 @@ string(TIMESTAMP timestamp "%Y.%m.%d")
 if("${file_timestamp}" VERSION_LESS ${timestamp} OR IS_CI)
     file(WRITE ${PROJECT_BINARY_DIR}/conan_install_timestamp.txt "${timestamp}\n")
     set(CONAN_UPDATE UPDATE)
+    conan_add_remote(NAME ogs INDEX 0
+        URL https://ogs.jfrog.io/ogs/api/conan/conan)
+    conan_add_remote(NAME conan-community INDEX 1
+        URL https://api.bintray.com/conan/conan-community/conan)
+    conan_add_remote(NAME bincrafters INDEX 2
+        URL https://api.bintray.com/conan/bincrafters/public-conan)
 else()
     message(STATUS "Conan: Skipping update step.")
 endif()

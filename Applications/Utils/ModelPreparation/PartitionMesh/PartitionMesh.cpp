@@ -5,7 +5,7 @@
   \brief  A tool for mesh partitioning.
 
   \copyright
-  Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+  Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
              Distributed under a Modified BSD License.
                See accompanying file LICENSE.txt or
                http://www.opengeosys.org/project/license
@@ -47,11 +47,11 @@ int main(int argc, char* argv[])
         "Note: If this tool is installed as a system command,\n"
         "\tthe command must be run with its full path.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_input(
         "i", "mesh-input-file",
         "the name of the file containing the input mesh", true, "",
@@ -101,7 +101,8 @@ int main(int argc, char* argv[])
         BaseLib::dropFileExtension(mesh_input.getValue());
     std::unique_ptr<MeshLib::Mesh> mesh_ptr(
         MeshLib::IO::readMeshFromFile(input_file_name_wo_extension + ".vtu"));
-    INFO("Mesh read: %d nodes, %d elements.",
+    INFO("Mesh '%s' read: %d nodes, %d elements.",
+         mesh_ptr->getName().c_str(),
          mesh_ptr->getNumberOfNodes(),
          mesh_ptr->getNumberOfElements());
 
@@ -173,13 +174,15 @@ int main(int argc, char* argv[])
     {
         std::unique_ptr<MeshLib::Mesh> mesh(
             MeshLib::IO::readMeshFromFile(filename));
-        INFO("Mesh read: %d nodes, %d elements.",
+        INFO("Mesh '%s' read: %d nodes, %d elements.",
+             mesh->getName().c_str(),
              mesh->getNumberOfNodes(),
              mesh->getNumberOfElements());
 
-        std::string const output_file_name_wo_extension = BaseLib::joinPaths(
-            output_directory_arg.getValue(),
-            BaseLib::extractBaseNameWithoutExtension(filename));
+        std::string const other_mesh_output_file_name_wo_extension =
+            BaseLib::joinPaths(
+                output_directory_arg.getValue(),
+                BaseLib::extractBaseNameWithoutExtension(filename));
         auto const partitions = mesh_partitioner.partitionOtherMesh(
             *mesh, is_mixed_high_order_linear_elems);
 
@@ -187,14 +190,15 @@ int main(int argc, char* argv[])
             partitionProperties(mesh->getProperties(), partitions);
         mesh_partitioner.renumberBulkNodeIdsProperty(
             partitioned_properties.getPropertyVector<std::size_t>(
-                "bulk_node_ids"),
+                "bulk_node_ids", MeshLib::MeshItemType::Node, 1),
             partitions);
         mesh_partitioner.renumberBulkElementIdsProperty(
             partitioned_properties.getPropertyVector<std::size_t>(
-                "bulk_element_ids"),
+                "bulk_element_ids", MeshLib::MeshItemType::Cell, 1),
             partitions);
-        mesh_partitioner.writeOtherMesh(output_file_name_wo_extension,
-                                        partitions, partitioned_properties);
+        mesh_partitioner.writeOtherMesh(
+            other_mesh_output_file_name_wo_extension, partitions,
+            partitioned_properties);
     }
 
     if (ascii_flag.getValue())

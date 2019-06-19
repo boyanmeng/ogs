@@ -5,7 +5,7 @@
  * \brief  Implementation of the XmlStnInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -184,8 +184,10 @@ void XmlStnInterface::readStratigraphy( const QDomNode &stratRoot,
                 depth_check = depth;
             }
             else
-                WARN("XmlStnInterface::readStratigraphy(): Skipped layer \"%s\" in borehole \"%s\" because of thickness 0.0.",
-                     horizonName.c_str(), borehole->getName().c_str());
+                WARN(
+                    "XmlStnInterface::readStratigraphy(): Skipped layer '%s' "
+                    "in borehole '%s' because of thickness 0.0.",
+                    horizonName.c_str(), borehole->getName().c_str());
         }
         else
             WARN("XmlStnInterface::readStratigraphy(): Attribute missing in <horizon> tag.");
@@ -198,7 +200,7 @@ bool XmlStnInterface::write()
     if (this->_exportName.empty())
     {
         ERR("XmlStnInterface::write(): No station list specified.");
-        return 0;
+        return false;
     }
 
     _out << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n"; // xml definition
@@ -481,9 +483,10 @@ void XmlStnInterface::rapidReadStratigraphy( const rapidxml::xml_node<>* strat_r
             }
             else
                 WARN(
-                        "XmlStnInterface::rapidReadStratigraphy(): Skipped layer \"%s\" in borehole \"%s\" because of thickness 0.0.",
-                        horizon_name.c_str(),
-                        borehole->getName().c_str());
+                    "XmlStnInterface::rapidReadStratigraphy(): Skipped layer "
+                    "'%s' in borehole '%s' because of thickness 0.0.",
+                    horizon_name.c_str(),
+                    borehole->getName().c_str());
         }
         else
             WARN("XmlStnInterface::rapidReadStratigraphy(): Attribute missing in <horizon> tag.");

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -22,7 +22,7 @@ const double c[] = { 0.34102920966608297,
                      -7.610441241719489e-11
                    };
 
-}
+}  // namespace
 
 namespace Adsorption
 {
@@ -61,4 +61,4 @@ double DensityLegacy::dCharacteristicCurve(const double A) const
     return dCurvePolyfrac(c, A);
 }
 
-}
+}  // namespace Adsorption

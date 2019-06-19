@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -97,7 +97,9 @@ public:
         {
             _local_u.setZero();
             for (std::size_t i = 0; i < local_x_.size(); i++)
+            {
                 _local_u[_dofIndex_to_localIndex[i]] = local_x_[i];
+            }
         }
 
         computeSecondaryVariableConcreteWithVector(t, _local_u);

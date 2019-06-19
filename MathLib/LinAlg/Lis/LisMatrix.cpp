@@ -5,7 +5,7 @@
  * \brief  Implementation of the LisMatrix class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -63,7 +63,10 @@ LisMatrix::~LisMatrix()
 {
     int ierr = 0;
     if (_use_external_arrays)
+    {
         ierr = lis_matrix_unset(_AA);
+        checkLisError(ierr);
+    }
     ierr = lis_matrix_destroy(_AA);
     checkLisError(ierr);
     ierr = lis_vector_destroy(_diag);

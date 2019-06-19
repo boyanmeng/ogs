@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,6 +13,8 @@
 #include "MeshLib/Elements/Line.h"
 #include "MeshLib/Elements/Quad.h"
 #include "MeshLib/Elements/Hex.h"
+#include "MeshLib/Elements/Tet.h"
+#include "MeshLib/Elements/Tri.h"
 #include "MeshLib/Elements/Utils.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/MeshEditing/DuplicateMeshComponents.h"
@@ -33,8 +35,11 @@ T_ELEMENT* createLinearElement(MeshLib::Element const* e,
 {
     auto const n_base_nodes = T_ELEMENT::n_base_nodes;
     auto** nodes = new MeshLib::Node*[n_base_nodes];
-    for (unsigned i=0; i<e->getNumberOfBaseNodes(); i++)
-        nodes[i] = const_cast<MeshLib::Node*>(vec_new_nodes[e->getNode(i)->getID()]);
+    for (unsigned i = 0; i < e->getNumberOfBaseNodes(); i++)
+    {
+        nodes[i] =
+            const_cast<MeshLib::Node*>(vec_new_nodes[e->getNode(i)->getID()]);
+    }
     return new T_ELEMENT(nodes);
 }
 
@@ -59,9 +64,19 @@ std::unique_ptr<MeshLib::Mesh> convertToLinearMesh(MeshLib::Mesh const& org_mesh
             vec_new_eles.push_back(createLinearElement<MeshLib::Quad>(
                 e, vec_new_nodes));
         }
+        else if (e->getCellType() == MeshLib::CellType::TRI6)
+        {
+            vec_new_eles.push_back(createLinearElement<MeshLib::Tri>(
+                e, vec_new_nodes));
+        }
         else if (e->getCellType() == MeshLib::CellType::HEX20)
         {
             vec_new_eles.push_back(createLinearElement<MeshLib::Hex>(
+                e, vec_new_nodes));
+        }
+        else if (e->getCellType() == MeshLib::CellType::TET10)
+        {
+            vec_new_eles.push_back(createLinearElement<MeshLib::Tet>(
                 e, vec_new_nodes));
         }
         else
@@ -81,10 +96,14 @@ std::unique_ptr<MeshLib::Mesh> convertToLinearMesh(MeshLib::Mesh const& org_mesh
     for (auto name : src_properties.getPropertyVectorNames())
     {
         if (!src_properties.existsPropertyVector<double>(name))
+        {
             continue;
+        }
         auto const* src_prop = src_properties.getPropertyVector<double>(name);
         if (src_prop->getMeshItemType() != MeshLib::MeshItemType::Node)
+        {
             continue;
+        }
 
         auto const n_src_comp = src_prop->getNumberOfComponents();
         auto new_prop =
@@ -96,7 +115,10 @@ std::unique_ptr<MeshLib::Mesh> convertToLinearMesh(MeshLib::Mesh const& org_mesh
         for (unsigned i=0; i<org_mesh.getNumberOfBaseNodes(); i++)
         {
             for (int j = 0; j < n_src_comp; j++)
-                (*new_prop)[i*n_src_comp+j] = (*src_prop)[i*n_src_comp+j];
+            {
+                (*new_prop)[i * n_src_comp + j] =
+                    (*src_prop)[i * n_src_comp + j];
+            }
         }
     }
 

@@ -5,7 +5,7 @@
  * \brief  Implementation of the BoostXmlGmlInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -261,19 +261,22 @@ bool BoostXmlGmlInterface::write()
 
     GeoLib::PointVec const*const pnt_vec(_geo_objects.getPointVecObj(_exportName));
     if (! pnt_vec) {
-        ERR("BoostXmlGmlInterface::write(): No PointVec within the geometry \"%s\".",
+        ERR("BoostXmlGmlInterface::write(): No PointVec within the geometry "
+            "'%s'.",
             _exportName.c_str());
         return false;
     }
 
     std::vector<GeoLib::Point*> const*const pnts(pnt_vec->getVector());
     if (! pnts) {
-        ERR("BoostXmlGmlInterface::write(): No vector of points within the geometry \"%s\".",
+        ERR("BoostXmlGmlInterface::write(): No vector of points within the "
+            "geometry '%s'.",
             _exportName.c_str());
         return false;
     }
     if (pnts->empty()) {
-        ERR("BoostXmlGmlInterface::write(): No points within the geometry \"%s\".",
+        ERR("BoostXmlGmlInterface::write(): No points within the geometry "
+            "'%s'.",
             _exportName.c_str());
         return false;
     }
@@ -296,7 +299,9 @@ bool BoostXmlGmlInterface::write()
         pnt_tag.put("<xmlattr>.z", (*((*pnts)[k]))[2]);
         std::string const& point_name(pnt_vec->getItemNameByID(k));
         if (!point_name.empty())
+        {
             pnt_tag.put("<xmlattr>.name", point_name);
+        }
     }
 
     addPolylinesToPropertyTree(geometry_set);
@@ -313,8 +318,10 @@ void BoostXmlGmlInterface::addSurfacesToPropertyTree(
 {
     GeoLib::SurfaceVec const*const sfc_vec(_geo_objects.getSurfaceVecObj(_exportName));
     if (!sfc_vec) {
-        INFO("BoostXmlGmlInterface::addSurfacesToPropertyTree(): "
-            "No surfaces within the geometry \"%s\".", _exportName.c_str());
+        INFO(
+            "BoostXmlGmlInterface::addSurfacesToPropertyTree(): "
+            "No surfaces within the geometry '%s'.",
+            _exportName.c_str());
         return;
     }
 
@@ -323,7 +330,7 @@ void BoostXmlGmlInterface::addSurfacesToPropertyTree(
     {
         INFO(
             "BoostXmlGmlInterface::addSurfacesToPropertyTree(): "
-            "No surfaces within the geometry \"%s\".",
+            "No surfaces within the geometry '%s'.",
             _exportName.c_str());
         return;
     }
@@ -336,7 +343,9 @@ void BoostXmlGmlInterface::addSurfacesToPropertyTree(
         auto& surface_tag = surfaces_tag.add("surface", "");
         surface_tag.put("<xmlattr>.id", i);
         if (!sfc_name.empty())
+        {
             surface_tag.put("<xmlattr>.name", sfc_name);
+        }
         for (std::size_t j=0; j<surface->getNumberOfTriangles(); ++j) {
             auto& element_tag = surface_tag.add("element", "");
             element_tag.put("<xmlattr>.p1", (*(*surface)[j])[0]);
@@ -351,8 +360,10 @@ void BoostXmlGmlInterface::addPolylinesToPropertyTree(
 {
     GeoLib::PolylineVec const*const vec(_geo_objects.getPolylineVecObj(_exportName));
     if (!vec) {
-        INFO("BoostXmlGmlInterface::addPolylinesToPropertyTree(): "
-            "No polylines within the geometry \"%s\".", _exportName.c_str());
+        INFO(
+            "BoostXmlGmlInterface::addPolylinesToPropertyTree(): "
+            "No polylines within the geometry '%s'.",
+            _exportName.c_str());
         return;
     }
 
@@ -361,7 +372,7 @@ void BoostXmlGmlInterface::addPolylinesToPropertyTree(
     {
         INFO(
             "BoostXmlGmlInterface::addPolylinesToPropertyTree(): "
-            "No polylines within the geometry \"%s\".",
+            "No polylines within the geometry '%s'.",
             _exportName.c_str());
         return;
     }
@@ -374,7 +385,9 @@ void BoostXmlGmlInterface::addPolylinesToPropertyTree(
         auto& polyline_tag = polylines_tag.add("polyline", "");
         polyline_tag.put("<xmlattr>.id", i);
         if (!ply_name.empty())
+        {
             polyline_tag.put("<xmlattr>.name", ply_name);
+        }
         for (std::size_t j=0; j<polyline->getNumberOfPoints(); ++j) {
             polyline_tag.add("pnt", polyline->getPointID(j));
         }

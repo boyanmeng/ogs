@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -17,7 +17,6 @@ class MeshLibLineMesh : public ::testing::Test
 {
     public:
     MeshLibLineMesh()
-        : mesh(nullptr)
     {
         mesh = MeshLib::MeshGenerator::generateLineMesh(extent, mesh_size);
     }
@@ -25,7 +24,7 @@ class MeshLibLineMesh : public ::testing::Test
     ~MeshLibLineMesh() override { delete mesh; }
     static std::size_t const mesh_size = 9;
     double extent = 1.0;
-    MeshLib::Mesh const* mesh;
+    MeshLib::Mesh const* mesh{nullptr};
 };
 std::size_t const MeshLibLineMesh::mesh_size;
 
@@ -42,7 +41,9 @@ TEST_F(MeshLibLineMesh, Construction)
     // All elements have maximum two neighbors.
     std::vector<MeshLib::Element*> const& elements = mesh->getElements();
     for (auto e : elements)
+    {
         ASSERT_EQ(2u, e->getNumberOfNeighbors());
+    }
 
     ASSERT_NEAR(extent/mesh_size, mesh->getMinEdgeLength(),std::numeric_limits<double>::epsilon());
     ASSERT_NEAR(extent/mesh_size, mesh->getMaxEdgeLength(),std::numeric_limits<double>::epsilon());
@@ -54,8 +55,12 @@ TEST_F(MeshLibLineMesh, ElementNeigbors)
         {
             unsigned count = 0;
             for (int i = 0; i < 2; i++)
+            {
                 if (e->getNeighbor(i) != nullptr)
+                {
                     count++;
+                }
+            }
             return count;
         };
 

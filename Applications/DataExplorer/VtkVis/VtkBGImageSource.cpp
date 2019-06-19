@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkBGImageSource class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,10 +30,7 @@
 
 vtkStandardNewMacro(VtkBGImageSource);
 
-VtkBGImageSource::VtkBGImageSource() : _origin(0,0), _cellsize(1)
-{
-}
-
+VtkBGImageSource::VtkBGImageSource() = default;
 VtkBGImageSource::~VtkBGImageSource() = default;
 
 void VtkBGImageSource::SetRaster(vtkImageAlgorithm *img, double x0, double y0, double scalingFactor)

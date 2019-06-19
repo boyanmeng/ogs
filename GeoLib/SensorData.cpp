@@ -5,7 +5,7 @@
  * \brief  Implementation of the SensorData class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -46,7 +46,9 @@ SensorData::SensorData(std::size_t first_timestep, std::size_t last_timestep, st
 SensorData::~SensorData()
 {
     for (std::vector<float>* vec : _data_vecs)
+    {
         delete vec;
+    }
 }
 
 
@@ -79,21 +81,13 @@ const std::vector<float>* SensorData::getTimeSeries(SensorDataType time_series_n
     for (std::size_t i=0; i<_vec_names.size(); i++)
     {
         if (time_series_name == _vec_names[i])
+        {
             return _data_vecs[i];
+        }
     }
-    ERR("Error in SensorData::getTimeSeries() - Time series \"%d\" not found.", time_series_name);
+    ERR("Error in SensorData::getTimeSeries() - Time series '%d' not found.",
+        time_series_name);
     return nullptr;
-}
-
-std::string SensorData::getDataUnit(SensorDataType time_series_name) const
-{
-    for (std::size_t i=0; i<_vec_names.size(); i++)
-    {
-        if (time_series_name == _vec_names[i])
-            return _data_unit_string[i];
-    }
-    ERR("Error in SensorData::getDataUnit() - Time series \"%d\" not found.", time_series_name);
-    return "";
 }
 
 int SensorData::readDataFromFile(const std::string &file_name)
@@ -114,8 +108,10 @@ int SensorData::readDataFromFile(const std::string &file_name)
     std::list<std::string>::const_iterator it (fields.begin());
     std::size_t nFields = fields.size();
 
-    if (nFields<2)
+    if (nFields < 2)
+    {
         return 0;
+    }
 
     std::size_t nDataArrays(nFields-1);
 
@@ -139,12 +135,16 @@ int SensorData::readDataFromFile(const std::string &file_name)
             std::size_t current_time_step = (pos == std::string::npos) ? atoi((it++)->c_str()) : BaseLib::strDate2int(*it++);
             this->_time_steps.push_back(current_time_step);
 
-            for (std::size_t i=0; i<nDataArrays; i++)
+            for (std::size_t i = 0; i < nDataArrays; i++)
+            {
                 this->_data_vecs[i]->push_back(
                     static_cast<float>(strtod((it++)->c_str(), nullptr)));
+            }
         }
         else
+        {
             return 0;
+        }
     }
 
     in.close();
@@ -157,11 +157,18 @@ int SensorData::readDataFromFile(const std::string &file_name)
 
 std::string SensorData::convertSensorDataType2String(SensorDataType t)
 {
-    if (SensorDataType::EVAPORATION == t) return "Evaporation";
+    if (SensorDataType::EVAPORATION == t)
+    {
+        return "Evaporation";
+    }
     if (SensorDataType::PRECIPITATION == t)
+    {
         return "Precipitation";
+    }
     if (SensorDataType::TEMPERATURE == t)
+    {
         return "Temperature";
+    }
     // pls leave this as last choice
     return "Unknown";
 }
@@ -169,11 +176,17 @@ std::string SensorData::convertSensorDataType2String(SensorDataType t)
 SensorDataType SensorData::convertString2SensorDataType(const std::string &s)
 {
     if (s == "Evaporation" || s == "EVAPORATION")
+    {
         return SensorDataType::EVAPORATION;
+    }
     if (s == "Precipitation" || s == "PRECIPITATION")
+    {
         return SensorDataType::PRECIPITATION;
+    }
     if (s == "Temperature" || s == "TEMPERATURE")
+    {
         return SensorDataType::TEMPERATURE;
+    }
     return SensorDataType::OTHER;
 }
 

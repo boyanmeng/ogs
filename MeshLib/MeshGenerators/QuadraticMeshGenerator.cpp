@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -31,7 +31,9 @@ std::unique_ptr<QuadraticElement> convertLinearToQuadratic(
     // Copy base nodes of element to the quadratic element new nodes'.
     std::array<MeshLib::Node*, n_all_nodes> nodes;
     for (int i = 0; i < n_base_nodes; i++)
+    {
         nodes[i] = const_cast<MeshLib::Node*>(e.getNode(i));
+    }
 
     // For each edge create a middle node.
     int const number_of_edges = e.getNumberOfEdges();

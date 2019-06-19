@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,9 @@ void SourceTermCollection::integrate(const double t, GlobalVector const& x,
                                      GlobalVector& b, GlobalMatrix* jac) const
 {
     for (auto const& st : _source_terms)
+    {
         st->integrate(t, x, b, jac);
+    }
 }
 
-}
+}  // namespace ProcessLib

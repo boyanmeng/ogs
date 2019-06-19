@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -366,7 +366,7 @@ private:
                         std::forward<ConstructorArgs>(args)...}};
             }
             return LADataIntfPtr{new LAFractureData<ShapeFunction>{
-                e, local_matrix_size, dofIndex_to_localIndex,
+                e, n_variables, local_matrix_size, dofIndex_to_localIndex,
                 std::forward<ConstructorArgs>(args)...}};
         };
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -99,4 +99,4 @@ const double TestQuad4::cl_exp_J[dim*dim] = {0.0, 1.0, 1.0, 0.0};
 const double TestQuad4::cl_exp_detJ = -1.;
 const double TestQuad4::ze_exp_J[dim*dim] = {1.0, 0.0, 0.0, 0.0};
 
-}
+}  // namespace CoordinatesMappingTestData

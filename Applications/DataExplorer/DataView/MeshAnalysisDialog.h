@@ -5,7 +5,7 @@
  * \brief  Definition of the MeshAnalysisDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,7 +36,7 @@ public:
     MeshAnalysisDialog(
         std::vector<std::unique_ptr<MeshLib::Mesh>> const& mesh_vec,
         QDialog* parent = nullptr);
-    ~MeshAnalysisDialog(void) override;
+    ~MeshAnalysisDialog() override;
 
 private:
     /// Prepares the output for the node message window

@@ -4,7 +4,7 @@
  * \brief  Implementation of AddLayerToMesh class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -50,7 +50,9 @@ MeshLib::Element* extrudeElement(std::vector<MeshLib::Node*> const& subsfc_nodes
     std::map<std::size_t, std::size_t> const& subsfc_sfc_id_map)
 {
     if (sfc_elem.getDimension() > 2)
+    {
         return nullptr;
+    }
 
     const unsigned nElemNodes(sfc_elem.getNumberOfBaseNodes());
     auto new_nodes = std::unique_ptr<MeshLib::Node* []> {
@@ -67,11 +69,17 @@ MeshLib::Element* extrudeElement(std::vector<MeshLib::Node*> const& subsfc_nodes
     }
 
     if (sfc_elem.getGeomType() == MeshLib::MeshElemType::LINE)
+    {
         return new MeshLib::Quad(new_nodes.release());
+    }
     if (sfc_elem.getGeomType() == MeshLib::MeshElemType::TRIANGLE)
+    {
         return new MeshLib::Prism(new_nodes.release());
+    }
     if (sfc_elem.getGeomType() == MeshLib::MeshElemType::QUAD)
+    {
         return new MeshLib::Hex(new_nodes.release());
+    }
 
     return nullptr;
 }
@@ -94,7 +102,7 @@ MeshLib::Mesh* addLayerToMesh(MeshLib::Mesh const& mesh, double thickness,
     std::string const& name,
     bool on_top)
 {
-    INFO("Extracting top surface of mesh \"%s\" ... ", mesh.getName().c_str());
+    INFO("Extracting top surface of mesh '%s' ... ", mesh.getName().c_str());
     int const flag = (on_top) ? -1 : 1;
     const MathLib::Vector3 dir(0, 0, flag);
     double const angle(90);
@@ -103,9 +111,12 @@ MeshLib::Mesh* addLayerToMesh(MeshLib::Mesh const& mesh, double thickness,
     std::string const prop_name("bulk_node_ids");
 
     if (mesh.getDimension() == 3)
+    {
         sfc_mesh.reset(MeshLib::MeshSurfaceExtraction::getMeshSurface(
             mesh, dir, angle, prop_name));
-    else {
+    }
+    else
+    {
         sfc_mesh = (on_top) ? std::make_unique<MeshLib::Mesh>(mesh)
                             : std::unique_ptr<MeshLib::Mesh>(
                                   MeshLib::createFlippedMesh(mesh));
@@ -136,8 +147,7 @@ MeshLib::Mesh* addLayerToMesh(MeshLib::Mesh const& mesh, double thickness,
 
     if (!sfc_mesh->getProperties().existsPropertyVector<std::size_t>(prop_name))
     {
-        ERR(
-            "Need subsurface node ids, but the property \"%s\" is not "
+        ERR("Need subsurface node ids, but the property '%s' is not "
             "available.",
             prop_name.c_str());
         return nullptr;
@@ -160,15 +170,17 @@ MeshLib::Mesh* addLayerToMesh(MeshLib::Mesh const& mesh, double thickness,
     // *** insert new layer elements into subsfc_mesh
     std::vector<MeshLib::Element*> const& sfc_elements(sfc_mesh->getElements());
     std::size_t const n_sfc_elements(sfc_elements.size());
-    for (std::size_t k(0); k<n_sfc_elements; ++k)
+    for (std::size_t k(0); k < n_sfc_elements; ++k)
+    {
         subsfc_elements.push_back(extrudeElement(
             subsfc_nodes, *sfc_elements[k], *node_id_pv, subsfc_sfc_id_map));
+    }
 
     auto new_mesh = new MeshLib::Mesh(name, subsfc_nodes, subsfc_elements);
 
     if (!mesh.getProperties().existsPropertyVector<int>("MaterialIDs"))
     {
-        ERR("Could not copy the property \"MaterialIDs\" since the original "
+        ERR("Could not copy the property 'MaterialIDs' since the original "
             "mesh does not contain such a property.");
         return new_mesh;
     }

@@ -5,7 +5,7 @@
  * \brief  Definition of the MeshRevision class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,7 +39,7 @@ public:
      * Constructor
      * @param mesh The mesh which is being revised. Note that node IDs in mesh are changed during computation but are resetted after the algorithms implemented here are finished
      */
-    MeshRevision(MeshLib::Mesh &mesh);
+    explicit MeshRevision(MeshLib::Mesh& mesh);
 
     virtual ~MeshRevision() = default;
 
@@ -190,4 +190,4 @@ private:
     static const std::array<unsigned,8> _hex_diametral_nodes;
 };
 
-}
+}  // namespace MeshLib

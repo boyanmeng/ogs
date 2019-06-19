@@ -2,7 +2,7 @@
  * @brief Computes the areas associated nodes of the surface mesh.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -32,11 +32,13 @@ void writeToFile(std::string const& id_area_fname, std::string const& csv_fname,
 {
     std::ofstream ids_and_area_out(id_area_fname);
     if (!ids_and_area_out) {
-        OGS_FATAL("Unable to open the file \"%s\" - aborting.", id_area_fname.c_str());
+        OGS_FATAL("Unable to open the file '%s' - aborting.",
+                  id_area_fname.c_str());
     }
     std::ofstream csv_out(csv_fname);
     if (!csv_out) {
-        OGS_FATAL("Unable to open the file \"%s\" - aborting.", csv_fname.c_str());
+        OGS_FATAL("Unable to open the file '%s' - aborting.",
+                  csv_fname.c_str());
     }
 
     ids_and_area_out.precision(std::numeric_limits<double>::digits10);
@@ -61,11 +63,11 @@ int main (int argc, char* argv[])
         "The tool computes the area per node of the surface mesh and writes "
         "the information as txt and csv data.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_in("i", "mesh-input-file",
         "the name of the file containing the input mesh", true,
         "", "file name of input mesh");
@@ -124,7 +126,9 @@ int main (int argc, char* argv[])
     // generate file names for output
     std::string path(out_base_fname.getValue());
     if (path.empty())
+    {
         path = BaseLib::dropFileExtension(mesh_in.getValue());
+    }
     std::string const id_and_area_fname(path+".txt");
     std::string const csv_fname(path+".csv");
 

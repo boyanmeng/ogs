@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,6 +12,7 @@
 #include <boost/math/constants/constants.hpp>
 #include "FlowAndTemperatureControl.h"
 #include "Physics.h"
+#include "ThermoMechanicalFlowProperties.h"
 
 namespace ProcessLib
 {
@@ -19,6 +20,8 @@ namespace HeatTransportBHE
 {
 namespace BHE
 {
+constexpr int BHE_1U::number_of_grout_zones;
+
 BHE_1U::BHE_1U(BoreholeGeometry const& borehole,
                RefrigerantProperties const& refrigerant,
                GroutParameters const& grout,
@@ -167,27 +170,19 @@ constexpr std::pair<int, int> BHE_1U::inflow_outflow_bc_component_ids[];
 void BHE_1U::updateHeatTransferCoefficients(double const flow_rate)
 
 {
-    _flow_velocity = flow_rate / _pipes.inlet.area();
+    auto const tm_flow_properties = calculateThermoMechanicalFlowPropertiesPipe(
+        _pipes.inlet, borehole_geometry.length, refrigerant, flow_rate);
 
-    double const Re = reynoldsNumber(std::abs(_flow_velocity),
-                                     _pipes.inlet.diameter,
-                                     refrigerant.dynamic_viscosity,
-                                     refrigerant.density);
-    double const Pr = prandtlNumber(refrigerant.dynamic_viscosity,
-                                    refrigerant.specific_heat_capacity,
-                                    refrigerant.thermal_conductivity);
-
-    double const Nu =
-        nusseltNumber(Re, Pr, _pipes.inlet.diameter, borehole_geometry.length);
-
-    _thermal_resistances = calcThermalResistances(Nu);
+    _flow_velocity = tm_flow_properties.velocity;
+    _thermal_resistances =
+        calcThermalResistances(tm_flow_properties.nusselt_number);
 }
 
 /// Nu is the Nusselt number.
 std::array<double, BHE_1U::number_of_unknowns> BHE_1U::calcThermalResistances(
     double const Nu)
 {
-    static constexpr double pi = boost::math::constants::pi<double>();
+    constexpr double pi = boost::math::constants::pi<double>();
 
     double const& lambda_r = refrigerant.thermal_conductivity;
     double const& lambda_g = grout.lambda_g;
@@ -231,7 +226,7 @@ std::array<double, BHE_1U::number_of_unknowns> BHE_1U::calcThermalResistances(
     double R_gg, R_gs;
     std::tie(R_gg, R_gs) = thermalResistancesGroutSoil(chi, R_ar, R_g);
 
-    return {R_fig, R_fog, R_gg, R_gs};
+    return {{R_fig, R_fog, R_gg, R_gs}};
 
     // keep the following lines------------------------------------------------
     // when debugging the code, printing the R and phi values are needed--------

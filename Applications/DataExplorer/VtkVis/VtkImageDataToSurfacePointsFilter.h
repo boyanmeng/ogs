@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,7 +36,7 @@ public:
 
 protected:
     VtkImageDataToSurfacePointsFilter();
-    ~VtkImageDataToSurfacePointsFilter() = default;
+    ~VtkImageDataToSurfacePointsFilter() override = default;
 
     /// Sets input port to vtkImageData.
     int FillInputPortInformation(int port, vtkInformation* info) override;
@@ -57,5 +57,5 @@ private:
     /// Returns a random number in [min, max]
     double getRandomNumber(double const& min, double const& max) const;
 
-    vtkIdType PointsPerPixel;
+    vtkIdType PointsPerPixel{20};
 };

@@ -2,7 +2,7 @@
  *  \brief A function for creating a thermal conductivity model for fluid
  *
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,9 +30,11 @@ std::unique_ptr<FluidProperty> createFluidThermalConductivityModel(
     auto const type = config.getConfigParameter<std::string>("type");
 
     if (type == "Constant")
+    {
         return std::make_unique<ConstantFluidProperty>(
             //! \ogs_file_param{material__fluid__thermal_conductivity__Constant__value}
             config.getConfigParameter<double>("value"));
+    }
     // TODO: add more models
 
     OGS_FATAL(
@@ -41,5 +43,5 @@ std::unique_ptr<FluidProperty> createFluidThermalConductivityModel(
         type.data());
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

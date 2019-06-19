@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -29,7 +29,9 @@ std::vector<std::size_t> filter(Container const& container, Predicate const& p)
     std::size_t i = 0;
     for (auto value : container) {
         if (p(value))
+        {
             matchedIDs.push_back(i);
+        }
         i++;
     }
     return matchedIDs;
@@ -59,9 +61,13 @@ std::size_t ElementSearch::searchByBoundingBox(
     auto matchedIDs = filter(_mesh.getElements(),
         [&aabb](MeshLib::Element* e) {
             std::size_t const nElemNodes (e->getNumberOfBaseNodes());
-            for (std::size_t n=0; n < nElemNodes; ++n)
+            for (std::size_t n = 0; n < nElemNodes; ++n)
+            {
                 if (aabb.containsPoint(*e->getNode(n), 0))
-                    return true;    // any node of element is in aabb.
+                {
+                    return true;  // any node of element is in aabb.
+                }
+            }
             return false;    // no nodes of element are in aabb.
         });
 
@@ -74,9 +80,10 @@ std::size_t ElementSearch::searchByNodeIDs(const std::vector<std::size_t> &nodes
     std::vector<std::size_t> connected_elements;
     for (std::size_t node_id : nodes)
     {
-        for (auto* e : _mesh.getNode(node_id)->getElements()) {
-            connected_elements.push_back(e->getID());
-        }
+        auto const& elements = _mesh.getNode(node_id)->getElements();
+        std::transform(begin(elements), end(elements),
+                       back_inserter(connected_elements),
+                       [](Element const* const e) { return e->getID(); });
     }
 
     BaseLib::makeVectorUnique(connected_elements);

@@ -2,7 +2,7 @@
  * \brief Declaration of the MeshElementGrid class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -62,9 +62,9 @@ public:
             for (std::size_t j(min_coords.second[1]); j<=max_coords.second[1]; j++) {
                 for (std::size_t k(min_coords.second[2]); k<=max_coords.second[2]; k++) {
                     std::size_t idx(i+j*_n_steps[0]+k*n_plane);
-                    std::copy(_elements_in_grid_box[idx].begin(),
-                              _elements_in_grid_box[idx].end(),
-                              std::back_inserter(elements_vec));
+                    elements_vec.insert(end(elements_vec),
+                                        begin(_elements_in_grid_box[idx]),
+                                        end(_elements_in_grid_box[idx]));
                 }
             }
         }

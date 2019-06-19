@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,14 +33,13 @@ namespace LiquidFlow
 LiquidFlowProcess::LiquidFlowProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
     SecondaryVariableCollection&& secondary_variables,
     NumLib::NamedFunctionCaller&& named_function_caller,
-    MeshLib::PropertyVector<int> const& material_ids,
-    bool const has_material_ids,
+    MeshLib::PropertyVector<int> const* const material_ids,
     int const gravitational_axis_id,
     double const gravitational_acceleration,
     double const reference_temperature,
@@ -51,8 +50,8 @@ LiquidFlowProcess::LiquidFlowProcess(
       _gravitational_axis_id(gravitational_axis_id),
       _gravitational_acceleration(gravitational_acceleration),
       _reference_temperature(reference_temperature),
-      _material_properties(createLiquidFlowMaterialProperties(
-          config, parameters, has_material_ids, material_ids))
+      _material_properties(
+          createLiquidFlowMaterialProperties(config, parameters, material_ids))
 {
     DBUG("Create Liquid flow process.");
 }
@@ -87,11 +86,17 @@ void LiquidFlowProcess::assembleConcreteProcess(const double t,
     DBUG("Assemble LiquidFlowProcess.");
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
-       dof_table = {std::ref(*_local_to_global_index_map)};
+        dof_table = {std::ref(*_local_to_global_index_map)};
+
+
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        dof_table, t, x, M, K, b, _coupled_solutions);
+        pv.getActiveElementIDs(),  dof_table, t, x, M, K, b,
+        _coupled_solutions);
 }
 
 void LiquidFlowProcess::assembleWithJacobianConcreteProcess(
@@ -102,23 +107,29 @@ void LiquidFlowProcess::assembleWithJacobianConcreteProcess(
     DBUG("AssembleWithJacobian LiquidFlowProcess.");
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
-       dof_table = {std::ref(*_local_to_global_index_map)};
+        dof_table = {std::ref(*_local_to_global_index_map)};
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, dof_table, t, x, xdot, dxdot_dx,
-        dx_dx, M, K, b, Jac, _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(), dof_table, t,
+        x, xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 }
 
 void LiquidFlowProcess::computeSecondaryVariableConcrete(const double t,
-                                                         GlobalVector const& x)
+                                                         GlobalVector const& x,
+                                                         int const process_id)
 {
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     DBUG("Compute the velocity for LiquidFlowProcess.");
-    GlobalExecutor::executeMemberOnDereferenced(
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &LiquidFlowLocalAssemblerInterface::computeSecondaryVariable,
-        _local_assemblers, *_local_to_global_index_map, t, x,
-        _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(),
+        getDOFTable(process_id), t, x, _coupled_solutions);
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace LiquidFlow
+}  // namespace ProcessLib

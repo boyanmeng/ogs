@@ -22,16 +22,16 @@ set(SOURCES
     MergeGeometriesDialog.cpp
     MeshAnalysisDialog.cpp
     MeshElementRemovalDialog.cpp
+    MeshItem.cpp
+    MeshLayerEditDialog.cpp
     MeshMapping2DDialog.cpp
+    MeshModel.cpp
     MeshQualitySelectionDialog.cpp
+    MeshTabWidget.cpp
     MeshValueEditDialog.cpp
+    MeshView.cpp
     ModellingTabWidget.cpp
     ModelTreeItem.cpp
-    MeshLayerEditDialog.cpp
-    MshItem.cpp
-    MshModel.cpp
-    MshTabWidget.cpp
-    MshView.cpp
     ProcessModel.cpp
     ProcessView.cpp
     SaveMeshDialog.cpp
@@ -72,16 +72,16 @@ set(HEADERS
     MergeGeometriesDialog.h
     MeshAnalysisDialog.h
     MeshElementRemovalDialog.h
+    MeshItem.h
+    MeshLayerEditDialog.h
     MeshMapping2DDialog.h
+    MeshModel.h
     MeshQualitySelectionDialog.h
+    MeshTabWidget.h
     MeshValueEditDialog.h
+    MeshView.h
     ModellingTabWidget.h
     ModelTreeItem.h
-    MeshLayerEditDialog.h
-    MshItem.h
-    MshModel.h
-    MshTabWidget.h
-    MshView.h
     ProcessModel.h
     ProcessVarItem.h
     ProcessView.h
@@ -142,6 +142,8 @@ target_link_libraries(QtDataView
 if(GEOTIFF_FOUND)
     target_link_libraries(QtDataView PRIVATE ${GEOTIFF_LIBRARIES})
 endif () # GEOTIFF_FOUND
+
+add_autogen_include(QtDataView)
 
 set_property(TARGET QtDataView PROPERTY FOLDER "DataExplorer")
 

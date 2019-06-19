@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,6 +13,7 @@
 #include "NumLib/DOF/ComputeSparsityPattern.h"
 #include "NumLib/Extrapolation/LocalLinearLeastSquaresExtrapolator.h"
 #include "NumLib/ODESolver/ConvergenceCriterionPerComponent.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Output/GlobalVectorFromNamedFunction.h"
 
 #include "ProcessVariable.h"
@@ -23,7 +24,7 @@ namespace ProcessLib
 Process::Process(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
@@ -49,7 +50,7 @@ Process::Process(
           return pcs_BCs;
       }(_process_variables.size())),
       _source_term_collections([&](const std::size_t number_of_processes)
-                               -> std::vector<SourceTermCollection> {
+                                   -> std::vector<SourceTermCollection> {
           std::vector<SourceTermCollection> pcs_sts;
           pcs_sts.reserve(number_of_processes);
           for (std::size_t i = 0; i < number_of_processes; i++)
@@ -121,7 +122,8 @@ void Process::setInitialConditions(const int process_id, double const t,
          variable_id < per_process_variables.size();
          variable_id++)
     {
-        SpatialPosition pos;
+        MathLib::LinAlg::setLocalAccessibleVector(x);
+        ParameterLib::SpatialPosition pos;
 
         auto const& pv = per_process_variables[variable_id];
         DBUG("Set the initial condition of variable %s of process %d.",
@@ -163,6 +165,7 @@ void Process::setInitialConditions(const int process_id, double const t,
             }
         }
     }
+    setInitialConditionsConcreteProcess(x, t);
 }
 
 MathLib::MatrixSpecifications Process::getMatrixSpecifications(
@@ -171,6 +174,16 @@ MathLib::MatrixSpecifications Process::getMatrixSpecifications(
     auto const& l = *_local_to_global_index_map;
     return {l.dofSizeWithoutGhosts(), l.dofSizeWithoutGhosts(),
             &l.getGhostIndices(), &_sparsity_pattern};
+}
+
+void Process::updateDeactivatedSubdomains(double const time,
+                                          const int process_id)
+{
+    auto const& variables_per_process = getProcessVariables(process_id);
+    for (auto const& variable : variables_per_process)
+    {
+        variable.get().updateDeactivatedSubdomains(time);
+    }
 }
 
 void Process::preAssemble(const double t, GlobalVector const& x)
@@ -210,6 +223,9 @@ void Process::assembleWithJacobian(const double t, GlobalVector const& x,
     const auto pcs_id =
         (_coupled_solutions) != nullptr ? _coupled_solutions->process_id : 0;
     _boundary_conditions[pcs_id].applyNaturalBC(t, x, K, b, &Jac);
+
+    // the last argument is for the jacobian, nullptr is for a unused jacobian
+    _source_term_collections[pcs_id].integrate(t, x, b, &Jac);
 }
 
 void Process::constructDofTable()
@@ -356,11 +372,12 @@ void Process::postNonLinearSolver(GlobalVector const& x, const double t,
     postNonLinearSolverConcreteProcess(x, t, process_id);
 }
 
-void Process::computeSecondaryVariable(const double t, GlobalVector const& x)
+void Process::computeSecondaryVariable(const double t, GlobalVector const& x,
+                                       int const process_id)
 {
     MathLib::LinAlg::setLocalAccessibleVector(x);
 
-    computeSecondaryVariableConcrete(t, x);
+    computeSecondaryVariableConcrete(t, x, process_id);
 }
 
 void Process::preIteration(const unsigned iter, const GlobalVector& x)

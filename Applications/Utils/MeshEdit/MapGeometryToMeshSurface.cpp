@@ -3,7 +3,7 @@
  * \brief Map geometric objects to the surface of the given mesh.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  */
@@ -32,11 +32,11 @@ int main (int argc, char* argv[])
         "https://docs.opengeosys.org/docs/tools/model-preparation/"
         "map-geometric-object-to-the-surface-of-a-mesh.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_in("m", "mesh-file",
         "the name of the file containing the mesh", true,
         "", "file name");
@@ -61,8 +61,8 @@ int main (int argc, char* argv[])
     {
         GeoLib::IO::BoostXmlGmlInterface xml_io(geometries);
         if (xml_io.readFile(input_geometry_fname.getValue())) {
-            INFO("Read geometry from file \"%s\".",
-                input_geometry_fname.getValue().c_str());
+            INFO("Read geometry from file '%s'.",
+                 input_geometry_fname.getValue().c_str());
         } else {
             return EXIT_FAILURE;
         }

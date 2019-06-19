@@ -5,7 +5,7 @@
  * \brief  Definition of the SHPImportDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -42,6 +42,7 @@ class SHPImportDialog : public QDialog
 public:
     /// Constructor
     SHPImportDialog(std::string filename, GeoLib::GEOObjects& geo_objects,
+                    std::string const& gmsh_path,
                     QDialog* parent = nullptr);
     ~SHPImportDialog() override;
 
@@ -59,6 +60,7 @@ private:
     std::string _filename;
     short _fileType;
     FileIO::SHPInterface* _shpInterface;
+    std::string const _gmsh_path;
 
 private slots:
     /// Instructions if the OK-Button has been pressed.

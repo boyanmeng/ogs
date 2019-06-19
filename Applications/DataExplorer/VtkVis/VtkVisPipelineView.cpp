@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkVisPipelineView class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -56,7 +56,7 @@ VtkVisPipelineView::VtkVisPipelineView( QWidget* parent /*= 0*/ )
     this->setItemsExpandable(false);
     auto* checkboxDelegate = new CheckboxDelegate(this);
     this->setItemDelegateForColumn(1, checkboxDelegate);
-    this->header()->setStretchLastSection(false);
+    this->header()->setStretchLastSection(true);
     this->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
@@ -80,7 +80,7 @@ void VtkVisPipelineView::contextMenuEvent( QContextMenuEvent* event )
         int objectType = item->algorithm()->GetOutputDataObject(0)->GetDataObjectType();
         VtkAlgorithmProperties* vtkProps = item->getVtkProperties();
         bool isSourceItem =
-                (this->selectionModel()->currentIndex().parent().isValid()) ? 0 : 1;
+            !(this->selectionModel()->currentIndex().parent().isValid());
 
         QMenu menu;
         QAction* addFilterAction = menu.addAction("Add filter...");

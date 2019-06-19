@@ -3,7 +3,7 @@
  * @brief Implementation of heuristic search length strategy.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -59,14 +59,20 @@ HeuristicSearchLength::HeuristicSearchLength(MeshLib::Mesh const& mesh, LengthTy
     _search_length = mean/2;
 
     if (variance > 0) {
-        if (variance < mean*mean/4)
+        if (variance < mean * mean / 4)
+        {
             _search_length -= std::sqrt(variance);
+        }
         else
+        {
             _search_length = std::numeric_limits<double>::epsilon();
+        }
     }
 
-    DBUG("[MeshNodeSearcher::MeshNodeSearcher] Calculated search length for mesh \"%s\" is %f.",
-            _mesh.getName().c_str(), _search_length);
+    DBUG(
+        "[MeshNodeSearcher::MeshNodeSearcher] Calculated search length for "
+        "mesh '%s' is %f.",
+        _mesh.getName().c_str(), _search_length);
 }
 
 } // end namespace MeshGeoToolsLib

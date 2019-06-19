@@ -18,7 +18,7 @@
 #include "LinearElasticIsotropic.h"
 #include "MathLib/KelvinVector.h"
 #include "NumLib/NewtonRaphson.h"
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 namespace MaterialLib
 {
@@ -40,8 +40,7 @@ template <int DisplacementDim>
 class CreepBGRa final : public LinearElasticIsotropic<DisplacementDim>
 {
 public:
-    static int const KelvinVectorSize =
-        MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value;
+    using LinearElasticIsotropic<DisplacementDim>::KelvinVectorSize;
     using ResidualVectorType = Eigen::Matrix<double, KelvinVectorSize, 1>;
     using JacobianMatrix = Eigen::Matrix<double, KelvinVectorSize,
                                          KelvinVectorSize, Eigen::RowMajor>;
@@ -51,7 +50,7 @@ public:
     using KelvinMatrix =
         MathLib::KelvinVector::KelvinMatrixType<DisplacementDim>;
 
-    using Parameter = ProcessLib::Parameter<double>;
+    using Parameter = ParameterLib::Parameter<double>;
 
     std::unique_ptr<
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables>
@@ -80,7 +79,7 @@ public:
                                    DisplacementDim>::MaterialStateVariables>,
                                KelvinMatrix>>
     integrateStress(
-        double const t, ProcessLib::SpatialPosition const& x, double const dt,
+        double const t, ParameterLib::SpatialPosition const& x, double const dt,
         KelvinVector const& eps_prev, KelvinVector const& eps,
         KelvinVector const& sigma_prev,
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -93,7 +92,7 @@ public:
     }
 
     double getTemperatureRelatedCoefficient(
-        double const t, double const dt, ProcessLib::SpatialPosition const& x,
+        double const t, double const dt, ParameterLib::SpatialPosition const& x,
         double const T, double const deviatoric_stress_norm) const override;
 
 private:

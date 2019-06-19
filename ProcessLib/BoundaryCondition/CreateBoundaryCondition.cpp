@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,13 +13,16 @@
 #include "BoundaryConditionConfig.h"
 #include "ConstraintDirichletBoundaryCondition.h"
 #include "DirichletBoundaryCondition.h"
+#include "DirichletBoundaryConditionWithinTimeInterval.h"
+#include "HCNonAdvectiveFreeComponentFlowBoundaryCondition.h"
 #include "NeumannBoundaryCondition.h"
-#include "NonuniformDirichletBoundaryCondition.h"
-#include "NonuniformNeumannBoundaryCondition.h"
-#include "NonuniformVariableDependentNeumannBoundaryCondition.h"
 #include "NormalTractionBoundaryCondition.h"
 #include "PhaseFieldIrreversibleDamageOracleBoundaryCondition.h"
 #include "RobinBoundaryCondition.h"
+#include "VariableDependentNeumannBoundaryCondition.h"
+
+#include "BaseLib/TimeInterval.h"
+
 #ifdef OGS_USE_PYTHON
 #include "Python/PythonBoundaryCondition.h"
 #endif
@@ -31,7 +34,7 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
     const NumLib::LocalToGlobalIndexMap& dof_table,
     const MeshLib::Mesh& bulk_mesh, const int variable_id,
     const unsigned integration_order, const unsigned shapefunction_order,
-    const std::vector<std::unique_ptr<ProcessLib::ParameterBase>>& parameters,
+    const std::vector<std::unique_ptr<ParameterLib::ParameterBase>>& parameters,
     const Process& process)
 {
     // Surface mesh and bulk mesh must have equal axial symmetry flags!
@@ -54,6 +57,12 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             *config.component_id, parameters);
     }
+    if (type == "DirichletWithinTimeInterval")
+    {
+        return ProcessLib::createDirichletBoundaryConditionWithinTimeInterval(
+            config.config, config.boundary_mesh, dof_table, variable_id,
+            *config.component_id, parameters);
+    }
     if (type == "Neumann")
     {
         return ProcessLib::createNeumannBoundaryCondition(
@@ -68,27 +77,12 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
             *config.component_id, integration_order, shapefunction_order,
             bulk_mesh.getDimension(), parameters);
     }
-    if (type == "NonuniformDirichlet")
+    if (type == "VariableDependentNeumann")
     {
-        return ProcessLib::createNonuniformDirichletBoundaryCondition(
-            config.config, config.boundary_mesh, dof_table, variable_id,
-            *config.component_id);
-    }
-    if (type == "NonuniformNeumann")
-    {
-        return ProcessLib::createNonuniformNeumannBoundaryCondition(
+        return ProcessLib::createVariableDependentNeumannBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             *config.component_id, integration_order, shapefunction_order,
-            bulk_mesh);
-    }
-
-    if (type == "NonuniformVariableDependentNeumann")
-    {
-        return ProcessLib::
-            createNonuniformVariableDependentNeumannBoundaryCondition(
-                config.config, config.boundary_mesh, dof_table, variable_id,
-                *config.component_id, integration_order, shapefunction_order,
-                bulk_mesh);
+            bulk_mesh.getDimension(), parameters);
     }
 
     if (type == "Python")
@@ -112,6 +106,13 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             integration_order, *config.component_id, parameters, process);
     }
+    if (type == "HCNonAdvectiveFreeComponentFlowBoundary")
+    {
+        return createHCNonAdvectiveFreeComponentFlowBoundaryCondition(
+            config.config, config.boundary_mesh, dof_table, variable_id,
+            *config.component_id, integration_order, parameters,
+            bulk_mesh.getDimension(), process, shapefunction_order);
+    }
     if (type == "NormalTraction")
     {
         return ProcessLib::NormalTractionBoundaryCondition::
@@ -124,6 +125,7 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
     {
         return ProcessLib::
             createPhaseFieldIrreversibleDamageOracleBoundaryCondition(
+                //! \ogs_file_param_special{prj__process_variables__process_variable__boundary_conditions__boundary_condition__PhaseFieldIrreversibleDamageOracleBoundaryCondition}
                 config.config, dof_table, bulk_mesh, variable_id,
                 *config.component_id);
     }

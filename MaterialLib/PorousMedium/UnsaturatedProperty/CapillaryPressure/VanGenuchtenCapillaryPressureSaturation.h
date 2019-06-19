@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -48,7 +48,7 @@ namespace PorousMedium
 *   Fully coupled generalized hybrid-mixed finite element approximation of
 * two-phase two-component flow in porous media.
 *   Part I: formulation and properties of the mathematical model. Comput Geosci
-* 2013;17(2):431¨C42.
+* 2013;17(2):431-442.
 */
 class VanGenuchtenCapillaryPressureSaturation final
     : public CapillaryPressureSaturation
@@ -114,5 +114,5 @@ private:
     double getdPcdSvG(const double Sg) const;
 };
 
-}  // end namespace
-}  // end namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

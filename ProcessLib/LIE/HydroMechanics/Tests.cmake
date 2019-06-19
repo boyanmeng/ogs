@@ -7,6 +7,7 @@ AddTest(
     WRAPPER time
     TESTER vtkdiff
     REQUIREMENTS NOT (OGS_USE_LIS OR OGS_USE_MPI)
+    RUNTIME 20
     DIFF_DATA
     expected_single_fracture_pcs_0_ts_10_t_100.000000.vtu single_fracture_pcs_0_ts_10_t_100.000000.vtu pressure pressure 1e-12 1e-12
     expected_single_fracture_pcs_0_ts_10_t_100.000000.vtu single_fracture_pcs_0_ts_10_t_100.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
@@ -28,6 +29,7 @@ AddTest(
 AddTest(
     NAME LARGE_LIE_HM_single_fracture_3D
     PATH LIE/HydroMechanics
+    RUNTIME 320
     EXECUTABLE ogs
     EXECUTABLE_ARGS single_fracture_3D.prj
     WRAPPER time
@@ -55,6 +57,7 @@ AddTest(
 AddTest(
     NAME LARGE_LIE_HM_TaskB
     PATH LIE/HydroMechanics
+    RUNTIME 60
     EXECUTABLE ogs
     EXECUTABLE_ARGS TaskB.prj
     WRAPPER time

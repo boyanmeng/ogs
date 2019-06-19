@@ -5,7 +5,7 @@
  * \brief  Definition of the StratView class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,7 +34,7 @@ public:
     /**
      * Creates an empty view.
      */
-    StratView(QWidget* parent = nullptr) : _scene(nullptr) { Q_UNUSED(parent); }
+    StratView(QWidget* parent = nullptr) { Q_UNUSED(parent); }
     ~StratView() override;
 
     /// Sets the Borehole whose data should be visualised.
@@ -72,5 +72,5 @@ private:
     /// Updates the view automatically when a Borehole is added or when the window containing the view changes its state.
     void update();
 
-    StratScene* _scene;
+    StratScene* _scene{nullptr};
 };

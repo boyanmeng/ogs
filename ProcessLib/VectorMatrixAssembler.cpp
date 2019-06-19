@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -47,10 +47,10 @@ void VectorMatrixAssembler::assemble(
 {
     std::vector<std::vector<GlobalIndexType>> indices_of_processes;
     indices_of_processes.reserve(dof_tables.size());
-    for (std::size_t i = 0; i < dof_tables.size(); i++)
+    for (auto dof_table : dof_tables)
     {
         indices_of_processes.emplace_back(
-            NumLib::getIndices(mesh_item_id, dof_tables[i].get()));
+            NumLib::getIndices(mesh_item_id, dof_table.get()));
     }
 
     auto const& indices = (cpl_xs == nullptr)
@@ -114,10 +114,10 @@ void VectorMatrixAssembler::assembleWithJacobian(
 {
     std::vector<std::vector<GlobalIndexType>> indices_of_processes;
     indices_of_processes.reserve(dof_tables.size());
-    for (std::size_t i = 0; i < dof_tables.size(); i++)
+    for (auto dof_table : dof_tables)
     {
         indices_of_processes.emplace_back(
-            NumLib::getIndices(mesh_item_id, dof_tables[i].get()));
+            NumLib::getIndices(mesh_item_id, dof_table.get()));
     }
 
     auto const& indices = (cpl_xs == nullptr)

@@ -4,7 +4,7 @@
  * \date   2016-02-21
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -106,7 +106,9 @@ public:
             }
 
             if (!name.empty())
+            {
                 line_name_map.insert(std::make_pair(name, line_id));
+            }
         };
 
         auto const& pnt_vec = *(geo_objects.getPointVecObj(geo_name));
@@ -136,8 +138,10 @@ public:
             auto const lines = geo_objects.getPolylineVec(geo_name);
             GeoLib::Polyline* line = (*lines)[ply_id];
             EXPECT_EQ(pnt_ids.size(), line->getNumberOfPoints());
-            for (std::size_t k(0); k<pnt_ids.size(); ++k)
+            for (std::size_t k(0); k < pnt_ids.size(); ++k)
+            {
                 EXPECT_EQ(pnt_ids[k], line->getPointID(k));
+            }
             std::string line_name;
             line_vec->getNameOfElementByID(ply_id, line_name);
             EXPECT_EQ(name, line_name);
@@ -189,8 +193,10 @@ public:
             auto const& sfc_vec = *(sfcs.getVector());
             auto const& sfc = *(sfc_vec[sfc_id]);
             EXPECT_EQ(tri_ids.size(), sfc.getNumberOfTriangles());
-            for (std::size_t k(0); k<tri_ids.size(); ++k)
+            for (std::size_t k(0); k < tri_ids.size(); ++k)
+            {
                 checkTriangleIDs(*(sfc[k]), tri_ids[k]);
+            }
 
             std::string sfc_name;
             sfcs.getNameOfElementByID(sfc_id, sfc_name);

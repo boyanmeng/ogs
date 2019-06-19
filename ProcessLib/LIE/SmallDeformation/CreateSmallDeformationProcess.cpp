@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -15,9 +15,8 @@
 #include "MaterialLib/FractureModels/CreateLinearElasticIsotropic.h"
 #include "MaterialLib/FractureModels/CreateMohrCoulomb.h"
 #include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
-
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
-#include "ProcessLib/Utils/ProcessUtils.h"  // required for findParameter
 
 #include "SmallDeformationProcess.h"
 #include "SmallDeformationProcessData.h"
@@ -33,7 +32,9 @@ std::unique_ptr<Process> createSmallDeformationProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config)
 {
@@ -49,14 +50,21 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         pv_conf.getConfigParameterList<std::string>("process_variable");
     std::vector<std::reference_wrapper<ProcessVariable>> per_process_variables;
 
+    std::size_t n_var_du = 0;
     for (std::string const& pv_name : range)
     {
         if (pv_name != "displacement" && pv_name.find("displacement_jump") != 0)
         {
             OGS_FATAL(
                 "Found a process variable name '%s'. It should be "
-                "'displacement' or 'displacement_jumpN'");
+                "'displacement' or 'displacement_jumpN' or "
+                "'displacement_junctionN'");
         }
+        if (pv_name.find("displacement_jump") == 0)
+        {
+            n_var_du++;
+        }
+
         auto variable = std::find_if(variables.cbegin(), variables.cend(),
                                      [&pv_name](ProcessVariable const& v) {
                                          return v.getName() == pv_name;
@@ -70,18 +78,19 @@ std::unique_ptr<Process> createSmallDeformationProcess(
                 "list for config tag <%s>.",
                 pv_name.c_str(), "process_variable");
         }
-        DBUG("Found process variable \'%s\' for config tag <%s>.",
+        DBUG("Found process variable '%s' for config tag <%s>.",
              variable->getName().c_str(), "process_variable");
 
-        per_process_variables.emplace_back(const_cast<ProcessVariable&>(*variable));
+        per_process_variables.emplace_back(
+            const_cast<ProcessVariable&>(*variable));
     }
-    auto const n_fractures = per_process_variables.size() - 1;
-    if (n_fractures < 1)
+
+    if (n_var_du < 1)
     {
         OGS_FATAL("No displacement jump variables are specified");
     }
 
-    DBUG("Associate displacement with process variable \'%s\'.",
+    DBUG("Associate displacement with process variable '%s'.",
          per_process_variables.back().get().getName().c_str());
 
     if (per_process_variables.back().get().getNumberOfComponents() !=
@@ -100,7 +109,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
 
     auto solid_constitutive_relations =
         MaterialLib::Solids::createConstitutiveRelations<DisplacementDim>(
-            parameters, config);
+            parameters, local_coordinate_system, config);
 
     // Fracture constitutive relation.
     // read type;
@@ -135,30 +144,28 @@ std::unique_ptr<Process> createSmallDeformationProcess(
     {
         OGS_FATAL(
             "Cannot construct fracture constitutive relation of given type "
-            "\'%s\'.",
+            "'%s'.",
             frac_type.c_str());
     }
 
     // Fracture properties
-    std::vector<std::unique_ptr<FractureProperty>> vec_fracture_property;
+    std::vector<FractureProperty> fracture_properties;
     for (
         auto fracture_properties_config :
         //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__fracture_properties}
         config.getConfigSubtreeList("fracture_properties"))
     {
-        auto& para_b0 = ProcessLib::findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__fracture_properties__initial_aperture}
-            fracture_properties_config, "initial_aperture", parameters, 1);
-        auto frac_prop(new FractureProperty());
-        frac_prop->fracture_id = vec_fracture_property.size();
-        frac_prop->mat_id =
+        fracture_properties.emplace_back(
+            fracture_properties.size(),
             //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__fracture_properties__material_id}
-            fracture_properties_config.getConfigParameter<int>("material_id");
-        frac_prop->aperture0 = &para_b0;
-        vec_fracture_property.emplace_back(frac_prop);
+            fracture_properties_config.getConfigParameter<int>("material_id"),
+            ParameterLib::findParameter<double>(
+                //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_LIE__fracture_properties__initial_aperture}
+                fracture_properties_config, "initial_aperture", parameters, 1,
+                &mesh));
     }
 
-    if (n_fractures != vec_fracture_property.size())
+    if (n_var_du < fracture_properties.size())
     {
         OGS_FATAL(
             "The number of displacement jumps and the number of "
@@ -174,7 +181,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
 
     SmallDeformationProcessData<DisplacementDim> process_data(
         materialIDs(mesh), std::move(solid_constitutive_relations),
-        std::move(fracture_model), std::move(vec_fracture_property),
+        std::move(fracture_model), std::move(fracture_properties),
         reference_temperature);
 
     SecondaryVariableCollection secondary_variables;
@@ -195,7 +202,9 @@ template std::unique_ptr<Process> createSmallDeformationProcess<2>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 
@@ -203,7 +212,9 @@ template std::unique_ptr<Process> createSmallDeformationProcess<3>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 

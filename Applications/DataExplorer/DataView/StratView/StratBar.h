@@ -5,7 +5,7 @@
  * \brief  Definition of the StratBar class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -38,7 +38,7 @@ public:
     StratBar(GeoLib::StationBorehole* station,
              std::map<std::string, DataHolderLib::Color>* stratColors = nullptr,
              QGraphicsItem* parent = nullptr);
-    ~StratBar() override;
+    ~StratBar() override = default;
 
     /// Returns the bounding rectangle of the bar.
     QRectF boundingRect() const override;

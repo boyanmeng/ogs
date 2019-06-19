@@ -5,7 +5,7 @@
  * \brief  Definition of analytical geometry functions.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -21,37 +21,32 @@
 
 #include "Polygon.h"
 
-namespace MathLib
-{
-    class PointVec;
-}
-
 namespace GeoLib
 {
-class Polyline;
-class LineSegment;
 
 enum Orientation
 {
-    CW = 1, CCW = 2, COLLINEAR = 3
+    CW = -1,
+    COLLINEAR = 0,
+    CCW = 1
 };
 
 /**
- * computes the orientation of the three 2D-Points given by their coordinates
- * p0_x, p0_y, p1_x, p1_y, p2_x and p2_y
- * \returns CW (clockwise), CCW (counterclockwise) or COLLINEAR (points are on a line)
+ * Computes the orientation of the three 2D-Points. This is a robust method.
+ * \returns CW (clockwise), CCW (counterclockwise) or COLLINEAR (points are on a
+ * line)
  */
-Orientation getOrientation (const double& p0_x, const double& p0_y,
-    const double& p1_x, const double& p1_y,
-    const double& p2_x, const double& p2_y);
-
+Orientation getOrientation(MathLib::Point3d const& p0,
+                           MathLib::Point3d const& p1,
+                           MathLib::Point3d const& p2);
 /**
- * wrapper for getOrientation ()
+ * Computes the orientation of the three 2D-Points. This is a non-robust method.
+ * \returns CW (clockwise), CCW (counterclockwise) or COLLINEAR (points are on a
+ * line)
  */
-Orientation getOrientation (const GeoLib::Point* p0,
-                            const GeoLib::Point* p1,
-                            const GeoLib::Point* p2);
-
+Orientation getOrientationFast(MathLib::Point3d const& p0,
+                               MathLib::Point3d const& p1,
+                               MathLib::Point3d const& p2);
 /**
  * compute a supporting plane (represented by plane_normal and the value d) for the polygon
  * Let \f$n\f$ be the plane normal and \f$d\f$ a parameter. Then for all points \f$p \in R^3\f$ of the plane
@@ -161,14 +156,6 @@ MathLib::DenseMatrix<double> rotatePointsToXY(InputIterator1 p_pnts_begin,
                                               InputIterator1 p_pnts_end,
                                               InputIterator2 r_pnts_begin,
                                               InputIterator2 r_pnts_end);
-
-/**
- * rotate points to X-Z plane
- * @param pnts a vector of points with a minimum length of three.
- * Points are rotated using a rotation matrix computed from the first three points
- * in the vector. Point coordinates are modified as a result of the rotation.
- */
-void rotatePointsToXZ(std::vector<GeoLib::Point*> &pnts);
 
 /**
  * test for intersections of the line segments of the Polyline

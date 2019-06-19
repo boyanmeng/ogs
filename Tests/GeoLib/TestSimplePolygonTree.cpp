@@ -5,7 +5,7 @@
  * @brief Test functionality of class SimplePolygonTree.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,8 +40,7 @@
 class CreatePolygonTreesTest : public testing::Test
 {
 public:
-    CreatePolygonTreesTest() :
-        _p0(nullptr), _p1(nullptr), _p2(nullptr), _p3(nullptr)
+    CreatePolygonTreesTest()
     {
         // create points and construct polygon
         _pnts.push_back(new GeoLib::Point(0.0,-1.0,0.0));
@@ -92,16 +91,18 @@ public:
         delete _p1;
         delete _p2;
         delete _p3;
-        for (auto & _pnt : _pnts)
+        for (auto& _pnt : _pnts)
+        {
             delete _pnt;
+        }
     }
 
 protected:
     std::vector<GeoLib::Point*> _pnts;
-    GeoLib::Polygon *_p0;
-    GeoLib::Polygon *_p1;
-    GeoLib::Polygon *_p2;
-    GeoLib::Polygon *_p3;
+    GeoLib::Polygon* _p0{nullptr};
+    GeoLib::Polygon* _p1{nullptr};
+    GeoLib::Polygon* _p2{nullptr};
+    GeoLib::Polygon* _p3{nullptr};
 };
 
 TEST_F(CreatePolygonTreesTest, P0AndP1)

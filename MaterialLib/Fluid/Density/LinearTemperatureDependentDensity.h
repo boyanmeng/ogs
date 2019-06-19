@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -62,7 +62,9 @@ public:
     {
         (void)var_vals;
         if (var != PropertyVariableType::T)
+        {
             return 0.0;
+        }
         return -_rho0 * _beta;
     }
 
@@ -72,5 +74,5 @@ private:
     const double _beta;          ///<  Parameter.
 };
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

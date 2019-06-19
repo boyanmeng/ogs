@@ -5,7 +5,7 @@
  * \brief  Implementation of the GeoTreeView class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,10 +32,10 @@ GeoTreeView::GeoTreeView(QWidget* parent) : QTreeView(parent)
 void GeoTreeView::updateView()
 {
     setAlternatingRowColors(true);
-    //resizeColumnToContents(0);
     setColumnWidth(0,150);
-    setColumnWidth(1,50);
-    setColumnWidth(2,50);
+    setColumnWidth(1,75);
+    setColumnWidth(2,75);
+    setColumnWidth(3,75);
 }
 
 void GeoTreeView::on_Clicked(QModelIndex idx)
@@ -125,6 +125,13 @@ void GeoTreeView::contextMenuEvent( QContextMenuEvent* event )
     // The current index is a list of points/polylines/surfaces
     if (list != nullptr)
     {
+        QAction* convertToStationAction(nullptr);
+        if (list->getType() == GeoLib::GEOTYPE::POINT)
+        {
+            convertToStationAction = menu.addAction("Convert to Stations");
+            connect(convertToStationAction, SIGNAL(triggered()),
+                    this, SLOT(convertPointsToStations()));
+        }
         QAction* connectPlyAction(nullptr);
         if (list->getType() == GeoLib::GEOTYPE::POLYLINE)
         {
@@ -181,6 +188,14 @@ void GeoTreeView::contextMenuEvent( QContextMenuEvent* event )
     }
 
     menu.exec(event->globalPos());
+}
+
+void GeoTreeView::convertPointsToStations()
+{
+    TreeItem const*const item = static_cast<GeoTreeModel*>(model())
+                         ->getItem(this->selectionModel()->currentIndex())
+                         ->parentItem();
+    emit requestPointToStationConversion(item->data(0).toString().toStdString());
 }
 
 void GeoTreeView::connectPolylines()

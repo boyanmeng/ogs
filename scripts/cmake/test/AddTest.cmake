@@ -16,6 +16,8 @@
 #                  enable the test, e.g.
 #                  OGS_USE_PETSC AND (OGS_USE_EIGEN OR OGS_USE_LIS)
 #   VIS <vtu output file(s)> # optional for documentation
+#   RUNTIME <in seconds> # optional for optimizing ctest duration
+#                          values should be taken from eve serial job
 # )
 #
 # Conditional arguments:
@@ -37,12 +39,12 @@
 #         the benchmark output directory.
 
 function (AddTest)
-    if(NOT OGS_BUILD_TESTS)
+    if(NOT BUILD_TESTING)
         return()
     endif()
     # parse arguments
     set(options NONE)
-    set(oneValueArgs EXECUTABLE PATH NAME WRAPPER TESTER ABSTOL RELTOL)
+    set(oneValueArgs EXECUTABLE PATH NAME WRAPPER TESTER ABSTOL RELTOL RUNTIME)
     set(multiValueArgs EXECUTABLE_ARGS DATA DIFF_DATA WRAPPER_ARGS REQUIREMENTS VIS)
     cmake_parse_arguments(AddTest "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -54,11 +56,14 @@ function (AddTest)
     set(AddTest_STDOUT_FILE_PATH "${AddTest_BINARY_PATH}/${AddTest_NAME}_stdout.log")
 
     # set defaults
-    if(NOT AddTest_EXECUTABLE)
+    if(NOT DEFINED AddTest_EXECUTABLE)
         set(AddTest_EXECUTABLE ogs)
     endif()
-    if (NOT AddTest_REQUIREMENTS)
-        set (AddTest_REQUIREMENTS TRUE)
+    if (NOT DEFINED AddTest_REQUIREMENTS)
+        set(AddTest_REQUIREMENTS TRUE)
+    endif()
+    if (NOT DEFINED AddTest_RUNTIME)
+        set(AddTest_RUNTIME 1)
     endif()
 
     if("${AddTest_EXECUTABLE}" STREQUAL "ogs")
@@ -70,7 +75,7 @@ function (AddTest)
     if(${AddTest_REQUIREMENTS})
         # message(STATUS "Enabling test ${AddTest_NAME}.")
     else()
-        message(STATUS "Requirement ${AddTest_REQUIREMENTS} not met! Disabling test ${AddTest_NAME}.")
+        set(DISABLED_TESTS_LOG "${DISABLED_TESTS_LOG}\nRequirement ${AddTest_REQUIREMENTS} not met! Disabling test ${AddTest_NAME}." CACHE INTERNAL "")
         return()
     endif()
 
@@ -78,7 +83,7 @@ function (AddTest)
         if(TIME_TOOL_PATH)
             set(WRAPPER_COMMAND time)
         else()
-            message(STATUS "WARNING: Disabling time wrapper for ${AddTest_NAME} as time exe was not found!")
+            set(DISABLED_TESTS_LOG "${DISABLED_TESTS_LOG}\nDisabling time wrapper for ${AddTest_NAME} as time exe was not found!" CACHE INTERNAL "")
             set(AddTest_WRAPPER_ARGS "")
         endif()
     elseif(AddTest_WRAPPER STREQUAL "memcheck")
@@ -86,7 +91,7 @@ function (AddTest)
             set(WRAPPER_COMMAND "${VALGRIND_TOOL_PATH} --tool=memcheck --log-file=${AddTest_SOURCE_PATH}/${AddTest_NAME}_memcheck.log -v --leak-check=full --show-reachable=yes --track-origins=yes --malloc-fill=0xff --free-fill=0xff")
             set(tester memcheck)
         else()
-            message(STATUS "WARNING: Disabling memcheck wrapper for ${AddTest_NAME} as memcheck exe was not found!")
+            set(DISABLED_TESTS_LOG "${DISABLED_TESTS_LOG}\nDisabling memcheck wrapper for ${AddTest_NAME} as memcheck exe was not found!" CACHE INTERNAL "")
             set(AddTest_WRAPPER_ARGS "")
         endif()
     elseif(AddTest_WRAPPER STREQUAL "callgrind")
@@ -94,11 +99,14 @@ function (AddTest)
             set(WRAPPER_COMMAND "${VALGRIND_TOOL_PATH} --tool=callgrind --branch-sim=yes --cache-sim=yes --dump-instr=yes --collect-jumps=yes")
             unset(tester)
         else()
-            message(STATUS "WARNING: Disabling callgrind wrapper for ${AddTest_NAME} as callgrind exe was not found!")
+            set(DISABLED_TESTS_LOG "${DISABLED_TESTS_LOG}\nDisabling callgrind wrapper for ${AddTest_NAME} as callgrind exe was not found!" CACHE INTERNAL "")
             set(AddTest_WRAPPER_ARGS "")
         endif()
     elseif(AddTest_WRAPPER STREQUAL "mpirun")
         if(MPIRUN_TOOL_PATH)
+            if("${HOSTNAME}" MATCHES "frontend.*")
+                set(AddTest_WRAPPER_ARGS ${AddTest_WRAPPER_ARGS} --mca btl_openib_allow_ib 1)
+            endif()
             set(WRAPPER_COMMAND ${MPIRUN_TOOL_PATH})
         else()
             message(STATUS "ERROR: mpirun was not found but is required for ${AddTest_NAME}!")
@@ -243,6 +251,7 @@ Use six arguments version of AddTest with absolute and relative tolerances")
         -DSTDOUT_FILE_PATH=${AddTest_STDOUT_FILE_PATH}
         -P ${PROJECT_SOURCE_DIR}/scripts/cmake/test/AddTestWrapper.cmake
     )
+    set_tests_properties(${TEST_NAME} PROPERTIES COST ${AddTest_RUNTIME})
 
     if(TARGET ${AddTest_EXECUTABLE})
         add_dependencies(ctest ${AddTest_EXECUTABLE})

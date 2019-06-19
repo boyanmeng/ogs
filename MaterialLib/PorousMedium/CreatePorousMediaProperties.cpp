@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -24,7 +24,7 @@ namespace PorousMedium
 {
 PorousMediaProperties createPorousMediaProperties(
     MeshLib::Mesh& mesh, BaseLib::ConfigTree const& configs,
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters)
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters)
 {
     DBUG("Create PorousMediaProperties.");
 
@@ -76,25 +76,21 @@ PorousMediaProperties createPorousMediaProperties(
     BaseLib::reorderVector(porosity_models, mat_ids);
     BaseLib::reorderVector(storage_models, mat_ids);
 
-    std::vector<int> material_ids(mesh.getNumberOfElements());
-    if (mesh.getProperties().existsPropertyVector<int>("MaterialIDs"))
-    {
-        auto const& mesh_material_ids =
-            mesh.getProperties().getPropertyVector<int>("MaterialIDs");
-        material_ids.reserve(mesh_material_ids->size());
-        std::copy(mesh_material_ids->cbegin(), mesh_material_ids->cend(),
-                  material_ids.begin());
-    }
+    auto const material_ids = materialIDs(mesh);
     int const max_material_id =
-        *std::max_element(material_ids.cbegin(), material_ids.cend());
+        !material_ids
+            ? 0
+            : *std::max_element(begin(*material_ids), end(*material_ids));
 
     if (max_material_id > static_cast<int>(mat_ids.size() - 1))
+    {
         OGS_FATAL(
             "The maximum value of MaterialIDs in mesh is %d. As the "
             "given number of porous media definitions in the project "
             "file is %d, the maximum value of MaterialIDs in mesh must be %d "
             "(index starts with zero).",
             max_material_id, mat_ids.size(), max_material_id - 1);
+    }
 
     if (max_material_id < static_cast<int>(mat_ids.size() - 1))
         WARN(
@@ -104,15 +100,16 @@ PorousMediaProperties createPorousMediaProperties(
             mat_ids.size(), max_material_id - 1);
 
     if (mat_ids.back() != static_cast<int>(mat_ids.size()) - 1)
+    {
         OGS_FATAL(
             "The ids in the porous media definitions in the project file have "
             "to be sequential, starting with the id zero.");
+    }
 
     return PorousMediaProperties{std::move(porosity_models),
                                  std::move(intrinsic_permeability_models),
-                                 std::move(storage_models),
-                                 std::move(material_ids)};
+                                 std::move(storage_models), material_ids};
 }
 
-}  // namespace ComponentTransport
-}  // namespace ProcessLib
+}  // namespace PorousMedium
+}  // namespace MaterialLib

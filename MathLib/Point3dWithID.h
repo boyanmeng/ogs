@@ -4,7 +4,7 @@
  * \brief  Definition of the Point3d class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,7 +40,8 @@ public:
     /// the provided id.
     /// @param coords coordinates of the point
     /// @param id the id of the object [default: max of std::size_t]
-    Point3dWithID(std::array<double,3> const& coords,
+    explicit Point3dWithID(
+        std::array<double, 3> const& coords,
         std::size_t id = std::numeric_limits<std::size_t>::max())
         : Point3d(coords), _id(id)
     {}
@@ -66,4 +67,4 @@ protected:
     std::size_t _id;
 };
 
-}
+}  // namespace MathLib

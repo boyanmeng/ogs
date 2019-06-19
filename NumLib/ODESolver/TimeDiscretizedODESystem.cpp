@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -21,7 +21,9 @@ void applyKnownSolutions(std::vector<Solutions> const* const known_solutions,
                          Vector& x)
 {
     if (!known_solutions)
+    {
         return;
+    }
 
     for (auto const& bc : *known_solutions)
     {
@@ -140,7 +142,9 @@ void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
                               GlobalVector& minus_delta_x) const
 {
     if (!_known_solutions)
+    {
         return;
+    }
 
     using IndexType = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
     std::vector<IndexType> ids;
@@ -221,7 +225,9 @@ void TimeDiscretizedODESystem<ODESystemTag::FirstOrderImplicitQuasilinear,
                               GlobalVector& x) const
 {
     if (!_known_solutions)
+    {
         return;
+    }
 
     using IndexType = MathLib::MatrixVectorTraits<GlobalMatrix>::Index;
     std::vector<IndexType> ids;

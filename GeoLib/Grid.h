@@ -5,7 +5,7 @@
  * \brief  Definition of the Grid class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -177,22 +177,19 @@ private:
     static POINT const* copyOrAddress(POINT const& p) { return &p; }
     static POINT* copyOrAddress(POINT* p) { return p; }
 
-    std::array<std::size_t,3> _n_steps;
-    std::array<double, 3> _step_sizes;
+    std::array<std::size_t,3> _n_steps = {{1, 1, 1}};
+    std::array<double, 3> _step_sizes = {{0.0, 0.0, 0.0}};
     /**
      * This is an array that stores pointers to POINT objects.
      */
-    std::vector<POINT*>* _grid_cell_nodes_map;
+    std::vector<POINT*>* _grid_cell_nodes_map = nullptr;
 };
 
 template <typename POINT>
 template <typename InputIterator>
 Grid<POINT>::Grid(InputIterator first, InputIterator last,
                   std::size_t max_num_per_grid_cell)
-    : GeoLib::AABB(first, last),
-      _n_steps({{1, 1, 1}}),
-      _step_sizes({{0.0, 0.0, 0.0}}),
-      _grid_cell_nodes_map(nullptr)
+    : GeoLib::AABB(first, last)
 {
     auto const n_pnts(std::distance(first,last));
 

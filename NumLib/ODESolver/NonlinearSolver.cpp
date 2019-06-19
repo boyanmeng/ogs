@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,9 +26,10 @@ void NonlinearSolver<NonlinearSolverTag::Picard>::assemble(
     _equation_system->assemble(x);
 }
 
-bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
+NonlinearSolverStatus NonlinearSolver<NonlinearSolverTag::Picard>::solve(
     GlobalVector& x,
-    std::function<void(unsigned, GlobalVector const&)> const& postIterationCallback)
+    std::function<void(int, GlobalVector const&)> const&
+        postIterationCallback)
 {
     namespace LinAlg = MathLib::LinAlg;
     auto& sys = *_equation_system;
@@ -45,7 +46,7 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
 
     _convergence_criterion->preFirstIteration();
 
-    unsigned iteration = 1;
+    int iteration = 1;
     for (; iteration <= _maxiter;
          ++iteration, _convergence_criterion->reset())
     {
@@ -93,7 +94,9 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
         else
         {
             if (postIterationCallback)
+            {
                 postIterationCallback(iteration, x_new);
+            }
 
             switch (sys.postIteration(x_new))
             {
@@ -146,7 +149,16 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
              time_iteration.elapsed());
 
         if (error_norms_met)
+        {
             break;
+        }
+
+        // Avoid increment of the 'iteration' if the error norms are not met,
+        // but maximum number of iterations is reached.
+        if (iteration >= _maxiter)
+        {
+            break;
+        }
     }
 
     if (iteration > _maxiter)
@@ -160,7 +172,7 @@ bool NonlinearSolver<NonlinearSolverTag::Picard>::solve(
     NumLib::GlobalVectorProvider::provider.releaseVector(rhs);
     NumLib::GlobalVectorProvider::provider.releaseVector(x_new);
 
-    return error_norms_met;
+    return {error_norms_met, iteration};
 }
 
 void NonlinearSolver<NonlinearSolverTag::Newton>::assemble(
@@ -172,9 +184,10 @@ void NonlinearSolver<NonlinearSolverTag::Newton>::assemble(
     //      equation every time and could not forget it.
 }
 
-bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
+NonlinearSolverStatus NonlinearSolver<NonlinearSolverTag::Newton>::solve(
     GlobalVector& x,
-    std::function<void(unsigned, GlobalVector const&)> const& postIterationCallback)
+    std::function<void(int, GlobalVector const&)> const&
+        postIterationCallback)
 {
     namespace LinAlg = MathLib::LinAlg;
     auto& sys = *_equation_system;
@@ -195,7 +208,7 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
 
     _convergence_criterion->preFirstIteration();
 
-    unsigned iteration = 1;
+    int iteration = 1;
     for (; iteration <= _maxiter;
          ++iteration, _convergence_criterion->reset())
     {
@@ -227,7 +240,9 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
         INFO("[time] Applying Dirichlet BCs took %g s.", time_dirichlet);
 
         if (!sys.isLinear() && _convergence_criterion->hasResidualCheck())
+        {
             _convergence_criterion->checkResidual(res);
+        }
 
         BaseLib::RunTime time_linear_solver;
         time_linear_solver.start();
@@ -248,7 +263,9 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
             LinAlg::axpy(x_new, -_damping, minus_delta_x);
 
             if (postIterationCallback)
+            {
                 postIterationCallback(iteration, x_new);
+            }
 
             switch(sys.postIteration(x_new))
             {
@@ -295,7 +312,16 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
              time_iteration.elapsed());
 
         if (error_norms_met)
+        {
             break;
+        }
+
+        // Avoid increment of the 'iteration' if the error norms are not met,
+        // but maximum number of iterations is reached.
+        if (iteration >= _maxiter)
+        {
+            break;
+        }
     }
 
     if (iteration > _maxiter)
@@ -310,7 +336,7 @@ bool NonlinearSolver<NonlinearSolverTag::Newton>::solve(
     NumLib::GlobalVectorProvider::provider.releaseVector(
         minus_delta_x);
 
-    return error_norms_met;
+    return {error_norms_met, iteration};
 }
 
 std::pair<std::unique_ptr<NonlinearSolverBase>, NonlinearSolverTag>
@@ -320,7 +346,7 @@ createNonlinearSolver(GlobalLinearSolver& linear_solver,
     //! \ogs_file_param{prj__nonlinear_solvers__nonlinear_solver__type}
     auto const type = config.getConfigParameter<std::string>("type");
     //! \ogs_file_param{prj__nonlinear_solvers__nonlinear_solver__max_iter}
-    auto const max_iter = config.getConfigParameter<unsigned>("max_iter");
+    auto const max_iter = config.getConfigParameter<int>("max_iter");
 
     if (type == "Picard") {
         auto const tag = NonlinearSolverTag::Picard;
@@ -347,4 +373,4 @@ createNonlinearSolver(GlobalLinearSolver& linear_solver,
     }
     OGS_FATAL("Unsupported nonlinear solver type");
 }
-}
+}  // namespace NumLib

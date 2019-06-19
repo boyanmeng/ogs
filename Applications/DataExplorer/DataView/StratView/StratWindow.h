@@ -5,7 +5,7 @@
  * \brief  Definition of the StratWindow class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,7 +40,7 @@ public:
         GeoLib::StationBorehole* station,
         std::map<std::string, DataHolderLib::Color>* stratColors = nullptr,
         QWidget* parent = nullptr);
-    ~StratWindow(void) override { this->destroy(); }
+    ~StratWindow() override { this->destroy(); }
 
 private:
     /// Automatically resize window based on the measurements of the borehole.

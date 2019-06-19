@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkColorLookupTable class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,15 +25,11 @@
 
 vtkStandardNewMacro(VtkColorLookupTable);
 
-VtkColorLookupTable::VtkColorLookupTable()
-: _type(DataHolderLib::LUTType::LINEAR)
-{
-}
+VtkColorLookupTable::VtkColorLookupTable() = default;
 
 VtkColorLookupTable::~VtkColorLookupTable()
 {
-    for (std::map<double, unsigned char*>::const_iterator it = _dict.begin(); it != _dict.end();
-         ++it)
+    for (auto it = _dict.begin(); it != _dict.end(); ++it)
         delete it->second;
 }
 
@@ -57,7 +53,7 @@ void VtkColorLookupTable::Build()
     double range[2];
     this->GetTableRange(range);
     const double interval = range[1]-range[0];
-    this->SetNumberOfTableValues(ceil(interval)+1);
+    this->SetNumberOfTableValues(static_cast<vtkIdType>(ceil(interval))+1);
 //    const vtkIdType nColours = this->GetNumberOfTableValues();
     if (!_dict.empty())
     {
@@ -152,7 +148,7 @@ void VtkColorLookupTable::GetTableValue(vtkIdType idx, unsigned char rgba[4])
     vtkLookupTable::GetTableValue(idx, value);
 
     for (unsigned i=0; i<4; ++i)
-        rgba[i] = value[i]*255.0;
+        rgba[i] = static_cast<unsigned char>(value[i]*255.0);
 }
 
 void VtkColorLookupTable::setColor(double pos, DataHolderLib::Color const& color)

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& os, std::array<T, N> const& array)
     os << "]";
     return os;
 }
-}
+}  // namespace std
 
 namespace autocheck
 {
@@ -143,7 +143,8 @@ struct progressivelySmallerGenerator
 
     using result_type = T;
 
-    progressivelySmallerGenerator(T max_value = T{1}) : _max_value(max_value)
+    explicit progressivelySmallerGenerator(T max_value = T{1})
+        : _max_value(max_value)
     {
     }
 

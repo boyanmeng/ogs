@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,7 +25,9 @@ inline double logPenaltyDerivative(double const aperture0,
                                    double const aperture_cutoff)
 {
     if (aperture >= aperture0)
+    {
         return 1;
+    }
 
     // Logarithmic penalty
     if (aperture > aperture_cutoff)
@@ -49,7 +51,9 @@ inline double logPenalty(double const aperture0,
                          double const aperture_cutoff)
 {
     if (aperture >= aperture0)
+    {
         return 1;
+    }
 
     // Logarithmic penalty
     if (aperture > aperture_cutoff)

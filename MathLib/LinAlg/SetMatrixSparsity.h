@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -31,7 +31,7 @@ void setMatrixSparsity(MATRIX& matrix, SPARSITY_PATTERN const& sparsity_pattern)
     set_sparsity(matrix, sparsity_pattern);
 }
 
-} // MathLib
+}  // namespace MathLib
 
 #ifdef USE_LIS
 #include "Lis/LisMatrix.h"

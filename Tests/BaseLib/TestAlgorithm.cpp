@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <random>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -19,12 +20,13 @@ TEST(BaseLibAlgorithm, testreorderVector)
 {
     const std::size_t size = 100;
     std::vector<double> vec(size);
-    std::generate(vec.begin(), vec.end(), std::rand);
+    std::default_random_engine random_engine;
+    std::generate(vec.begin(), vec.end(), random_engine);
     std::vector<double> vec0 = vec;
 
     std::vector<int> order(size);
     std::iota(order.begin(), order.end(), 0);
-    std::random_shuffle(order.begin(), order.end());
+    std::shuffle(order.begin(), order.end(), random_engine);
 
     BaseLib::reorderVector(vec, order);
 
@@ -49,7 +51,9 @@ TEST(BaseLibAlgorithm, excludeObjectCopy)
     ASSERT_EQ(size - ex_positions.size(), c1.size());
 
     for (std::size_t i(0); i < c1.size(); i++)
+    {
         ASSERT_EQ(c1[i], v[size / 10 + i]);
+    }
 
     // do not copy element 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
     std::transform(ex_positions.begin(), ex_positions.end(),
@@ -60,9 +64,13 @@ TEST(BaseLibAlgorithm, excludeObjectCopy)
     ASSERT_EQ(size - ex_positions.size(), c2.size());
 
     for (std::size_t i(0); i < ex_positions.size(); i++)
+    {
         ASSERT_EQ(c2[i], v[2 * i + 1]);
+    }
     for (std::size_t i(ex_positions.size()); i < c2.size(); i++)
+    {
         ASSERT_EQ(c2[i], v[ex_positions.size() + i]);
+    }
 
     // do not copy the last element
     ex_positions.clear();
@@ -72,5 +80,7 @@ TEST(BaseLibAlgorithm, excludeObjectCopy)
     ASSERT_EQ(size - ex_positions.size(), c3.size());
 
     for (std::size_t i(0); i < c3.size(); i++)
+    {
         ASSERT_EQ(c3[i], v[i]);
+    }
 }

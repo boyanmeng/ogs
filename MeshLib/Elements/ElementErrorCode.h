@@ -5,7 +5,7 @@
  * \brief   Definition of ElementErrorCodes.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -47,13 +47,21 @@ public:
     static std::string toString(const ElementErrorFlag e)
     {
         if (e == ElementErrorFlag::ZeroVolume)
+        {
             return "zero volume";
+        }
         if (e == ElementErrorFlag::NonCoplanar)
+        {
             return "non coplanar nodes";
+        }
         if (e == ElementErrorFlag::NonConvex)
+        {
             return "non-convex geometry";
+        }
         if (e == ElementErrorFlag::NodeOrder)
+        {
             return "wrong node order";
+        }
         return "nonspecified error";
     }
 

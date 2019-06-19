@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,9 +18,9 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "LocalAssemblerInterface.h"
@@ -75,7 +75,7 @@ struct IntegrationPointData final
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
-/// Used by for extrapolation of the integration point values. It is ordered
+/// Used for the extrapolation of the integration point values. It is ordered
 /// (and stored) by integration points.
 template <typename ShapeMatrixType>
 struct SecondaryData
@@ -154,7 +154,7 @@ public:
             ip_data.eps_m.setZero(kelvin_vector_size);
             ip_data.eps_m_prev.setZero(kelvin_vector_size);
 
-            SpatialPosition x_position;
+            ParameterLib::SpatialPosition x_position;
             x_position.setElementID(_element.getID());
             ip_data.solid_density =
                 _process_data.reference_solid_density(0, x_position)[0];
@@ -185,6 +185,14 @@ public:
         if (name == "sigma_ip")
         {
             return setSigma(values);
+        }
+        if (name == "epsilon_ip")
+        {
+            return setEpsilon(values);
+        }
+        else if (name == "epsilon_m_ip")
+        {
+            return setEpsilonMechanical(values);
         }
 
         return 0;
@@ -246,7 +254,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition x_position;
+        ParameterLib::SpatialPosition x_position;
         x_position.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -302,7 +310,9 @@ public:
                 t, x_position, dt, eps_m_prev, eps_m, sigma_prev, *state, T_ip);
 
             if (!solution)
+            {
                 OGS_FATAL("Computation of local constitutive relation failed.");
+            }
 
             MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
             std::tie(sigma, state, C) = std::move(*solution);
@@ -320,9 +330,11 @@ public:
                                              displacement_size);
 
             for (int i = 0; i < DisplacementDim; ++i)
+            {
                 N_u.template block<1, displacement_size / DisplacementDim>(
                        i, i * displacement_size / DisplacementDim)
                     .noalias() = N;
+            }
 
             // calculate real density
             // rho_s_{n+1} * (V_{n} + dV) = rho_s_n * V_n
@@ -415,7 +427,6 @@ private:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        std::vector<double> ip_sigma_values;
         auto sigma_values =
             Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
                                      Eigen::ColMajor> const>(
@@ -484,7 +495,53 @@ private:
         return cache;
     }
 
-    virtual std::vector<double> const& getIntPtEpsilon(
+    std::size_t setEpsilon(double const* values)
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        auto epsilon_values =
+            Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
+                                     Eigen::ColMajor> const>(
+                values, kelvin_vector_size, n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            _ip_data[ip].eps =
+                MathLib::KelvinVector::symmetricTensorToKelvinVector(
+                    epsilon_values.col(ip));
+        }
+
+        return n_integration_points;
+    }
+
+    std::vector<double> getEpsilon() const override
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        std::vector<double> ip_epsilon_values;
+        auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+            double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+            ip_epsilon_values, n_integration_points, kelvin_vector_size);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto const& eps = _ip_data[ip].eps;
+            cache_mat.row(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(eps);
+        }
+
+        return ip_epsilon_values;
+    }
+
+    std::vector<double> const& getIntPtEpsilon(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
@@ -509,6 +566,52 @@ private:
         }
 
         return cache;
+    }
+
+    std::size_t setEpsilonMechanical(double const* values)
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        auto epsilon_m_values =
+            Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
+                                     Eigen::ColMajor> const>(
+                values, kelvin_vector_size, n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            _ip_data[ip].eps_m =
+                MathLib::KelvinVector::symmetricTensorToKelvinVector(
+                    epsilon_m_values.col(ip));
+        }
+
+        return n_integration_points;
+    }
+
+    std::vector<double> getEpsilonMechanical() const override
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        std::vector<double> ip_epsilon_m_values;
+        auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+            double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+            ip_epsilon_m_values, n_integration_points, kelvin_vector_size);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto const& eps_m = _ip_data[ip].eps_m;
+            cache_mat.row(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(eps_m);
+        }
+
+        return ip_epsilon_m_values;
     }
 
     ThermoMechanicsProcessData<DisplacementDim>& _process_data;

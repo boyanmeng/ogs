@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,6 +12,7 @@
 #include <cassert>
 
 #include "BaseLib/Functional.h"
+#include "NumLib/DOF/DOFTableUtil.h"
 #include "ProcessLib/SmallDeformation/CreateLocalAssemblers.h"
 
 #include "ThermoMechanicsFEM.h"
@@ -24,7 +25,7 @@ template <int DisplacementDim>
 ThermoMechanicsProcess<DisplacementDim>::ThermoMechanicsProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
@@ -38,8 +39,15 @@ ThermoMechanicsProcess<DisplacementDim>::ThermoMechanicsProcess(
               use_monolithic_scheme),
       _process_data(std::move(process_data))
 {
+    _nodal_forces = MeshLib::getOrCreateMeshProperty<double>(
+        mesh, "NodalForces", MeshLib::MeshItemType::Node, DisplacementDim);
+
+    _heat_flux = MeshLib::getOrCreateMeshProperty<double>(
+        mesh, "HeatFlux", MeshLib::MeshItemType::Node, 1);
+
     _integration_point_writer.emplace_back(
-        std::make_unique<SigmaIntegrationPointWriter>(
+        std::make_unique<KelvinVectorIntegrationPointWriter>(
+            "sigma_ip",
             static_cast<int>(mesh.getDimension() == 2 ? 4 : 6) /*n components*/,
             2 /*integration order*/, [this]() {
                 // Result containing integration point data for each local
@@ -52,6 +60,46 @@ ThermoMechanicsProcess<DisplacementDim>::ThermoMechanicsProcess(
                     auto const& local_asm = *_local_assemblers[i];
 
                     result[i] = local_asm.getSigma();
+                }
+
+                return result;
+            }));
+
+    _integration_point_writer.emplace_back(
+        std::make_unique<KelvinVectorIntegrationPointWriter>(
+            "epsilon_ip",
+            static_cast<int>(mesh.getDimension() == 2 ? 4 : 6) /*n components*/,
+            2 /*integration order*/, [this]() {
+                // Result containing integration point data for each local
+                // assembler.
+                std::vector<std::vector<double>> result;
+                result.resize(_local_assemblers.size());
+
+                for (std::size_t i = 0; i < _local_assemblers.size(); ++i)
+                {
+                    auto const& local_asm = *_local_assemblers[i];
+
+                    result[i] = local_asm.getEpsilon();
+                }
+
+                return result;
+            }));
+
+    _integration_point_writer.emplace_back(
+        std::make_unique<KelvinVectorIntegrationPointWriter>(
+            "epsilon_m_ip",
+            static_cast<int>(mesh.getDimension() == 2 ? 4 : 6) /*n components*/,
+            2 /*integration order*/, [this]() {
+                // Result containing integration point data for each local
+                // assembler.
+                std::vector<std::vector<double>> result;
+                result.resize(_local_assemblers.size());
+
+                for (std::size_t i = 0; i < _local_assemblers.size(); ++i)
+                {
+                    auto const& local_asm = *_local_assemblers[i];
+
+                    result[i] = local_asm.getEpsilonMechanical();
                 }
 
                 return result;
@@ -127,7 +175,7 @@ void ThermoMechanicsProcess<DisplacementDim>::initializeConcreteProcess(
         {
             OGS_FATAL(
                 "Different number of components in meta data (%d) than in "
-                "the integration point field data for \"%s\": %d.",
+                "the integration point field data for '%s': %d.",
                 ip_meta_data.n_components, name.c_str(),
                 mesh_property.getNumberOfComponents());
         }
@@ -161,10 +209,15 @@ void ThermoMechanicsProcess<DisplacementDim>::assembleConcreteProcess(
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
+    const int process_id =
+        _use_monolithic_scheme ? 0 : _coupled_solutions->process_id;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        dof_table, t, x, M, K, b, _coupled_solutions);
+        pv.getActiveElementIDs(), dof_table, t, x, M, K, b,
+        _coupled_solutions);
 }
 
 template <int DisplacementDim>
@@ -180,38 +233,72 @@ void ThermoMechanicsProcess<DisplacementDim>::
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
+     const int process_id =
+        _use_monolithic_scheme ? 0 : _coupled_solutions->process_id;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, dof_table, t, x, xdot, dxdot_dx,
-        dx_dx, M, K, b, Jac, _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
+        xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
+
+    // TODO (naumov): Refactor the copy rhs part. This is copy from HM.
+    auto copyRhs = [&](int const variable_id, auto& output_vector) {
+        if (_use_monolithic_scheme)
+        {
+            transformVariableFromGlobalVector(b, variable_id, dof_table[0],
+                                              output_vector,
+                                              std::negate<double>());
+        }
+        else
+        {
+            transformVariableFromGlobalVector(
+                b, 0, dof_table[_coupled_solutions->process_id], output_vector,
+                std::negate<double>());
+        }
+    };
+    if (_use_monolithic_scheme || _coupled_solutions->process_id == 0)
+    {
+        copyRhs(0, *_heat_flux);
+    }
+    if (_use_monolithic_scheme || _coupled_solutions->process_id == 1)
+    {
+        copyRhs(1, *_nodal_forces);
+    }
 }
 
 template <int DisplacementDim>
 void ThermoMechanicsProcess<DisplacementDim>::preTimestepConcreteProcess(
     GlobalVector const& x, double const t, double const dt,
-    const int /*process_id*/)
+    const int process_id)
 {
     DBUG("PreTimestep ThermoMechanicsProcess.");
 
     _process_data.dt = dt;
     _process_data.t = t;
 
-    GlobalExecutor::executeMemberOnDereferenced(
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &ThermoMechanicsLocalAssemblerInterface::preTimestep, _local_assemblers,
-        *_local_to_global_index_map, x, t, dt);
+        pv.getActiveElementIDs(), *_local_to_global_index_map, x, t,
+        dt);
 }
 
 template <int DisplacementDim>
 void ThermoMechanicsProcess<DisplacementDim>::postTimestepConcreteProcess(
     GlobalVector const& x, const double /*t*/, const double /*delta_t*/,
-    int const /*process_id*/)
+    int const process_id)
 {
     DBUG("PostTimestep ThermoMechanicsProcess.");
 
-    GlobalExecutor::executeMemberOnDereferenced(
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &ThermoMechanicsLocalAssemblerInterface::postTimestep,
-        _local_assemblers, *_local_to_global_index_map, x);
+        _local_assemblers, pv.getActiveElementIDs(),
+        *_local_to_global_index_map, x);
 }
 
 template class ThermoMechanicsProcess<2>;

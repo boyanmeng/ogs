@@ -5,7 +5,7 @@
  * \brief  Definition of the BoostXmlGmlInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,7 +35,7 @@ namespace IO
 class BoostXmlGmlInterface : public BaseLib::IO::XMLInterface
 {
 public:
-    BoostXmlGmlInterface(GeoLib::GEOObjects& geo_objs);
+    explicit BoostXmlGmlInterface(GeoLib::GEOObjects& geo_objs);
     ~BoostXmlGmlInterface() override = default;
 
     /// Reads an xml-file containing OGS geometry

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -22,7 +22,7 @@ namespace IO
 
 void PVDFile::addVTUFile(const std::string &vtu_fname, double timestep)
 {
-    _datasets.push_back(std::make_pair(timestep, vtu_fname));
+    _datasets.emplace_back(timestep, vtu_fname);
 
     std::ofstream fh(_pvd_filename.c_str());
     if (!fh) {
@@ -37,10 +37,13 @@ void PVDFile::addVTUFile(const std::string &vtu_fname, double timestep)
            "  <Collection>\n";
 
     for (auto const& pair : _datasets)
-        fh << "    <DataSet timestep=\"" << pair.first << "\" group=\"\" part=\"0\" file=\"" << pair.second << "\"/>\n";
+    {
+        fh << "    <DataSet timestep=\"" << pair.first
+           << "\" group=\"\" part=\"0\" file=\"" << pair.second << "\"/>\n";
+    }
 
     fh << "  </Collection>\n</VTKFile>\n";
 }
 
-} // IO
-} // MeshLib
+}  // namespace IO
+}  // namespace MeshLib

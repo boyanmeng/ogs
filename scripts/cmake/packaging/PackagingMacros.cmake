@@ -11,7 +11,7 @@ macro(ConfigureMacOSXBundle TARGET_NAME ICON_FILE_PATH)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${OGS_VERSION}
         MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_NAME} ${OGS_VERSION}"
         MACOSX_BUNDLE_BUNDLE_VERSION ${OGS_VERSION}
-        MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2012-2018, OpenGeoSys Community. All Rights Reserved."
+        MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2012-2019, OpenGeoSys Community. All Rights Reserved."
     )
 
     set_source_files_properties(${ICON_FILE_PATH} PROPERTIES
@@ -75,6 +75,7 @@ macro(install_qt5_plugin _qt_plugin_name _qt_plugins_var)
             set(_qt_plugin_dir "plugins")
         endif()
         set(_qt_plugin_dest "${_qt_plugin_dir}/${_qt_plugin_type}")
+        file(COPY "${_qt_plugin_path}" DESTINATION "${_qt_plugin_dest}")
         install(FILES "${_qt_plugin_path}"
             DESTINATION "${_qt_plugin_dest}"
             ${COMPONENT})

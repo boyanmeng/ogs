@@ -5,7 +5,7 @@
  * \brief  Definition of the Node class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,7 @@ class Element;
 /**
  * A mesh node with coordinates in 3D space.
  */
-class Node final : public MathLib::Point3dWithID
+class Node : public MathLib::Point3dWithID
 {
     /* friend classes: */
     friend class Mesh;
@@ -44,10 +44,12 @@ class Node final : public MathLib::Point3dWithID
 
 public:
     /// Constructor using a coordinate array
-    Node(const double coords[3], std::size_t id = std::numeric_limits<std::size_t>::max());
+    explicit Node(const double coords[3],
+                  std::size_t id = std::numeric_limits<std::size_t>::max());
 
     /// Constructor using a coordinate array
-    Node(std::array<double, 3> const& coords, std::size_t id = std::numeric_limits<std::size_t>::max());
+    explicit Node(std::array<double, 3> const& coords,
+                  std::size_t id = std::numeric_limits<std::size_t>::max());
 
     /// Constructor using single coordinates
     Node(double x, double y, double z, std::size_t id = std::numeric_limits<std::size_t>::max());
@@ -106,4 +108,4 @@ protected:
 /// is not connected to any element i.e. an unconnected node.
 bool isBaseNode(Node const& node);
 
-} /* namespace */
+}  // namespace MeshLib

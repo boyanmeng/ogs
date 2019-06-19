@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -73,7 +73,7 @@ boost::optional<std::tuple<typename Lubby2<DisplacementDim>::KelvinVector,
                                DisplacementDim>::MaterialStateVariables>,
                            typename Lubby2<DisplacementDim>::KelvinMatrix>>
 Lubby2<DisplacementDim>::integrateStress(
-    double const t, ProcessLib::SpatialPosition const& x, double const dt,
+    double const t, ParameterLib::SpatialPosition const& x, double const dt,
     KelvinVector const& /*eps_prev*/, KelvinVector const& eps,
     KelvinVector const& /*sigma_prev*/,
     typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -165,13 +165,17 @@ Lubby2<DisplacementDim>::integrateStress(
         auto const success_iterations = newton_solver.solve(K_loc);
 
         if (!success_iterations)
+        {
             return {};
+        }
 
         // If the Newton loop didn't run, the linear solver will not be
         // initialized.
         // This happens usually for the first iteration of the first timestep.
         if (*success_iterations == 0)
+        {
             linear_solver.compute(K_loc);
+        }
     }
 
     KelvinMatrix C =
@@ -223,7 +227,7 @@ void Lubby2<DisplacementDim>::calculateResidualBurgers(
 template <int DisplacementDim>
 void Lubby2<DisplacementDim>::calculateJacobianBurgers(
     double const t,
-    ProcessLib::SpatialPosition const& x,
+    ParameterLib::SpatialPosition const& x,
     const double dt,
     JacobianMatrix& Jac,
     double s_eff,

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -72,10 +72,23 @@ void LocalAssemblerInterface::computeSecondaryVariable(
     auto const indices = NumLib::getIndices(mesh_item_id, dof_table);
 
     if (coupled_xs != nullptr)
+    {
         return;
+    }
 
     auto const local_x = x.get(indices);
     computeSecondaryVariableConcrete(t, local_x);
+}
+
+void LocalAssemblerInterface::setInitialConditions(
+    std::size_t const mesh_item_id,
+    NumLib::LocalToGlobalIndexMap const& dof_table, GlobalVector const& x,
+    double const t)
+{
+    auto const indices = NumLib::getIndices(mesh_item_id, dof_table);
+    auto const local_x = x.get(indices);
+
+    setInitialConditionsConcrete(local_x, t);
 }
 
 void LocalAssemblerInterface::preTimestep(

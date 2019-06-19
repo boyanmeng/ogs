@@ -5,7 +5,7 @@
  * \brief  Implementation of the Element class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -38,20 +38,24 @@ Element::~Element()
 void Element::setNeighbor(Element* neighbor, unsigned const face_id)
 {
     if (neighbor == this)
+    {
         return;
+    }
 
     this->_neighbors[face_id] = neighbor;
 }
 
 boost::optional<unsigned> Element::addNeighbor(Element* e)
 {
-    if (e == this ||
-        e == nullptr ||
-        e->getDimension() != this->getDimension())
+    if (e == this || e == nullptr || e->getDimension() != this->getDimension())
+    {
         return boost::optional<unsigned>();
+    }
 
     if (this->hasNeighbor(e))
+    {
         return boost::optional<unsigned>();
+    }
 
     Node* face_nodes[3];
     const unsigned nNodes (this->getNumberOfBaseNodes());
@@ -59,8 +63,10 @@ boost::optional<unsigned> Element::addNeighbor(Element* e)
     const Node* const* e_nodes = e->getNodes();
     unsigned count(0);
     const unsigned dim (this->getDimension());
-    for (unsigned i(0); i<nNodes; i++)
-        for (unsigned j(0); j<eNodes; j++)
+    for (unsigned i(0); i < nNodes; i++)
+    {
+        for (unsigned j(0); j < eNodes; j++)
+        {
             if (_nodes[i] == e_nodes[j])
             {
                 face_nodes[count] = _nodes[i];
@@ -71,6 +77,8 @@ boost::optional<unsigned> Element::addNeighbor(Element* e)
                     return boost::optional<unsigned>(e->identifyFace(face_nodes));
                 }
             }
+        }
+    }
 
     return boost::optional<unsigned>();
 }
@@ -135,9 +143,13 @@ const Element* Element::getNeighbor(unsigned i) const
 unsigned Element::getNodeIDinElement(const MeshLib::Node* node) const
 {
     const unsigned nNodes (this->getNumberOfNodes());
-    for (unsigned i(0); i<nNodes; i++)
+    for (unsigned i(0); i < nNodes; i++)
+    {
         if (node == _nodes[i])
+        {
             return i;
+        }
+    }
     return std::numeric_limits<unsigned>::max();
 }
 
@@ -161,7 +173,7 @@ void Element::setNode(unsigned idx, Node* node)
         _nodes[idx] = node;
 }
 
-unsigned Element::getNodeIndex(unsigned i) const
+std::size_t Element::getNodeIndex(unsigned i) const
 {
 #ifndef NDEBUG
     if (i<getNumberOfNodes())
@@ -169,16 +181,20 @@ unsigned Element::getNodeIndex(unsigned i) const
         return _nodes[i]->getID();
 #ifndef NDEBUG
     ERR("Error in MeshLib::Element::getNodeIndex() - Index does not exist.");
-    return std::numeric_limits<unsigned>::max();
+    return std::numeric_limits<std::size_t>::max();
 #endif
 }
 
 bool Element::hasNeighbor(Element* elem) const
 {
     unsigned nNeighbors (this->getNumberOfNeighbors());
-    for (unsigned i=0; i<nNeighbors; i++)
-        if (this->_neighbors[i]==elem)
+    for (unsigned i = 0; i < nNeighbors; i++)
+    {
+        if (this->_neighbors[i] == elem)
+        {
             return true;
+        }
+    }
     return false;
 }
 
@@ -235,8 +251,8 @@ bool isPointInElementXY(MathLib::Point3d const& p, Element const& e)
                MathLib::isPointInTriangleXY(p, n0, n2, n3);
     }
 
-    WARN("isPointInElementXY: element type \"%s\" is not supported.",
+    WARN("isPointInElementXY: element type '%s' is not supported.",
          MeshLib::MeshElemType2String(e.getGeomType()).c_str());
     return false;
 }
-}
+}  // namespace MeshLib

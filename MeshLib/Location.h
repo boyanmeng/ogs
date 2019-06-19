@@ -3,7 +3,7 @@
  * \date   2013-04-16
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -50,8 +50,14 @@ struct Location
 inline
 bool operator<(const Location& left, const Location& right)
 {
-    if (left.mesh_id != right.mesh_id) return left.mesh_id < right.mesh_id;
-    if (left.item_type != right.item_type) return left.item_type < right.item_type;
+    if (left.mesh_id != right.mesh_id)
+    {
+        return left.mesh_id < right.mesh_id;
+    }
+    if (left.item_type != right.item_type)
+    {
+        return left.item_type < right.item_type;
+    }
     return left.item_id < right.item_id;
 }
 

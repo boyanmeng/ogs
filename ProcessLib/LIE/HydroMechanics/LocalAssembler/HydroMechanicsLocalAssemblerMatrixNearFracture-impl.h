@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,8 +34,12 @@ HydroMechanicsLocalAssemblerMatrixNearFracture<ShapeFunctionDisplacement,
                                          ShapeFunctionPressure,
                                          IntegrationMethod, GlobalDim>(
           e, n_variables, local_matrix_size, dofIndex_to_localIndex,
-          is_axially_symmetric, integration_order, process_data)
+          is_axially_symmetric, integration_order, process_data),
+      _e_center_coords(e.getCenterOfGravity().getCoords())
 {
+    // currently not supporting multiple fractures
+    _fracture_props.push_back(process_data.fracture_property.get());
+    _fracID_to_local.insert({0, 0});
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -75,9 +79,9 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
 
     // levelset value of the element
     // remark: this assumes the levelset function is uniform within an element
-    auto const& fracture_props = *_process_data.fracture_property;
-    double const ele_levelset = calculateLevelSetFunction(
-        fracture_props, _element.getCenterOfGravity().getCoords());
+    std::vector<double> levelsets = uGlobalEnrichments(
+        _fracture_props, _junction_props, _fracID_to_local, _e_center_coords);
+    double const ele_levelset = levelsets[0];  // single fracture
 
     if (ele_levelset == 0)
     {
@@ -133,14 +137,16 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     auto p = const_cast<Eigen::VectorXd&>(local_x).segment(pressure_index,
                                                            pressure_size);
     if (_process_data.deactivate_matrix_in_flow)
+    {
         Base::setPressureOfInactiveNodes(t, p);
+    }
     auto u = local_x.segment(displacement_index, displacement_size);
 
     // levelset value of the element
     // remark: this assumes the levelset function is uniform within an element
-    auto const& fracture_props = *_process_data.fracture_property;
-    double const ele_levelset = calculateLevelSetFunction(
-        fracture_props, _element.getCenterOfGravity().getCoords());
+    std::vector<double> levelsets = uGlobalEnrichments(
+        _fracture_props, _junction_props, _fracID_to_local, _e_center_coords);
+    double const ele_levelset = levelsets[0];  // single fracture
 
     if (ele_levelset == 0)
     {

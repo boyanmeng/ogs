@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 #include <memory>
 #include <utility>
@@ -42,18 +42,16 @@ struct RichardsMechanicsProcessData
                  std::unique_ptr<
                      MaterialLib::Solids::MechanicsBase<DisplacementDim>>>&&
             solid_materials_,
-        Parameter<double> const& intrinsic_permeability_,
-        Parameter<double> const& fluid_bulk_modulus_,
-        Parameter<double> const& biot_coefficient_,
-        Parameter<double> const& solid_density_,
-        Parameter<double> const& solid_bulk_modulus_,
-        Parameter<double> const& temperature_,
+        ParameterLib::Parameter<double> const& fluid_bulk_modulus_,
+        ParameterLib::Parameter<double> const& biot_coefficient_,
+        ParameterLib::Parameter<double> const& solid_density_,
+        ParameterLib::Parameter<double> const& solid_bulk_modulus_,
+        ParameterLib::Parameter<double> const& temperature_,
         Eigen::Matrix<double, DisplacementDim, 1>
             specific_body_force_)
         : material_ids(material_ids_),
           flow_material{std::move(flow_material_)},
           solid_materials{std::move(solid_materials_)},
-          intrinsic_permeability(intrinsic_permeability_),
           fluid_bulk_modulus(fluid_bulk_modulus_),
           biot_coefficient(biot_coefficient_),
           solid_density(solid_density_),
@@ -83,19 +81,20 @@ struct RichardsMechanicsProcessData
         int,
         std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>>
         solid_materials;
-    /// Permeability of the solid. A scalar quantity, Parameter<double>.
-    Parameter<double> const& intrinsic_permeability;
-    /// Fluid's bulk modulus. A scalar quantity, Parameter<double>.
-    Parameter<double> const& fluid_bulk_modulus;
-    /// Biot coefficient. A scalar quantity, Parameter<double>.
-    Parameter<double> const& biot_coefficient;
-    /// Density of the solid. A scalar quantity, Parameter<double>.
-    Parameter<double> const& solid_density;
-    /// Solid's bulk modulus. A scalar quantity, Parameter<double>.
-    Parameter<double> const& solid_bulk_modulus;
+    /// Fluid's bulk modulus. A scalar quantity,
+    /// ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& fluid_bulk_modulus;
+    /// Biot coefficient. A scalar quantity, ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& biot_coefficient;
+    /// Density of the solid. A scalar quantity,
+    /// ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& solid_density;
+    /// Solid's bulk modulus. A scalar quantity,
+    /// ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& solid_bulk_modulus;
     /// Reference temperature for material properties. A scalar quantity,
-    /// Parameter<double>.
-    Parameter<double> const& temperature;
+    /// ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& temperature;
     /// Specific body forces applied to solid and fluid.
     /// It is usually used to apply gravitational forces.
     /// A vector of displacement dimension's length.

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,7 +40,6 @@ struct PhaseFieldLocalAssemblerInterface
             std::reference_wrapper<NumLib::LocalToGlobalIndexMap>> const&
             dof_tables,
         GlobalVector const& x, double const t, double& crack_volume,
-        bool const use_monolithic_scheme,
         CoupledSolutionsForStaggeredScheme const* const cpl_xs) = 0;
 
     virtual void computeEnergy(
@@ -50,7 +49,6 @@ struct PhaseFieldLocalAssemblerInterface
             dof_tables,
         GlobalVector const& x, double const t, double& elastic_energy,
         double& surface_energy, double& pressure_work,
-        bool const use_monolithic_scheme,
         CoupledSolutionsForStaggeredScheme const* const cpl_xs) = 0;
 };
 

@@ -5,7 +5,7 @@
  * \brief  Definition of the CondFromRasterDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,7 @@ class CondFromRasterDialog : public QDialog, private Ui_CondFromRaster
 public:
     CondFromRasterDialog(std::vector<MeshLib::Mesh*> msh_vec,
                          QDialog* parent = nullptr);
-    ~CondFromRasterDialog(void) override;
+    ~CondFromRasterDialog() override;
 
 private:
     const std::vector<MeshLib::Mesh*> _msh_vec;

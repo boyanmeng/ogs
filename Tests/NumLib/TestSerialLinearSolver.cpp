@@ -3,7 +3,7 @@
  * \date   2013-04-18
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -139,10 +139,14 @@ TEST(NumLibSerialLinearSolver, Steady2DdiffusionQuadElem)
     // copy solution to double vector
     std::vector<double> solution(x->size());
     for (GlobalIndexType i = 0; i < x->size(); ++i)
+    {
         solution[i] = (*x)[i];
+    }
 
     ASSERT_ARRAY_NEAR(&ex1.exact_solutions[0], &solution[0], ex1.dim_eqs, 1.e-5);
 
     for (auto p : local_assemblers)
+    {
         delete p;
+    }
 }

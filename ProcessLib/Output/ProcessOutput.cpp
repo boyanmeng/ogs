@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -82,7 +82,9 @@ static void addSecondaryVariableResiduals(
     MeshLib::Mesh& mesh)
 {
     if (!var.fcts.eval_residuals)
+    {
         return;
+    }
 
     DBUG("  secondary variable %s residual", output_name.c_str());
     auto const& property_name_res = output_name + "_residual";
@@ -131,7 +133,8 @@ void processOutputData(
     NumLib::LocalToGlobalIndexMap const& dof_table,
     std::vector<std::reference_wrapper<ProcessVariable>> const&
         process_variables,
-    SecondaryVariableCollection secondary_variables,
+    SecondaryVariableCollection const& secondary_variables,
+    bool const output_secondary_variable,
     std::vector<std::unique_ptr<IntegrationPointWriter>> const&
         integration_point_writer,
     ProcessOutput const& process_output)
@@ -185,9 +188,10 @@ void processOutputData(
 
         DBUG("  process variable %s", pv.getName().c_str());
 
-        auto& output_data = pv.getOrCreateMeshProperty();
-
         auto const num_comp = pv.getNumberOfComponents();
+        auto& output_data = *MeshLib::getOrCreateMeshProperty<double>(
+            mesh, pv.getName(), MeshLib::MeshItemType::Node, num_comp);
+
 
         for (int component_id = 0; component_id < num_comp; ++component_id)
         {
@@ -210,35 +214,36 @@ void processOutputData(
         }
     }
 
-    // Secondary variables output
-    for (auto const& external_variable_name : output_variables)
+    if (output_secondary_variable)
     {
-        if (!already_output.insert(external_variable_name).second)
+        for (auto const& external_variable_name : secondary_variables)
         {
-            // no insertion took place, output already done
-            continue;
-        }
+            auto const& name = external_variable_name.first;
+            if (!already_output.insert(name).second)
+            {
+                // no insertion took place, output already done
+                continue;
+            }
 
-        addSecondaryVariableNodes(
-            t, x, dof_table, secondary_variables.get(external_variable_name),
-            external_variable_name, mesh);
-        if (process_output.output_residuals)
-        {
-            addSecondaryVariableResiduals(
-                t, x, dof_table,
-                secondary_variables.get(external_variable_name),
-                external_variable_name, mesh);
+            addSecondaryVariableNodes(
+                t, x, dof_table, secondary_variables.get(name), name, mesh);
+
+            if (process_output.output_residuals)
+            {
+                addSecondaryVariableResiduals(
+                    t, x, dof_table, secondary_variables.get(name), name, mesh);
+            }
         }
     }
 
     addIntegrationPointWriter(mesh, integration_point_writer);
 }
 
-void makeOutput(std::string const& file_name, MeshLib::Mesh& mesh,
+void makeOutput(std::string const& file_name, MeshLib::Mesh const& mesh,
                 bool const compress_output, int const data_mode)
 {
     // Write output file
-    DBUG("Writing output to \'%s\'.", file_name.c_str());
+    DBUG("Writing output to '%s'.", file_name.c_str());
     MeshLib::IO::VtuInterface vtu_interface(&mesh, data_mode, compress_output);
     vtu_interface.writeToFile(file_name);
 }

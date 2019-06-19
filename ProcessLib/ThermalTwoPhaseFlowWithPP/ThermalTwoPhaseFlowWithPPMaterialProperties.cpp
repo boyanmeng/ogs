@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,8 +23,8 @@
 #include "MeshLib/Mesh.h"
 #include "MeshLib/PropertyVector.h"
 #include "NumLib/NewtonRaphson.h"
-#include "ProcessLib/Parameter/Parameter.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
+#include "ParameterLib/Parameter.h"
+#include "ParameterLib/SpatialPosition.h"
 
 namespace ProcessLib
 {
@@ -127,16 +127,20 @@ ThermalTwoPhaseFlowWithPPMaterialProperties::getThermalConductivityWetSolid(
 
 double
 ThermalTwoPhaseFlowWithPPMaterialProperties::calculateUnsatHeatConductivity(
-    double const /*t*/, ProcessLib::SpatialPosition const& /*x*/,
+    double const /*t*/, ParameterLib::SpatialPosition const& /*x*/,
     double const Sw, double const lambda_pm_dry,
     double const lambda_pm_wet) const
 {
     double lambda_pm =
         lambda_pm_dry + std::sqrt(Sw) * (lambda_pm_wet - lambda_pm_dry);
     if (Sw > 1)
+    {
         lambda_pm = lambda_pm_wet;
+    }
     else if (Sw < 0)
+    {
         lambda_pm = lambda_pm_dry;
+    }
     return lambda_pm;
 }
 
@@ -204,5 +208,5 @@ ThermalTwoPhaseFlowWithPPMaterialProperties::getLiquidWaterEnthalpySimple(
     return heat_capacity_liquid_water * (temperature - CelsiusZeroInKelvin);
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace ThermalTwoPhaseFlowWithPP
+}  // namespace ProcessLib

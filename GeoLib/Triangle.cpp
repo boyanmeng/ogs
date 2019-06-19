@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,14 +25,6 @@ Triangle::Triangle (std::vector<Point *> const &pnt_vec,
 {
     assert(!_pnts.empty());
     assert (pnt_a < _pnts.size() && pnt_b < _pnts.size() && pnt_c < _pnts.size());
-}
-
-void Triangle::setTriangle (std::size_t pnt_a, std::size_t pnt_b, std::size_t pnt_c)
-{
-    assert (pnt_a < _pnts.size() && pnt_b < _pnts.size() && pnt_c < _pnts.size());
-    _pnt_ids[0] = pnt_a;
-    _pnt_ids[1] = pnt_b;
-    _pnt_ids[2] = pnt_c;
 }
 
 bool Triangle::containsPoint(MathLib::Point3d const& q, double eps) const

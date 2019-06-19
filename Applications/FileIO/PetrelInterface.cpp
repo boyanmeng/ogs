@@ -5,7 +5,7 @@
  * \brief  Implementation of the PetrelInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -68,13 +68,17 @@ PetrelInterface::PetrelInterface(std::list<std::string> &sfc_fnames,
     geo_obj->addPointVec(std::unique_ptr<std::vector<GeoLib::Point*>>(pnt_vec),
                          _unique_name);
     if (!well_vec->empty())
+    {
         geo_obj->addStationVec(
             std::unique_ptr<std::vector<GeoLib::Point*>>(well_vec),
             _unique_name);
+    }
     if (!ply_vec->empty())
+    {
         geo_obj->addPolylineVec(
             std::unique_ptr<std::vector<GeoLib::Polyline*>>(ply_vec),
             _unique_name);
+    }
 }
 
 void PetrelInterface::readPetrelSurface(std::istream &in)
@@ -88,10 +92,8 @@ void PetrelInterface::readPetrelSurface(std::istream &in)
         // read header
         // read Version string
         in.getline(buffer, MAX_COLS_PER_ROW);
-        line = buffer;
         // read string BEGIN HEADER
         in.getline(buffer, MAX_COLS_PER_ROW);
-        line = buffer;
 
         in.getline(buffer, MAX_COLS_PER_ROW);
         line = buffer;
@@ -113,11 +115,15 @@ void PetrelInterface::readPetrelSurface(std::istream &in)
                 pnt_vec->pop_back();
             }
             else
+            {
                 idx++;
+            }
         }
     } else
-        WARN("PetrelInterface::readPetrelSurface(): problem reading petrel points from line\n\"%s\".",
-                        line.c_str());
+        WARN(
+            "PetrelInterface::readPetrelSurface(): problem reading petrel "
+            "points from line\n'%s'.",
+            line.c_str());
 }
 
 void PetrelInterface::readPetrelWellTrace(std::istream &in)

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -19,7 +19,7 @@ namespace BaseLib
 class ConfigTree;
 }
 
-namespace ProcessLib
+namespace ParameterLib
 {
 struct ParameterBase;
 }
@@ -36,18 +36,18 @@ namespace Creep
 template <int DisplacementDim>
 std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>
 createCreepBGRa(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     BaseLib::ConfigTree const& config);
 
 extern template std::unique_ptr<MaterialLib::Solids::MechanicsBase<2>>
 createCreepBGRa<2>(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     BaseLib::ConfigTree const& config);
 
 extern template std::unique_ptr<MaterialLib::Solids::MechanicsBase<3>>
 createCreepBGRa<3>(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     BaseLib::ConfigTree const& config);
-}
-}
-}
+}  // namespace Creep
+}  // namespace Solids
+}  // namespace MaterialLib

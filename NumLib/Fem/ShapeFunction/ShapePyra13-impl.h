@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -84,5 +84,4 @@ void ShapePyra13::computeGradShapeFunction(const T_X &x, T_N &dN)
     dN[38] = -0.5 * (1.0 - r) * (1.0 + s) * t;
 }
 
-}
-
+}  // namespace NumLib

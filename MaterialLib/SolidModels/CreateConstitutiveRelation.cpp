@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,6 +14,7 @@
 #include "CreateCreepBGRa.h"
 #include "CreateEhlers.h"
 #include "CreateLinearElasticIsotropic.h"
+#include "CreateLinearElasticOrthotropic.h"
 #include "CreateLubby2.h"
 #include "MFront/CreateMFront.h"
 
@@ -22,7 +23,7 @@
 #include "BaseLib/ConfigTree.h"
 #include "BaseLib/Error.h"
 
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 namespace MaterialLib
 {
@@ -31,7 +32,9 @@ namespace Solids
 template <int DisplacementDim>
 std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>
 createConstitutiveRelation(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     BaseLib::ConfigTree const& config)
 {
     auto const type =
@@ -49,6 +52,13 @@ createConstitutiveRelation(
         return MaterialLib::Solids::createLinearElasticIsotropic<
             DisplacementDim>(parameters, config, skip_type_checking);
     }
+    if (type == "LinearElasticOrthotropic")
+    {
+        const bool skip_type_checking = false;
+        return MaterialLib::Solids::createLinearElasticOrthotropic<
+            DisplacementDim>(
+            parameters, local_coordinate_system, config, skip_type_checking);
+    }
     if (type == "Lubby2")
     {
         return MaterialLib::Solids::Lubby2::createLubby2<DisplacementDim>(
@@ -64,7 +74,7 @@ createConstitutiveRelation(
         return MaterialLib::Solids::MFront::createMFront<DisplacementDim>(
             parameters, config);
     }
-    OGS_FATAL("Cannot construct constitutive relation of given type \'%s\'.",
+    OGS_FATAL("Cannot construct constitutive relation of given type '%s'.",
               type.c_str());
 }
 
@@ -72,7 +82,9 @@ template <int DisplacementDim>
 std::map<int,
          std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>>
 createConstitutiveRelations(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     BaseLib::ConfigTree const& config)
 {
     auto const constitutive_relation_configs =
@@ -102,7 +114,9 @@ createConstitutiveRelations(
         constitutive_relations.emplace(
             material_id,
             createConstitutiveRelation<DisplacementDim>(
-                parameters, constitutive_relation_config));
+                parameters,
+                local_coordinate_system,
+                constitutive_relation_config));
     }
 
     DBUG("Found %d constitutive relations.", constitutive_relations.size());
@@ -112,12 +126,16 @@ createConstitutiveRelations(
 
 template std::map<int, std::unique_ptr<MaterialLib::Solids::MechanicsBase<2>>>
 createConstitutiveRelations<2>(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     BaseLib::ConfigTree const& config);
 
 template std::map<int, std::unique_ptr<MaterialLib::Solids::MechanicsBase<3>>>
 createConstitutiveRelations<3>(
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     BaseLib::ConfigTree const& config);
-}
-}
+}  // namespace Solids
+}  // namespace MaterialLib

@@ -2,7 +2,7 @@
  *  \brief A function for creating viscosity model
  *
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -86,9 +86,13 @@ std::unique_ptr<FluidProperty> createViscosityModel(
             config.getConfigParameter<double>("value"));
     }
     if (type == "LinearPressure")
+    {
         return createLinearPressureDependentViscosity(config);
+    }
     if (type == "TemperatureDependent")
+    {
         return createTemperatureDependentViscosity(config);
+    }
     if (type == "Vogels")
     {
         //! \ogs_file_param{material__fluid__viscosity__type}
@@ -146,5 +150,5 @@ std::unique_ptr<FluidProperty> createViscosityModel(
         type.data());
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

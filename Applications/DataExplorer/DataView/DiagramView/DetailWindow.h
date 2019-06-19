@@ -5,7 +5,7 @@
  * \brief  Definition of the DetailWindow class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -44,7 +44,7 @@ public:
 
     DetailWindow(std::vector<std::size_t> data, QWidget* parent = nullptr);
 
-    ~DetailWindow(void) override;
+    ~DetailWindow() override;
 
     /**
      * Adds another plot to window. Axes are automatically resized, a random color is used.

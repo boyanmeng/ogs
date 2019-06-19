@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -505,5 +505,5 @@ createSurfaceMesh(std::string const& mesh_name,
     std::array<std::size_t, 2> const& n_steps,
     const std::function<double(double,double)>& f);
 
-}  //MeshGenerator
-} //MeshLib
+}  // namespace MeshGenerator
+}  // namespace MeshLib

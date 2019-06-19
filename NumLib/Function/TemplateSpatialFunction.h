@@ -3,7 +3,7 @@
  * \date   2013-08-13
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,7 +32,7 @@ public:
      * Constructor
      * @param f  a function object
      */
-    TemplateSpatialFunction(T_FUNCTION f) : _f(std::move(f)) {}
+    explicit TemplateSpatialFunction(T_FUNCTION f) : _f(std::move(f)) {}
     /**
      * evaluate a function
      * @param pnt  a point object
@@ -48,4 +48,4 @@ private:
     const T_FUNCTION _f;
 };
 
-}
+}  // namespace NumLib

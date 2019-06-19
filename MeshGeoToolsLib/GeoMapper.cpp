@@ -5,7 +5,7 @@
  * \brief  Implementation of the GeoMapper class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -53,7 +53,7 @@ void GeoMapper::mapOnDEM(std::unique_ptr<GeoLib::Raster const> raster)
 {
     std::vector<GeoLib::Point*> const* pnts(_geo_objects.getPointVec(_geo_name));
     if (! pnts) {
-        ERR("Geometry \"%s\" does not exist.", _geo_name.c_str());
+        ERR("Geometry '%s' does not exist.", _geo_name.c_str());
         return;
     }
     _raster = std::move(raster);
@@ -69,17 +69,21 @@ void GeoMapper::mapOnMesh(MeshLib::Mesh const*const mesh)
 {
     std::vector<GeoLib::Point*> const* pnts(_geo_objects.getPointVec(_geo_name));
     if (! pnts) {
-        ERR("Geometry \"%s\" does not exist.", _geo_name.c_str());
+        ERR("Geometry '%s' does not exist.", _geo_name.c_str());
         return;
     }
 
     // the variable _surface_mesh is reused below, so first the existing
     // _surface_mesh has to be cleaned up
     if (_surface_mesh)
+    {
         delete _surface_mesh;
+    }
 
-    if (mesh->getDimension()<3)
+    if (mesh->getDimension() < 3)
+    {
         _surface_mesh = new MeshLib::Mesh(*mesh);
+    }
     else
     {
         const MathLib::Vector3 dir(0,0,-1);
@@ -113,7 +117,7 @@ void GeoMapper::mapToConstantValue(double value)
     std::vector<GeoLib::Point*> const* points (this->_geo_objects.getPointVec(this->_geo_name));
     if (points == nullptr)
     {
-        ERR ("Geometry \"%s\" not found.", this->_geo_name.c_str());
+        ERR("Geometry '%s' not found.", this->_geo_name.c_str());
         return;
     }
     std::for_each(points->begin(), points->end(), [value](GeoLib::Point* pnt){ (*pnt)[2] = value; });
@@ -139,7 +143,9 @@ void GeoMapper::mapStationData(std::vector<GeoLib::Point*> const& points)
                 : getDemElevation(*pnt);
 
         if (!GeoLib::isBorehole(pnt))
+        {
             continue;
+        }
         auto const& layers = static_cast<GeoLib::StationBorehole*>(pnt)->getProfile();
         for (auto * layer_pnt : layers) {
             (*layer_pnt)[2] = (*layer_pnt)[2] + offset;
@@ -168,9 +174,13 @@ void GeoMapper::mapPointDataToMeshSurface(std::vector<GeoLib::Point*> const& pnt
         // projected onto the y-x plane
         GeoLib::Point &p(*pnt);
         if (p[0] < aabb.getMinPoint()[0] || aabb.getMaxPoint()[0] < p[0])
+        {
             continue;
+        }
         if (p[1] < aabb.getMinPoint()[1] || aabb.getMaxPoint()[1] < p[1])
+        {
             continue;
+        }
 
         p[2] = getMeshElevation(p[0], p[1], min_val, max_val);
     }
@@ -179,8 +189,11 @@ void GeoMapper::mapPointDataToMeshSurface(std::vector<GeoLib::Point*> const& pnt
 float GeoMapper::getDemElevation(GeoLib::Point const& pnt) const
 {
     double const elevation (_raster->getValueAtPoint(pnt));
-    if (std::abs(elevation-_raster->getHeader().no_data) < std::numeric_limits<double>::epsilon())
+    if (std::abs(elevation - _raster->getHeader().no_data) <
+        std::numeric_limits<double>::epsilon())
+    {
         return 0.0;
+    }
     return static_cast<float>(elevation);
 }
 
@@ -197,20 +210,26 @@ double GeoMapper::getMeshElevation(
     {
         if (intersection == nullptr &&
             element->getGeomType() != MeshLib::MeshElemType::LINE)
+        {
             intersection = GeoLib::triangleLineIntersection(
                 *element->getNode(0), *element->getNode(1),
                 *element->getNode(2), GeoLib::Point(x, y, max_val),
                 GeoLib::Point(x, y, min_val));
+        }
 
         if (intersection == nullptr &&
             element->getGeomType() == MeshLib::MeshElemType::QUAD)
+        {
             intersection = GeoLib::triangleLineIntersection(
                 *element->getNode(0), *element->getNode(2),
                 *element->getNode(3), GeoLib::Point(x, y, max_val),
                 GeoLib::Point(x, y, min_val));
+        }
     }
     if (intersection)
+    {
         return (*intersection)[2];
+    }
     // if something goes wrong, simply take the elevation of the nearest mesh node
     return (*(_surface_mesh->getNode(pnt->getID())))[2];
 }
@@ -266,8 +285,8 @@ static std::vector<MathLib::Point3d> computeElementSegmentIntersections(
             true};
         std::vector<MathLib::Point3d> const intersections(
             GeoLib::lineSegmentIntersect2d(segment, elem_segment));
-        for (auto const& p : intersections)
-            element_intersections.push_back(std::move(p));
+        element_intersections.insert(end(element_intersections),
+                                     begin(intersections), end(intersections));
     }
     return element_intersections;
 }
@@ -283,9 +302,10 @@ static std::vector<GeoLib::LineSegment> createSubSegmentsForElement(
         std::stringstream out;
         out << "element with id " << elem->getID() << " and seg "
                   << " intersecting at more than two edges\n";
-        for (std::size_t k(0); k<intersections.size(); ++k)
-            out << k << " " << intersections[k]
-                      << "\n";
+        for (std::size_t k(0); k < intersections.size(); ++k)
+        {
+            out << k << " " << intersections[k] << "\n";
+        }
         out << "Could not map segment on element. Aborting.\n";
         OGS_FATAL("%s", out.str().c_str());
     }
@@ -297,9 +317,11 @@ static std::vector<GeoLib::LineSegment> createSubSegmentsForElement(
         // added.
         if (MathLib::sqrDist(beg_pnt, intersections[0]) >
             std::numeric_limits<double>::epsilon())
+        {
             sub_segments.emplace_back(new GeoLib::Point{beg_pnt, 0},
                                       new GeoLib::Point{intersections[0], 0},
                                       true);
+        }
     }
 
     if (intersections.size() == 1 && elem == end_elem)
@@ -309,8 +331,10 @@ static std::vector<GeoLib::LineSegment> createSubSegmentsForElement(
         // added.
         if (MathLib::sqrDist(end_pnt, intersections[0]) >
             std::numeric_limits<double>::epsilon())
+        {
             sub_segments.emplace_back(new GeoLib::Point{intersections[0], 0},
                                       new GeoLib::Point{end_pnt, 0}, true);
+        }
     }
 
     if (intersections.size() == 1 && (elem != beg_elem && elem != end_elem))
@@ -344,7 +368,9 @@ static std::vector<GeoLib::LineSegment> mapLineSegment(
         std::vector<MathLib::Point3d> element_intersections(
             computeElementSegmentIntersections(*elem, segment));
         if (element_intersections.empty())
+        {
             continue;
+        }
 
         BaseLib::makeVectorUnique(element_intersections);
 
@@ -470,11 +496,15 @@ static void insertSubSegments(
         auto const begin_id(points.push_back(
             new GeoLib::Point(segment.getBeginPoint(), points.size())));
         if (ply.insertPoint(j + new_pnts_cnt + 1, begin_id))
+        {
             new_pnts_cnt++;
+        }
         auto const end_id(points.push_back(
             new GeoLib::Point(segment.getEndPoint(), points.size())));
         if (ply.insertPoint(j + new_pnts_cnt + 1, end_id))
+        {
             new_pnts_cnt++;
+        }
     }
     segment_it += new_pnts_cnt;
 }
@@ -496,7 +526,9 @@ static void mapPolylineOnSurfaceMesh(
             if (elem)
             {
                 if (!snapPointToElementNode(p, *elem, 1e-3))
+                {
                     mapPointOnSurfaceElement(*elem, p);
+                }
             }
             return elem;
         };
@@ -527,7 +559,9 @@ static void mapPolylineOnSurfaceMesh(
             *segment_it, candidate_elements, beg_elem, end_elem));
 
         if (sub_segments.empty())
+        {
             continue;
+        }
 
         // The case sub_segment.size() == 1 is already handled above.
 
@@ -542,7 +576,9 @@ void GeoMapper::advancedMapOnMesh(MeshLib::Mesh const& mesh)
 {
     // 1. extract surface
     if (_surface_mesh)
+    {
         delete _surface_mesh;
+    }
     if (mesh.getDimension()<3) {
         _surface_mesh = new MeshLib::Mesh(mesh);
     } else {

@@ -5,7 +5,7 @@
  * \brief  Definition of the RadiusEdgeRatioMetric class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,9 +26,9 @@ namespace MeshLib
 class RadiusEdgeRatioMetric : public ElementQualityMetric
 {
 public:
-    RadiusEdgeRatioMetric(Mesh const& mesh);
+    explicit RadiusEdgeRatioMetric(Mesh const& mesh);
     ~RadiusEdgeRatioMetric() override = default;
 
     void calculateQuality() override;
 };
-}
+}  // namespace MeshLib

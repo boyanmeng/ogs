@@ -13,6 +13,10 @@ append_source_files(SOURCES Fluid/SpecificHeatCapacity)
 append_source_files(SOURCES Fluid/ThermalConductivity)
 append_source_files(SOURCES Fluid/WaterVaporProperties)
 
+append_source_files(SOURCES MPL)
+append_source_files(SOURCES MPL/Properties)
+append_source_files(SOURCES MPL/Components)
+
 append_source_files(SOURCES PorousMedium)
 append_source_files(SOURCES PorousMedium/Porosity)
 append_source_files(SOURCES PorousMedium/Storage)
@@ -35,8 +39,8 @@ target_include_directories(MaterialLib
 )
 
 target_link_libraries(MaterialLib
-    PUBLIC MaterialLib_SolidModels_MFront # ProcessLib
-    PRIVATE MathLib MeshLib
+    PUBLIC MaterialLib_SolidModels_MFront
+    PRIVATE MathLib MeshLib ParameterLib
 )
 
 if(OGS_USE_PCH)

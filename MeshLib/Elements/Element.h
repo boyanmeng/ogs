@@ -5,7 +5,7 @@
  * \brief  Definition of the Element class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -120,7 +120,7 @@ public:
      * @return the global index or std::numeric_limits<unsigned>::max()
      * @sa Element::getNode()
      */
-    unsigned getNodeIndex(unsigned i) const;
+    std::size_t getNodeIndex(unsigned i) const;
 
     /**
      * Get the type of the mesh element in geometric context (as a MeshElemType-enum).
@@ -230,4 +230,4 @@ protected:
 /// @return true if the \f$p' \in e'\f$ and false if \f$p' \notin e'\f$
 bool isPointInElementXY(MathLib::Point3d const& p, Element const& e);
 
-} /* namespace */
+}  // namespace MeshLib

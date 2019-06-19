@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -72,7 +72,7 @@ struct IntegrationPointData final
     template <typename DisplacementVectorType>
     typename BMatricesType::KelvinMatrixType updateConstitutiveRelation(
         double const t,
-        SpatialPosition const& x_position,
+        ParameterLib::SpatialPosition const& x_position,
         double const dt,
         DisplacementVectorType const& /*u*/,
         double const temperature)
@@ -82,7 +82,9 @@ struct IntegrationPointData final
             *material_state_variables, temperature);
 
         if (!solution)
+        {
             OGS_FATAL("Computation of local constitutive relation failed.");
+        }
 
         MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
         std::tie(sigma_eff, material_state_variables, C) = std::move(*solution);

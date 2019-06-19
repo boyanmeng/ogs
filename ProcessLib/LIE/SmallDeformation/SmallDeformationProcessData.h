@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -17,6 +17,7 @@
 #include "MaterialLib/SolidModels/MechanicsBase.h"
 
 #include "ProcessLib/LIE/Common/FractureProperty.h"
+#include "ProcessLib/LIE/Common/JunctionProperty.h"
 
 namespace MeshLib
 {
@@ -41,12 +42,12 @@ struct SmallDeformationProcessData
         std::unique_ptr<
             MaterialLib::Fracture::FractureModelBase<DisplacementDim>>&&
             fracture_model,
-        std::vector<std::unique_ptr<FractureProperty>>&& vec_fracture_prop,
+        std::vector<FractureProperty>&& fracture_properties_,
         double const reference_temperature)
         : material_ids(material_ids_),
           solid_materials{std::move(solid_materials_)},
           _fracture_model{std::move(fracture_model)},
-          _vec_fracture_property(std::move(vec_fracture_prop)),
+          fracture_properties(std::move(fracture_properties_)),
           _reference_temperature(reference_temperature)
     {
     }
@@ -72,13 +73,15 @@ struct SmallDeformationProcessData
 
     std::unique_ptr<MaterialLib::Fracture::FractureModelBase<DisplacementDim>>
         _fracture_model;
-    std::vector<std::unique_ptr<FractureProperty>> _vec_fracture_property;
+    std::vector<FractureProperty> fracture_properties;
+    std::vector<JunctionProperty> junction_properties;
 
     MeshLib::PropertyVector<int> const* _mesh_prop_materialIDs = nullptr;
     std::vector<int> _map_materialID_to_fractureID;
 
     // a table of connected fracture IDs for each element
     std::vector<std::vector<int>> _vec_ele_connected_fractureIDs;
+    std::vector<std::vector<int>> _vec_ele_connected_junctionIDs;
 
     double dt = 0.0;
     double t = 0.0;

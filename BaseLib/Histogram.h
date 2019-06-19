@@ -4,7 +4,7 @@
  * \brief Implementation of Histogram class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -61,8 +61,8 @@ public:
      * \param computeHistogram Compute histogram if set. If not set user must call
      * \c update() before accessing data.
      */
-    Histogram(std::vector<T> data, const unsigned int nr_bins = 16,
-              const bool computeHistogram = true)
+    explicit Histogram(std::vector<T> data, const unsigned int nr_bins = 16,
+                       const bool computeHistogram = true)
         : _data(std::move(data)), _nr_bins(nr_bins)
     {
         init(computeHistogram);
@@ -81,7 +81,9 @@ public:
     void update()
     {
         if (!_dirty)
+        {
             return;
+        }
 
         _bin_width = (_max - _min) / _nr_bins;
 
@@ -120,7 +122,9 @@ public:
             const int n_stars =
                     std::ceil(line_width * ((double)_histogram[bin] / count_max));
             for (int star = 0; star < n_stars; star++)
+            {
                 os << "*";
+            }
             os << "\n";
         }
     }
@@ -147,7 +151,9 @@ public:
         double const bin_width (this->getBinWidth());
 
         for (std::size_t k(0); k < n_bins; k++)
-            out << min+k*bin_width << " " << bin_cnts[k] << "\n";
+        {
+            out << min + k * bin_width << " " << bin_cnts[k] << "\n";
+        }
         out.close ();
         return 0;
     }
@@ -165,7 +171,9 @@ protected:
 
         _dirty = true;
         if (computeHistogram)
+        {
             update();
+        }
     }
 
     Data _data;

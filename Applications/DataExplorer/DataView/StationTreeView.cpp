@@ -5,7 +5,7 @@
  * \brief  Implementation of the StationTreeView class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,9 +36,10 @@ StationTreeView::StationTreeView(QWidget* parent) : QTreeView(parent)
 void StationTreeView::updateView()
 {
     setAlternatingRowColors(true);
-    resizeColumnToContents(0);
-    setColumnWidth(1,50);
-    setColumnWidth(2,50);
+    setColumnWidth(0,150);
+    setColumnWidth(1,75);
+    setColumnWidth(2,75);
+    setColumnWidth(3,75);
 }
 
 void StationTreeView::selectionChanged( const QItemSelection &selected,

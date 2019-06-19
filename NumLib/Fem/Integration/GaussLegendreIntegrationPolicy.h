@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -31,7 +31,7 @@ namespace NumLib
 /// Gauss-Legendre integration method is used. The default implementation is
 /// choosing the regular-element integration, for other elements a
 /// specialization must be provided, as for example for triangles
-/// (\see GaussLegendreIntegrationPolicy<MeshLib::Tri>).
+/// (\ref GaussLegendreIntegrationPolicy<MeshLib::Tri>).
 /// The integration method depends on the dimension of the element and correctly
 /// chosen number and placement of the integration points within the element.
 template <typename MeshElement_>

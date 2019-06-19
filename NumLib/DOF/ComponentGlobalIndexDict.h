@@ -3,7 +3,7 @@
  * \date   2013-04-16
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -75,9 +75,13 @@ struct LineByLocationAndComponentComparator
     bool operator()(Line const& a, Line const& b) const
     {
         if (a.location < b.location)
+        {
             return true;
+        }
         if (b.location < a.location)
+        {
             return false;
+        }
 
         // a.loc == b.loc
         return a.comp_id < b.comp_id;

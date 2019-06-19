@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,4 +32,4 @@ inline double rhoWaterHauer(const double T_Ads)
     return rho0 * (1. - alpha0 * (T_Ads-T0)); // in kg/m^3
 }
 
-}
+}  // namespace Adsorption

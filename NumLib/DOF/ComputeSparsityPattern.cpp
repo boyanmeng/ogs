@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -55,9 +55,13 @@ GlobalSparsityPattern computeSparsityPatternNonPETSc(
     {
         unsigned n_connected_dof = 0;
         for (auto an : node_adjacency_table.getAdjacentNodes(n))
+        {
             n_connected_dof += global_idcs[an].size();
+        }
         for (auto global_index : global_idcs[n])
+        {
             sparsity_pattern[global_index] = n_connected_dof;
+        }
     }
 
     return sparsity_pattern;
@@ -76,4 +80,4 @@ GlobalSparsityPattern computeSparsityPattern(
 #endif
 }
 
-}
+}  // namespace NumLib

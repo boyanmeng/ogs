@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkCompositeFilter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -67,7 +67,7 @@ public:
 
 protected:
     /// Calculates a 1/200th of the largest extension of the bounding box (this is used as default radius for various filters)
-    float GetInitialRadius() const;
+    double GetInitialRadius() const;
 
     /// See [vtkSetGet.h](https://github.com/Kitware/VTK/blob/master/Common/Core/vtkSetGet.h)
     /// for the defines

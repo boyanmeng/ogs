@@ -5,7 +5,7 @@
  * \brief  Definition of the GMSHPrefsDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,7 @@ class GMSHPrefsDialog : public QDialog, private Ui_GMSHPrefs
 
 public:
     GMSHPrefsDialog(GeoLib::GEOObjects const& geoObjects, QDialog* parent = nullptr);
-    ~GMSHPrefsDialog(void) override;
+    ~GMSHPrefsDialog() override;
 
 private:
     std::vector<std::string> getSelectedObjects(QStringList list);

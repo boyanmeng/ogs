@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -76,8 +76,10 @@ TemplateLogogFormatterSuppressedGCC<T_SUPPPRESS_TOPIC_FLAG>
         m_sMessageBuffer.append( (LOGOG_CHAR)'\n' );
     }
 
-    if ( target.GetNullTerminatesStrings() )
+    if (target.GetNullTerminatesStrings())
+    {
         m_sMessageBuffer.append((LOGOG_CHAR)'\0');
+    }
 
     return m_sMessageBuffer;
 }

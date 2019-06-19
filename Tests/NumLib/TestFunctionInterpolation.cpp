@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -47,8 +47,6 @@ TEST(NumLibFunctionInterpolationTest, Linear1DElement)
     using ShapeFunction = NumLib::ShapeLine2;
     using ShapeMatricesType = ShapeMatrixPolicyType<ShapeFunction, 1u>;
 
-    using FemType = NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
-
     using IntegrationMethod = NumLib::GaussLegendreIntegrationPolicy<
         ShapeFunction::MeshElement>::IntegrationMethod;
 
@@ -60,7 +58,9 @@ TEST(NumLibFunctionInterpolationTest, Linear1DElement)
         MeshLib::Line(std::array<MeshLib::Node*, 2>{{&pt_a, &pt_b}});
 
     // set up shape function
-    FemType finite_element(*static_cast<const ShapeFunction::MeshElement*>(&element));
+    auto const finite_element =
+        NumLib::createIsoparametricFiniteElement<ShapeFunction,
+                                                 ShapeMatricesType>(element);
 
     const unsigned integration_order = 2;
     IntegrationMethod integration_method(integration_order);

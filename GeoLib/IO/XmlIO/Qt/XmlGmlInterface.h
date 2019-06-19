@@ -5,7 +5,7 @@
  * \brief  Definition of the XmlGmlInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -29,13 +29,11 @@ namespace IO
 /**
  * \brief Reads and writes GeoObjects to and from XML files.
  */
-class XmlGmlInterface : public BaseLib::IO::XMLInterface,
-                        public BaseLib::IO::XMLQtInterface
+class XmlGmlInterface final : public BaseLib::IO::XMLInterface,
+                              public BaseLib::IO::XMLQtInterface
 {
 public:
-    XmlGmlInterface(GeoLib::GEOObjects& geo_objs);
-
-    ~XmlGmlInterface() override = default;
+    explicit XmlGmlInterface(GeoLib::GEOObjects& geo_objs);
 
     /// Reads an xml-file containing geometric object definitions into the GEOObjects used in the contructor
     int readFile(const QString& fileName) override;

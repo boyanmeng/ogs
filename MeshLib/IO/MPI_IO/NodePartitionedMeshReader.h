@@ -5,7 +5,7 @@
   \brief  Declare a class to read node-wise partitioned mesh with MPI functions.
 
   \copyright
-  Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+  Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
              Distributed under a Modified BSD License.
                See accompanying file LICENSE.txt or
                http://www.opengeosys.org/project/license
@@ -33,11 +33,11 @@ namespace IO
 {
 /// Class for parallel reading of ascii or binary partitioned mesh files into a
 /// NodePartitionedMesh via MPI.
-class NodePartitionedMeshReader
+class NodePartitionedMeshReader final
 {
 public:
     ///  \param comm   MPI communicator.
-    NodePartitionedMeshReader(MPI_Comm comm);
+    explicit NodePartitionedMeshReader(MPI_Comm comm);
 
     ~NodePartitionedMeshReader();
 

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,15 +13,14 @@
 
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
-#include "MeshLib/CoordinateSystem.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
 #include "NumLib/Function/Interpolation.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 #include "RichardsFlowProcessData.h"
 
@@ -147,7 +146,7 @@ public:
 
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
         const int material_id =
             _process_data.material->getMaterialID(_element.getID());
@@ -157,9 +156,13 @@ public:
         GlobalDimMatrixType permeability = GlobalDimMatrixType::Zero(
             _element.getDimension(), _element.getDimension());
         if (perm.rows() == _element.getDimension())
+        {
             permeability = perm;
+        }
         else if (perm.rows() == 1)
+        {
             permeability.diagonal().setConstant(perm(0, 0));
+        }
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
@@ -258,7 +261,7 @@ public:
             Eigen::Matrix<double, GlobalDim, Eigen::Dynamic, Eigen::RowMajor>>(
             cache, GlobalDim, num_intpts);
 
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
         const int material_id =
             _process_data.material->getMaterialID(_element.getID());
@@ -269,9 +272,13 @@ public:
         GlobalDimMatrixType permeability = GlobalDimMatrixType::Zero(
             _element.getDimension(), _element.getDimension());
         if (perm.rows() == _element.getDimension())
+        {
             permeability = perm;
+        }
         else if (perm.rows() == 1)
+        {
             permeability.diagonal().setConstant(perm(0, 0));
+        }
 
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();

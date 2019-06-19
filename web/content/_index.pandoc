@@ -27,7 +27,7 @@ features:
 
     Parametrize the model with material parameters, boundary conditions and source terms.
   visual:
-    permalink: "/docs/tools/meshing/extract-surface/TopBottomSideSurface.png"
+    permalink: "/docs/tools/meshing-submeshes/extract-surface/TopBottomSideSurface.png"
     alt: Extracted surfaces
   links:
     - text: See Docs
@@ -121,13 +121,13 @@ features:
       textline: |
         Start using OpenGeoSys by [downloading](/downloads) a prebuilt package.
       links:
-        - text: <i class="fas fa-download"></i> Download OpenGeoSys
+        - text: <i class="far fa-download"></i> Download OpenGeoSys
           url: /releases
     - headline: Developing OpenGeoSys
       textline: |
         Getting started developing OpenGeoSys at the [Developer Guide](/docs/devguide).
       links:
-        - text: <i class="fas fa-book"></i> Developer Guide
+        - text: <i class="far fa-book"></i> Developer Guide
           url: /docs/devguide
     - headline: Become part of the Community
       textline: |

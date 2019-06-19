@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,8 +16,8 @@
 #include "ProcessLib/HeatTransportBHE/LocalAssemblers/HeatTransportBHELocalAssemblerBHE.h"
 #include "ProcessLib/HeatTransportBHE/LocalAssemblers/HeatTransportBHELocalAssemblerSoil.h"
 
-#include "ProcessLib/BoundaryCondition/BHEBottomDirichletBoundaryCondition.h"
-#include "ProcessLib/BoundaryCondition/BHEInflowDirichletBoundaryCondition.h"
+#include "BoundaryConditions/BHEBottomDirichletBoundaryCondition.h"
+#include "BoundaryConditions/BHEInflowDirichletBoundaryCondition.h"
 
 namespace ProcessLib
 {
@@ -26,7 +26,7 @@ namespace HeatTransportBHE
 HeatTransportBHEProcess::HeatTransportBHEProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
@@ -164,12 +164,16 @@ void HeatTransportBHEProcess::assembleConcreteProcess(const double t,
 {
     DBUG("Assemble HeatTransportBHE process.");
 
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
         dof_table = {std::ref(*_local_to_global_index_map)};
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        dof_table, t, x, M, K, b, _coupled_solutions);
+        pv.getActiveElementIDs(), dof_table, t, x, M, K, b,
+        _coupled_solutions);
 }
 
 void HeatTransportBHEProcess::assembleWithJacobianConcreteProcess(
@@ -182,13 +186,15 @@ void HeatTransportBHEProcess::assembleWithJacobianConcreteProcess(
 }
 
 void HeatTransportBHEProcess::computeSecondaryVariableConcrete(
-    const double t, GlobalVector const& x)
+    const double t, GlobalVector const& x, int const process_id)
 {
     DBUG("Compute heat flux for HeatTransportBHE process.");
-    GlobalExecutor::executeMemberOnDereferenced(
+
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &HeatTransportBHELocalAssemblerInterface::computeSecondaryVariable,
-        _local_assemblers, *_local_to_global_index_map, t, x,
-        _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(),
+        getDOFTable(process_id), t, x, _coupled_solutions);
 }
 
 void HeatTransportBHEProcess::createBHEBoundaryConditionTopBottom(
@@ -235,14 +241,16 @@ void HeatTransportBHEProcess::createBHEBoundaryConditionTopBottom(
             {
                 // Top, inflow.
                 bcs.addBoundaryCondition(
-                    ProcessLib::createBHEInflowDirichletBoundaryCondition(
+                    createBHEInflowDirichletBoundaryCondition(
                         get_global_bhe_bc_indices(bc_top_node_id,
                                                   in_out_component_id),
-                        bhe));
+                        [&bhe](double const T, double const t) {
+                            return bhe.updateFlowRateAndTemperature(T, t);
+                        }));
 
                 // Bottom, outflow.
                 bcs.addBoundaryCondition(
-                    ProcessLib::createBHEBottomDirichletBoundaryCondition(
+                    createBHEBottomDirichletBoundaryCondition(
                         get_global_bhe_bc_indices(bc_bottom_node_id,
                                                   in_out_component_id)));
             }

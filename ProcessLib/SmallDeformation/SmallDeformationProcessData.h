@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,7 +14,7 @@
 
 #include <Eigen/Eigen>
 
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 namespace MaterialLib
 {
@@ -37,13 +37,15 @@ struct SmallDeformationProcessData
                  std::unique_ptr<
                      MaterialLib::Solids::MechanicsBase<DisplacementDim>>>&&
             solid_materials_,
-        Parameter<double> const& solid_density_,
+        ParameterLib::Parameter<double> const& solid_density_,
         Eigen::Matrix<double, DisplacementDim, 1>
             specific_body_force_,
-        double const reference_temperature_)
+        double const reference_temperature_,
+        ParameterLib::Parameter<double> const* const nonequilibrium_stress_)
         : material_ids(material_ids_),
           solid_materials{std::move(solid_materials_)},
           solid_density(solid_density_),
+          nonequilibrium_stress(nonequilibrium_stress_),
           specific_body_force(std::move(specific_body_force_)),
           reference_temperature(reference_temperature_)
     {
@@ -66,8 +68,10 @@ struct SmallDeformationProcessData
         int,
         std::unique_ptr<MaterialLib::Solids::MechanicsBase<DisplacementDim>>>
         solid_materials;
-    /// Solid's density. A scalar quantity, Parameter<double>.
-    Parameter<double> const& solid_density;
+    /// Solid's density. A scalar quantity, ParameterLib::Parameter<double>.
+    ParameterLib::Parameter<double> const& solid_density;
+
+    ParameterLib::Parameter<double> const* const nonequilibrium_stress;
     /// Specific body forces applied to the solid.
     /// It is usually used to apply gravitational forces.
     /// A vector of displacement dimension's length.

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -18,7 +18,6 @@ class MeshLibQuadMesh : public ::testing::Test
 {
     public:
     MeshLibQuadMesh()
-        : mesh(nullptr)
     {
         mesh = MeshLib::MeshGenerator::generateRegularQuadMesh(1.0, n_elements);
     }
@@ -29,9 +28,9 @@ class MeshLibQuadMesh : public ::testing::Test
     static std::size_t const elements_stride = n_elements - 1;
     static std::size_t const nodes_stride = n_nodes - 1;
 
-    MeshLib::Mesh const* mesh;
+    MeshLib::Mesh const* mesh{nullptr};
 
-    public:
+public:
     // Helper functions to access elements and nodes.
 
     MeshLib::Element* getElement(std::size_t const i, std::size_t const j)
@@ -79,16 +78,24 @@ class MeshLibQuadMesh : public ::testing::Test
     {
         // left
         for (std::size_t j = 1; j < elements_stride; ++j)
+        {
             f(getElement(0, j), 0, j);
+        }
         // right
         for (std::size_t j = 1; j < elements_stride; ++j)
+        {
             f(getElement(elements_stride, j), elements_stride, j);
+        }
         // bottom
         for (std::size_t i = 1; i < elements_stride; ++i)
+        {
             f(getElement(i, 0), i, 0);
+        }
         // top
         for (std::size_t i = 1; i < elements_stride; ++i)
+        {
             f(getElement(i, elements_stride), i, elements_stride);
+        }
     }
 
     template <typename F>
@@ -96,8 +103,12 @@ class MeshLibQuadMesh : public ::testing::Test
     testInsideElements(F const&& f)
     {
         for (std::size_t i = 1; i < elements_stride; ++i)
+        {
             for (std::size_t j = 1; j < elements_stride; ++j)
+            {
                 f(getElement(i, j), i, j);
+            }
+        }
     }
 
     template <typename F>
@@ -105,8 +116,12 @@ class MeshLibQuadMesh : public ::testing::Test
     testAllElements(F const&& f)
     {
         for (std::size_t i = 0; i < elements_stride; ++i)
+        {
             for (std::size_t j = 0; j < elements_stride; ++j)
+            {
                 f(getElement(i, j), i, j);
+            }
+        }
     }
 
     template <typename F>
@@ -126,16 +141,24 @@ class MeshLibQuadMesh : public ::testing::Test
     {
         // left
         for (std::size_t j = 1; j < nodes_stride; ++j)
+        {
             f(getNode(0, j), 0, j);
+        }
         // right
         for (std::size_t j = 1; j < nodes_stride; ++j)
+        {
             f(getNode(nodes_stride, j), nodes_stride, j);
+        }
         // bottom
         for (std::size_t i = 1; i < nodes_stride; ++i)
+        {
             f(getNode(i, 0), i, 0);
+        }
         // top
         for (std::size_t i = 1; i < nodes_stride; ++i)
+        {
             f(getNode(i, nodes_stride), i, nodes_stride);
+        }
     }
 
     template <typename F>
@@ -143,8 +166,12 @@ class MeshLibQuadMesh : public ::testing::Test
     testInsideNodes(F const&& f)
     {
         for (std::size_t i = 1; i < nodes_stride; ++i)
+        {
             for (std::size_t j = 1; j < nodes_stride; ++j)
+            {
                 f(getNode(i, j), i, j);
+            }
+        }
     }
 };
 
@@ -171,8 +198,12 @@ TEST_F(MeshLibQuadMesh, ElementNeighbors)
         {
             unsigned count = 0;
             for (int i = 0; i < 4; i++)
+            {
                 if (e->getNeighbor(i) != nullptr)
+                {
                     count++;
+                }
+            }
             return count;
         };
 
@@ -181,17 +212,19 @@ TEST_F(MeshLibQuadMesh, ElementNeighbors)
         return std::make_pair(getNeighbor(i), getNeighbor(j));
     };
 
-    auto testNeighbors = [this](
-        MeshLib::Element const* const e,
-        std::size_t const i,
-        std::size_t const j,
-        std::pair<Indices, Indices> const& neighbors)
-    {
+    auto testNeighbors = [this](MeshLib::Element const* const e,
+                                std::size_t const i,
+                                std::size_t const j,
+                                std::pair<Indices, Indices> const& neighbors) {
         for (auto i_neighbor : neighbors.first)
+        {
             ASSERT_TRUE(e->hasNeighbor(getElement(i_neighbor, j)));
+        }
 
         for (auto j_neighbor : neighbors.second)
+        {
             ASSERT_TRUE(e->hasNeighbor(getElement(i, j_neighbor)));
+        }
     };
 
     // Two neighbors for corner elements.
@@ -268,9 +301,13 @@ TEST_F(MeshLibQuadMesh, NodeToElementConnectivity)
             EXPECT_EQ(1u, node->getNumberOfElements());
 
             if (i == nodes_stride)
+            {
                 i--;
+            }
             if (j == nodes_stride)
+            {
                 j--;
+            }
 
             EXPECT_EQ(getElement(i, j), node->getElement(0));
         });

@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkCustomInteractorStyle class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -71,7 +71,7 @@ protected:
     ~VtkCustomInteractorStyle() override;
 
     /// @brief The vtk object to pick.
-    vtkDataObject* _data;
+    vtkDataObject* _data{nullptr};
 
     /// @brief The mapper for highlighting the selected cell.
     vtkDataSetMapper* _selectedMapper;
@@ -80,8 +80,8 @@ protected:
     vtkActor* _selectedActor;
 
 private:
-    bool _highlightActor;
-    bool _alternateMouseActions;
+    bool _highlightActor{false};
+    bool _alternateMouseActions{false};
 
 signals:
     /// @brief Emitted when something was picked.

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.net)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.net)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,7 +35,7 @@ class NetCdfConfigureDialog : public QDialog, private Ui_NetCdfConfigure
 public:
     NetCdfConfigureDialog(const std::string& fileName,
                           QDialog* parent = nullptr);
-    ~NetCdfConfigureDialog(void) override;
+    ~NetCdfConfigureDialog() override;
     MeshLib::Mesh* getMesh() { return _currentMesh; };
     std::string getName();
     VtkGeoImageSource* getRaster() { return _currentRaster; };

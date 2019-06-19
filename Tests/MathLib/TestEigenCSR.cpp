@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,7 +58,10 @@ TEST(MathLibEigen, Eigen2CSR)
     for (int row=0; row<nrows; ++row) {
         for (int col = -1; col<=1; ++col) {
             int cidx = row + col;
-            if (cidx < 0 || cidx >= ncols) continue;
+            if (cidx < 0 || cidx >= ncols)
+            {
+                continue;
+            }
 
             const double val = (col == 0) ? 2.0 : -1.0;
             values.push_back(val);
@@ -71,13 +74,19 @@ TEST(MathLibEigen, Eigen2CSR)
     for (int row=0; row<nrows; ++row) {
         for (int col = -1; col<=1; ++col) {
             int cidx = row + col;
-            if (cidx < 0 || cidx >= ncols) continue;
+            if (cidx < 0 || cidx >= ncols)
+            {
+                continue;
+            }
 
             mat.coeffRef(row, cidx) = 4.0 * mat.coeff(row, cidx);
         }
     }
     // adapt entries of CSR matrix
-    for (auto& v : values) v *= 4.0;
+    for (auto& v : values)
+    {
+        v *= 4.0;
+    }
 
     mat.makeCompressed();
 

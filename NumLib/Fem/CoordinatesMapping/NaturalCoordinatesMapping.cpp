@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -102,8 +102,10 @@ computeMappingMatrices(
 static void checkJacobianDeterminant(const double detJ,
                                      MeshLib::Element const& element)
 {
-    if (detJ > 0)  // The usual case
+    if (detJ > 0)
+    {  // The usual case
         return;
+    }
 
     if (detJ < 0)
     {
@@ -379,6 +381,6 @@ OGS_INSTANTIATE_NATURAL_COORDINATES_MAPPING_FIX(TetRule4, ShapeTet4, 3);
 OGS_INSTANTIATE_NATURAL_COORDINATES_MAPPING_FIX(TriRule3, ShapeTri3, 3);
 OGS_INSTANTIATE_NATURAL_COORDINATES_MAPPING_FIX(TriRule6, ShapeTri6, 3);
 
-} // detail
+}  // namespace detail
 
-} // NumLib
+}  // namespace NumLib

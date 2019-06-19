@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,7 +20,7 @@ boost::optional<
                    DisplacementDim>::MaterialStateVariables>,
                typename LinearElasticIsotropic<DisplacementDim>::KelvinMatrix>>
 LinearElasticIsotropic<DisplacementDim>::integrateStress(
-    double const t, ProcessLib::SpatialPosition const& x, double const /*dt*/,
+    double const t, ParameterLib::SpatialPosition const& x, double const /*dt*/,
     KelvinVector const& eps_prev, KelvinVector const& eps,
     KelvinVector const& sigma_prev,
     typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -44,15 +44,11 @@ LinearElasticIsotropic<DisplacementDim>::integrateStress(
 template <int DisplacementDim>
 typename LinearElasticIsotropic<DisplacementDim>::KelvinMatrix
 LinearElasticIsotropic<DisplacementDim>::getElasticTensor(
-    double const t, ProcessLib::SpatialPosition const& x,
+    double const t, ParameterLib::SpatialPosition const& x,
     double const /*T*/) const
 {
-    KelvinMatrix C = KelvinMatrix::Zero();
-
-    C.template topLeftCorner<3, 3>().setConstant(_mp.lambda(t, x));
-    C.noalias() += 2 * _mp.mu(t, x) * KelvinMatrix::Identity();
-
-    return C;
+    return elasticTangentStiffness<DisplacementDim>(_mp.lambda(t, x),
+                                                    _mp.mu(t, x));
 }
 
 template class LinearElasticIsotropic<2>;

@@ -5,7 +5,7 @@
  * \brief  Definition of the GeoOnMeshMappingDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,7 +34,7 @@ public:
     GeoOnMeshMappingDialog(
         std::vector<std::unique_ptr<MeshLib::Mesh>> const& mesh_vec,
         QDialog* parent = nullptr);
-    ~GeoOnMeshMappingDialog(void) override;
+    ~GeoOnMeshMappingDialog() override;
 
     std::string const& getNewGeoName() const { return _new_geo_name; };
     int getDataSetChoice() const;

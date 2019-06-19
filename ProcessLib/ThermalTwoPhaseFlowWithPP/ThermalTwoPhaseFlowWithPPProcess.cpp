@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,7 +27,7 @@ namespace ThermalTwoPhaseFlowWithPP
 ThermalTwoPhaseFlowWithPPProcess::ThermalTwoPhaseFlowWithPPProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
@@ -83,10 +83,14 @@ void ThermalTwoPhaseFlowWithPPProcess::assembleConcreteProcess(
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        dof_table, t, x, M, K, b, _coupled_solutions);
+        pv.getActiveElementIDs(), dof_table, t, x, M, K, b,
+        _coupled_solutions);
 }
 
 void ThermalTwoPhaseFlowWithPPProcess::assembleWithJacobianConcreteProcess(
@@ -98,22 +102,27 @@ void ThermalTwoPhaseFlowWithPPProcess::assembleWithJacobianConcreteProcess(
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, dof_table, t, x, xdot, dxdot_dx,
-        dx_dx, M, K, b, Jac, _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
+        xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 }
 void ThermalTwoPhaseFlowWithPPProcess::preTimestepConcreteProcess(
     GlobalVector const& x, double const t, double const delta_t,
-    const int /*process_id*/)
+    const int process_id)
 {
     DBUG("PreTimestep ThermalTwoPhaseFlowWithPPProcess.");
 
-    GlobalExecutor::executeMemberOnDereferenced(
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &LocalAssemblerInterface::preTimestep, _local_assemblers,
-        *_local_to_global_index_map, x, t, delta_t);
+        pv.getActiveElementIDs(), *_local_to_global_index_map, x, t,
+        delta_t);
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace ThermalTwoPhaseFlowWithPP
+}  // namespace ProcessLib

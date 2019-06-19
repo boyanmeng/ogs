@@ -5,7 +5,7 @@
  * \brief  Definition of the AreaMetric class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,7 +26,7 @@ namespace MeshLib
 class EdgeRatioMetric : public ElementQualityMetric
 {
 public:
-    EdgeRatioMetric(Mesh const& mesh);
+    explicit EdgeRatioMetric(Mesh const& mesh);
     ~EdgeRatioMetric() override = default;
 
     void calculateQuality() override;
@@ -47,4 +47,4 @@ private:
     double checkPyramid (std::vector<const MathLib::Point3d*> const& pnts) const;
     double checkHexahedron (std::vector<const MathLib::Point3d*> const& pnts) const;
 };
-}
+}  // namespace MeshLib

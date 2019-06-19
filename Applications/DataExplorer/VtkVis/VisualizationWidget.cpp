@@ -5,7 +5,7 @@
  * \brief  Implementation of the VisualizationWidget class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,19 +20,22 @@
 #include "VtkCustomInteractorStyle.h"
 #include "VtkPickCallback.h"
 
+#include <vtkAxesActor.h>
 #include <vtkCamera.h>
 #include <vtkCellPicker.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderer.h>
-#include <vtkSmartPointer.h>
-
-#include <vtkAxesActor.h>
 #include <vtkCommand.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkInteractorStyleRubberBandZoom.h>
 #include <vtkInteractorStyleSwitch.h>
 #include <vtkMath.h>
+#include <vtkNew.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkPNGWriter.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkSmartPointer.h>
 #include <vtkSmartPointer.h>
 #include <vtkWindowToImageFilter.h>
 
@@ -44,36 +47,36 @@
 #include <QSettings>
 #include <QString>
 
-VisualizationWidget::VisualizationWidget( QWidget* parent /*= 0*/ )
-: QWidget(parent), _vtkRender(nullptr), _markerWidget(nullptr),
-  _interactorStyle(nullptr), _vtkPickCallback(nullptr)
+VisualizationWidget::VisualizationWidget(QWidget* parent /*= 0*/)
+    : QWidget(parent)
 {
     this->setupUi(this);
 
+    vtkNew<vtkRenderer> ren;
+    _vtkRender = ren;
+
+    vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+    vtkWidget->SetRenderWindow(renderWindow);
+    vtkWidget->GetRenderWindow()->AddRenderer(ren);
+
     _interactorStyle = VtkCustomInteractorStyle::New();
-    vtkWidget->GetRenderWindow()->GetInteractor()->SetInteractorStyle(_interactorStyle);
+    renderWindow->GetInteractor()->SetInteractorStyle(_interactorStyle);
+    _interactorStyle->SetDefaultRenderer(ren);
 
     _vtkPickCallback = VtkPickCallback::New();
     vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
     picker->AddObserver(vtkCommand::EndPickEvent, _vtkPickCallback);
-    vtkWidget->GetRenderWindow()->GetInteractor()->SetPicker(picker);
-
-    vtkSmartPointer<vtkRenderWindow> renderWindow = vtkWidget->GetRenderWindow();
-    renderWindow->StereoCapableWindowOn();
-    renderWindow->SetStereoTypeToCrystalEyes();
-    _vtkRender = vtkRenderer::New();
-    renderWindow->AddRenderer(_vtkRender);
-    _interactorStyle->SetDefaultRenderer(_vtkRender);
+    renderWindow->GetInteractor()->SetPicker(picker);
 
     QSettings settings;
 
-    _vtkRender->SetBackground(0.0,0.0,0.0);
+    ren->SetBackground(0.0,0.0,0.0);
 
     // Create an orientation marker using vtkAxesActor
     vtkSmartPointer<vtkAxesActor> axesActor = vtkSmartPointer<vtkAxesActor>::New();
     _markerWidget = vtkOrientationMarkerWidget::New();
     _markerWidget->SetOrientationMarker(axesActor);
-    _markerWidget->SetInteractor(vtkWidget->GetRenderWindow()->GetInteractor());
+    _markerWidget->SetInteractor(renderWindow->GetInteractor());
     _markerWidget->EnabledOn();
     _markerWidget->InteractiveOff();
 
@@ -82,6 +85,9 @@ VisualizationWidget::VisualizationWidget( QWidget* parent /*= 0*/ )
     // Set alternate cursor shapes
     connect(_interactorStyle, SIGNAL(cursorChanged(Qt::CursorShape)),
             this, SLOT(setCursorShape(Qt::CursorShape)));
+
+    connect((QObject*)_interactorStyle, SIGNAL(requestViewUpdate()),
+            this, SLOT(updateView()));
 }
 
 VisualizationWidget::~VisualizationWidget()
@@ -89,7 +95,6 @@ VisualizationWidget::~VisualizationWidget()
     _vtkPickCallback->Delete();
     _interactorStyle->Delete();
     _markerWidget->Delete();
-    _vtkRender->Delete();
 }
 
 VtkCustomInteractorStyle* VisualizationWidget::interactorStyle() const

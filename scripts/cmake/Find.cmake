@@ -2,25 +2,14 @@
 ### Find tools     ###
 ######################
 
-# Find doxygen
-if(WIN32)
-    find_program(DOXYGEN_DOT_EXECUTABLE NAMES dot
-        PATHS "$ENV{ProgramFiles}/Graphviz*/bin")
-    find_package(Doxygen QUIET)
-    if(DOXYGEN_DOT_PATH)
-        file(TO_NATIVE_PATH ${DOXYGEN_DOT_PATH} DOXYGEN_DOT_PATH)
-        set(DOXYGEN_DOT_PATH "\"${DOXYGEN_DOT_PATH}\"")
-    endif()
-else()
-    find_package(Doxygen QUIET)
-endif()
+find_package(Doxygen OPTIONAL_COMPONENTS dot)
 
 # Find gnu profiler gprof
 find_program(GPROF_PATH gprof DOC "GNU profiler gprof" QUIET)
 
-find_package(cppcheck QUIET)
+find_program(CPPCHECK_TOOL_PATH cppcheck)
 
-find_package(PythonInterp QUIET)
+find_package(Python COMPONENTS Interpreter Development)
 
 # Find bash itself ...
 find_program(BASH_TOOL_PATH bash
@@ -60,13 +49,15 @@ find_program(MODULE_CMD modulecmd
 ######################
 ### Find libraries ###
 ######################
-find_package(Boost REQUIRED)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+if(NOT OGS_USE_CONAN OR NOT CONAN_CMD)
+    find_package(Boost REQUIRED)
+    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+endif()
 
 find_package(VTK 8.1.0 REQUIRED)
 include(${VTK_USE_FILE})
 
-find_package(Eigen3 3.2.9 REQUIRED)
+find_package(Eigen3 3.3.4 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 ## pthread, is a requirement of logog ##
@@ -157,7 +148,6 @@ find_package(OpenSSL)
 ## Check MPI package
 if(OGS_USE_MPI)
     find_package(MPI REQUIRED)
-    include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 endif()
 
 find_package(Shapelib)
@@ -168,10 +158,10 @@ elseif(OGS_BUILD_GUI)
 endif()
 
 ## Sundials cvode ode-solver library
-find_package(CVODE)
-if(CVODE_FOUND)
+if(OGS_USE_CVODE)
+    find_package(CVODE REQUIRED)
     add_definitions(-DCVODE_FOUND)
-endif() # CVODE_FOUND
+endif()
 
 if(OGS_USE_MFRONT)
     find_package(MGIS REQUIRED)

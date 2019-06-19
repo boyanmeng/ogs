@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -119,7 +119,7 @@ void SmallDeformationLocalAssemblerMatrix<ShapeFunction, IntegrationMethod,
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)

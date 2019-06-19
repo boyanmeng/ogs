@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtuInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -50,7 +50,7 @@ VtuInterface::VtuInterface(const MeshLib::Mesh* mesh, int dataMode, bool compres
 MeshLib::Mesh* VtuInterface::readVTUFile(std::string const &file_name)
 {
     if (!BaseLib::IsFileExisting(file_name)) {
-        ERR("File \"%s\" does not exist.", file_name.c_str());
+        ERR("File '%s' does not exist.", file_name.c_str());
         return nullptr;
     }
 
@@ -62,7 +62,7 @@ MeshLib::Mesh* VtuInterface::readVTUFile(std::string const &file_name)
     vtkUnstructuredGrid* vtkGrid = reader->GetOutput();
     if (vtkGrid->GetNumberOfPoints() == 0)
     {
-        ERR("Mesh \"%s\" contains zero points.", file_name.c_str());
+        ERR("Mesh '%s' contains zero points.", file_name.c_str());
         return nullptr;
     }
 
@@ -108,5 +108,21 @@ bool VtuInterface::writeToFile(std::string const &file_name)
     return writeVTU<vtkXMLUnstructuredGridWriter>(file_name);
 #endif
 }
+
+int writeVtu(MeshLib::Mesh const& mesh, std::string const& file_name,
+             int const data_mode)
+{
+    MeshLib::IO::VtuInterface writer(&mesh, data_mode);
+    auto const result = writer.writeToFile(file_name);
+    if (!result)
+    {
+        ERR("writeMeshToFile(): Could not write mesh to '%s'.",
+            file_name.c_str());
+        return -1;
+    }
+    return 0;
+}
+
+
 } // end namespace IO
 } // end namespace MeshLib

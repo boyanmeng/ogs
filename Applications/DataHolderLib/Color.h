@@ -5,7 +5,7 @@
  * \brief  Definition of the Color class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -36,4 +36,4 @@ Color const getColor(const std::string &id, std::map<std::string, DataHolderLib:
 
 /// Convenience function to use the getColor method with numbers as identifiers.
 Color const getColor(double id, std::map<std::string, DataHolderLib::Color> &colors);
-} // namespace
+}  // namespace DataHolderLib

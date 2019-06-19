@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -46,7 +46,9 @@ public:
      * @param nodes  an array of pointers of mesh nodes which form this element
      * @param id     element id
      */
-    TemplateElement(Node* nodes[n_all_nodes], std::size_t id = std::numeric_limits<std::size_t>::max());
+    explicit TemplateElement(
+        Node* nodes[n_all_nodes],
+        std::size_t id = std::numeric_limits<std::size_t>::max());
 
     /**
      * Constructor with an array of mesh nodes
@@ -54,7 +56,9 @@ public:
      * @param nodes  an array of pointers of mesh nodes which form this element
      * @param id     element id
      */
-    TemplateElement(std::array<Node*, n_all_nodes> const& nodes, std::size_t id = std::numeric_limits<std::size_t>::max());
+    explicit TemplateElement(
+        std::array<Node*, n_all_nodes> const& nodes,
+        std::size_t id = std::numeric_limits<std::size_t>::max());
 
     /// Copy constructor
     TemplateElement(const TemplateElement &e);
@@ -142,8 +146,10 @@ public:
     inline Node* getEdgeNode(unsigned edge_id, unsigned node_id) const override
     {
         if (getNumberOfEdges() > 0)
+        {
             return const_cast<Node*>(
                 this->_nodes[ELEMENT_RULE::edge_nodes[edge_id][node_id]]);
+        }
 
         return nullptr;
     }
@@ -159,6 +165,6 @@ public:
 
 };
 
-} // MeshLib
+}  // namespace MeshLib
 
 #include "TemplateElement-impl.h"

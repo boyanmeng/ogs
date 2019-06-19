@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkMeshNodalCoordinatesTemplate class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -80,8 +80,10 @@ template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
     outArray->SetNumberOfTuples(numTuples);
 
     const vtkIdType numPoints = ptIds->GetNumberOfIds();
-    for(vtkIdType i = 0; i < numPoints; i++)
+    for (vtkIdType i = 0; i < numPoints; i++)
+    {
         outArray->SetTuple(i, this->GetTuple(ptIds->GetId(i)));
+    }
 }
 
 template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
@@ -100,8 +102,10 @@ template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
         return;
     }
 
-    for(vtkIdType daTubleId = 0; p1 <= p2; ++p1)
+    for (vtkIdType daTubleId = 0; p1 <= p2; ++p1)
+    {
         da->SetTuple(daTubleId++, this->GetTuple(p1));
+    }
 }
 
 template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
@@ -122,8 +126,10 @@ template <class Scalar> vtkIdType VtkMeshNodalCoordinatesTemplate<Scalar>
 {
     bool valid = true;
     Scalar val = vtkVariantCast<Scalar>(value, &valid);
-    if(valid)
+    if (valid)
+    {
         return this->Lookup(val, 0);
+    }
     return -1;
 }
 
@@ -136,8 +142,10 @@ template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
     if(valid)
     {
         vtkIdType index = 0;
-        while((index = this->Lookup(val, index)) >= 0)
+        while ((index = this->Lookup(val, index)) >= 0)
+        {
             ids->InsertNextId(index++);
+        }
     }
 }
 
@@ -179,8 +187,10 @@ template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
 {
     ids->Reset();
     vtkIdType index = 0;
-    while((index = this->Lookup(value, index)) >= 0)
+    while ((index = this->Lookup(value, index)) >= 0)
+    {
         ids->InsertNextId(index++);
+    }
 }
 
 template <class Scalar> Scalar& VtkMeshNodalCoordinatesTemplate<Scalar>
@@ -374,11 +384,8 @@ template <class Scalar> void VtkMeshNodalCoordinatesTemplate<Scalar>
 }
 
 template <class Scalar>
-VtkMeshNodalCoordinatesTemplate<Scalar>::VtkMeshNodalCoordinatesTemplate()
-    : _nodes(nullptr), TempDoubleArray(nullptr)
-{
-
-}
+VtkMeshNodalCoordinatesTemplate<Scalar>::VtkMeshNodalCoordinatesTemplate() =
+    default;
 
 template <class Scalar> VtkMeshNodalCoordinatesTemplate<Scalar>
 ::~VtkMeshNodalCoordinatesTemplate()
@@ -391,8 +398,10 @@ template <class Scalar> vtkIdType VtkMeshNodalCoordinatesTemplate<Scalar>
 {
     while(index <= this->MaxId)
     {
-        if(this->GetValueReference(index++) == val)
+        if (this->GetValueReference(index++) == val)
+        {
             return index;
+        }
     }
     return -1;
 }
@@ -478,4 +487,4 @@ template <class Scalar> vtkIdType VtkMeshNodalCoordinatesTemplate<Scalar>
 }
 
 #endif  // vtk version
-} // end namespace
+}  // namespace MeshLib

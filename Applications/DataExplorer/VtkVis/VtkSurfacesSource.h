@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkSurfacesSource class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -59,7 +59,7 @@ protected:
                            vtkInformationVector* outputVector) override;
 
     /// The surfaces to visualize
-    const std::vector<GeoLib::Surface*>* _surfaces;
+    const std::vector<GeoLib::Surface*>* _surfaces{nullptr};
 
 private:
 };

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,19 +9,20 @@
 
 #pragma once
 
-namespace ProcessLib
+namespace ParameterLib
 {
 template <typename T>
 struct Parameter;
+}
 
-namespace HeatConduction
+namespace ProcessLib::HeatConduction
 {
-
 struct HeatConductionProcessData
 {
-    HeatConductionProcessData(Parameter<double> const& thermal_conductivity_,
-                              Parameter<double> const& heat_capacity_,
-                              Parameter<double> const& density_)
+    HeatConductionProcessData(
+        ParameterLib::Parameter<double> const& thermal_conductivity_,
+        ParameterLib::Parameter<double> const& heat_capacity_,
+        ParameterLib::Parameter<double> const& density_)
         : thermal_conductivity(thermal_conductivity_),
           heat_capacity(heat_capacity_),
           density(density_)
@@ -44,10 +45,8 @@ struct HeatConductionProcessData
     //! Assignments are not needed.
     void operator=(HeatConductionProcessData&&) = delete;
 
-    Parameter<double> const& thermal_conductivity;
-    Parameter<double> const& heat_capacity;
-    Parameter<double> const& density;
+    ParameterLib::Parameter<double> const& thermal_conductivity;
+    ParameterLib::Parameter<double> const& heat_capacity;
+    ParameterLib::Parameter<double> const& density;
 };
-
-}  // namespace HeatConduction
-}  // namespace ProcessLib
+}  // namespace ProcessLib::HeatConduction

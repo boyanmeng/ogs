@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -98,8 +98,10 @@ double getNonGhostNodalValue(GlobalVector const& x, MeshLib::Mesh const& mesh,
     auto const index = dof_table.getGlobalIndex(l, global_component_id);
     assert (index != NumLib::MeshComponentMap::nop);
 
-    if (index < 0)  // ghost node value
+    if (index < 0)
+    {  // ghost node value
         return 0.0;
+    }
 
     return x.get(index);
 }

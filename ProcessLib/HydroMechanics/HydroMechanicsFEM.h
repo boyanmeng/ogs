@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,10 +18,10 @@
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "HydroMechanicsProcessData.h"
@@ -72,7 +72,7 @@ struct IntegrationPointData final
     template <typename DisplacementVectorType>
     typename BMatricesType::KelvinMatrixType updateConstitutiveRelation(
         double const t,
-        SpatialPosition const& x_position,
+        ParameterLib::SpatialPosition const& x_position,
         double const dt,
         DisplacementVectorType const& /*u*/,
         double const T)
@@ -82,7 +82,9 @@ struct IntegrationPointData final
             *material_state_variables, T);
 
         if (!solution)
+        {
             OGS_FATAL("Computation of local constitutive relation failed.");
+        }
 
         MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
         std::tie(sigma_eff, material_state_variables, C) = std::move(*solution);
@@ -93,7 +95,7 @@ struct IntegrationPointData final
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
-/// Used by for extrapolation of the integration point values. It is ordered
+/// Used for the extrapolation of the integration point values. It is ordered
 /// (and stored) by integration points.
 template <typename ShapeMatrixType>
 struct SecondaryData
@@ -308,10 +310,14 @@ private:
 
         for (auto const& ip_data : _ip_data)
         {
-            if (component < 3)  // xx, yy, zz components
+            if (component < 3)
+            {  // xx, yy, zz components
                 cache.push_back(ip_data.sigma_eff[component]);
-            else  // mixed xy, yz, xz components
+            }
+            else
+            {  // mixed xy, yz, xz components
                 cache.push_back(ip_data.sigma_eff[component] / std::sqrt(2));
+            }
         }
 
         return cache;

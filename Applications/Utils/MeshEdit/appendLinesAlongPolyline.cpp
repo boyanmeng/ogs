@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -30,11 +30,11 @@ int main (int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Append line elements into a mesh.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_in("i", "mesh-input-file",
                                          "the name of the file containing the input mesh", true,
                                          "", "file name of input mesh");
@@ -47,12 +47,18 @@ int main (int argc, char* argv[])
                                           "the name of the geometry file which contains polylines", true, "", "the name of the geometry file");
     cmd.add(geoFileArg);
 
+    TCLAP::ValueArg<std::string> gmsh_path_arg("g", "gmsh-path",
+                                               "the path to the gmsh binary",
+                                               false, "", "path as string");
+    cmd.add(gmsh_path_arg);
+
     // parse arguments
     cmd.parse(argc, argv);
 
     // read GEO objects
     GeoLib::GEOObjects geo_objs;
-    FileIO::readGeometryFromFile(geoFileArg.getValue(), geo_objs);
+    FileIO::readGeometryFromFile(geoFileArg.getValue(), geo_objs,
+                                 gmsh_path_arg.getValue());
 
     std::vector<std::string> geo_names;
     geo_objs.getGeometryNames (geo_names);
@@ -64,7 +70,7 @@ int main (int argc, char* argv[])
     const GeoLib::PolylineVec* ply_vec (geo_objs.getPolylineVecObj(geo_names[0]));
     if (!ply_vec)
     {
-        ERR("Could not find polylines in geometry \"%s\".",
+        ERR("Could not find polylines in geometry '%s'.",
             geo_names.front().c_str());
         return EXIT_FAILURE;
     }
@@ -73,7 +79,7 @@ int main (int argc, char* argv[])
     MeshLib::Mesh const*const mesh (MeshLib::IO::readMeshFromFile(mesh_in.getValue()));
     if (!mesh)
     {
-        ERR("Mesh file \"%s\" not found", mesh_in.getValue().c_str());
+        ERR("Mesh file '%s' not found", mesh_in.getValue().c_str());
         return EXIT_FAILURE;
     }
     INFO("Mesh read: %d nodes, %d elements.", mesh->getNumberOfNodes(), mesh->getNumberOfElements());

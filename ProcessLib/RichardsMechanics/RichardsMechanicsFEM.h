@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -17,10 +17,10 @@
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "IntegrationPointData.h"
@@ -31,7 +31,7 @@ namespace ProcessLib
 {
 namespace RichardsMechanics
 {
-/// Used by for extrapolation of the integration point values. It is ordered
+/// Used for the extrapolation of the integration point values. It is ordered
 /// (and stored) by integration points.
 template <typename ShapeMatrixType>
 struct SecondaryData
@@ -48,6 +48,9 @@ public:
         ShapeMatrixPolicyType<ShapeFunctionDisplacement, DisplacementDim>;
     using ShapeMatricesTypePressure =
         ShapeMatrixPolicyType<ShapeFunctionPressure, DisplacementDim>;
+
+    using GlobalDimMatrixType =
+        typename ShapeMatricesTypePressure::GlobalDimMatrixType;
 
     static int const KelvinVectorSize =
         MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value;

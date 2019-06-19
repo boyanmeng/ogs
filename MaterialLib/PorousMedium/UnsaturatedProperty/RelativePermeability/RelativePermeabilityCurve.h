@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,7 +25,7 @@ namespace PorousMedium
 class RelativePermeabilityCurve final : public RelativePermeability
 {
 public:
-    RelativePermeabilityCurve(
+    explicit RelativePermeabilityCurve(
         std::unique_ptr<MathLib::PiecewiseLinearInterpolation>&& curve_data)
         : RelativePermeability(curve_data->getSupportMin(),
                                curve_data->getSupportMax()),
@@ -63,5 +63,5 @@ public:
 private:
     std::unique_ptr<MathLib::PiecewiseLinearInterpolation> _curve_data;
 };
-}  // end namespace
-}  // end namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

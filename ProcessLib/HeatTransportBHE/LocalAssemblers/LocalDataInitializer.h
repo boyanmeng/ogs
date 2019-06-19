@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -259,6 +259,20 @@ private:
             {
                 return LADataIntfPtr{new LADataBHE<ShapeFunction, BHE::BHE_1U>{
                     e, boost::get<BHE::BHE_1U>(bhe),
+                    std::forward<ConstructorArgs>(args)...}};
+            }
+
+            if (bhe.type() == typeid(BHE::BHE_CXA))
+            {
+                return LADataIntfPtr{new LADataBHE<ShapeFunction, BHE::BHE_CXA>{
+                    e, boost::get<BHE::BHE_CXA>(bhe),
+                    std::forward<ConstructorArgs>(args)...}};
+            }
+
+            if (bhe.type() == typeid(BHE::BHE_CXC))
+            {
+                return LADataIntfPtr{new LADataBHE<ShapeFunction, BHE::BHE_CXC>{
+                    e, boost::get<BHE::BHE_CXC>(bhe),
                     std::forward<ConstructorArgs>(args)...}};
             }
             OGS_FATAL(

@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -37,7 +37,8 @@ public:
      * @param mesh_grid Grid object constructed with mesh nodes
      * @param pnt a point
      * @param epsilon_radius Search radius
-     * @param search_all_nodes whether this searches all nodes or only base nodes
+     * @param search_all_nodes whether this searches all nodes or only base
+     * nodes
      */
     MeshNodesOnPoint(MeshLib::Mesh const& mesh,
                      GeoLib::Grid<MeshLib::Node> const& mesh_grid,
@@ -51,18 +52,18 @@ public:
      * Access the vector of mesh node ids.
      * @return The vector of mesh node ids calculated in the constructor
      */
-    std::vector<std::size_t> const& getNodeIDs () const { return _msh_node_ids; }
+    std::vector<std::size_t> const& getNodeIDs() const { return _msh_node_ids; }
 
     /**
      * Deploying this method the user can get access to the underlying
      * GeoLib::Point.
      * @return the underlying GeoLib::Point
      */
-    GeoLib::Point const& getPoint () const { return _pnt; }
+    GeoLib::Point const& getPoint() const { return _pnt; }
 
 private:
     MeshLib::Mesh const& _mesh;
     GeoLib::Point const& _pnt;
     std::vector<std::size_t> _msh_node_ids;
 };
-} // end namespace MeshGeoToolsLib
+}  // end namespace MeshGeoToolsLib

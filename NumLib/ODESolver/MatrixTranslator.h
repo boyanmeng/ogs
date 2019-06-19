@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -102,7 +102,7 @@ public:
      *
      * \param timeDisc the time discretization scheme to be used.
      */
-    MatrixTranslatorGeneral(TimeDiscretization const& timeDisc)
+    explicit MatrixTranslatorGeneral(TimeDiscretization const& timeDisc)
         : _time_disc(timeDisc)
     {
     }
@@ -159,7 +159,7 @@ public:
      *
      * \param timeDisc the time discretization scheme to be used.
      */
-    MatrixTranslatorForwardEuler(ForwardEuler const& timeDisc)
+    explicit MatrixTranslatorForwardEuler(ForwardEuler const& timeDisc)
         : _fwd_euler(timeDisc)
     {
     }
@@ -215,12 +215,10 @@ public:
      *
      * \param timeDisc the time discretization scheme to be used.
      */
-    MatrixTranslatorCrankNicolson(CrankNicolson const& timeDisc)
+    explicit MatrixTranslatorCrankNicolson(CrankNicolson const& timeDisc)
         : _crank_nicolson(timeDisc),
-          _M_bar(NumLib::GlobalMatrixProvider::provider
-                     .getMatrix()),
-          _b_bar(
-              NumLib::GlobalVectorProvider::provider.getVector())
+          _M_bar(NumLib::GlobalMatrixProvider::provider.getMatrix()),
+          _b_bar(NumLib::GlobalVectorProvider::provider.getVector())
     {
     }
 
@@ -308,4 +306,4 @@ std::unique_ptr<MatrixTranslator<ODETag>> createMatrixTranslator(
 }
 
 //! @}
-}
+}  // namespace NumLib

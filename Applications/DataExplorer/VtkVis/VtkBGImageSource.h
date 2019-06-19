@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkBGImageSource class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -43,7 +43,6 @@ protected:
     ~VtkBGImageSource() override;
 
 private:
-
-    std::pair<double, double> _origin;
-    double _cellsize;
+    std::pair<double, double> _origin{0, 0};
+    double _cellsize{1};
 };

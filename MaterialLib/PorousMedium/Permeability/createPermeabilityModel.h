@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,8 @@ namespace PorousMedium
  */
 std::unique_ptr<Permeability> createPermeabilityModel(
     BaseLib::ConfigTree const& config,
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters);
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+        parameters);
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

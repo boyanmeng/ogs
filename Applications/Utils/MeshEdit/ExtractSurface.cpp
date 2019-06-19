@@ -2,7 +2,7 @@
  * @brief Extracts the surface from the given mesh.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -23,6 +23,7 @@
 
 #include "MeshLib/IO/readMeshFromFile.h"
 #include "MeshLib/IO/writeMeshToFile.h"
+#include "MeshLib/IO/VtkIO/VtuInterface.h"
 
 #include "MathLib/Vector3.h"
 
@@ -36,13 +37,14 @@ int main (int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Tool extracts the surface of the given mesh. The documentation is "
         "available at "
-        "https://docs.opengeosys.org/docs/tools/meshing/extract-surface.\n\n"
+        "https://docs.opengeosys.org/docs/tools/meshing-submeshes/"
+        "extract-surface.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> mesh_in(
         "i", "mesh-input-file",
         "the name of the file containing the input mesh", true, "",
@@ -87,10 +89,21 @@ int main (int argc, char* argv[])
         90, "floating point value");
     cmd.add(angle_arg);
 
+    TCLAP::ValueArg<bool> use_ascii_arg(
+        "", "ascii_output", "use ascii format for data in the vtu output ", false,
+        false, "boolean value");
+    cmd.add(use_ascii_arg);
+
     cmd.parse(argc, argv);
 
     std::unique_ptr<MeshLib::Mesh const> mesh(
         MeshLib::IO::readMeshFromFile(mesh_in.getValue()));
+
+    if (!mesh)
+    {
+        return EXIT_FAILURE;
+    }
+
     INFO("Mesh read: %u nodes, %u elements.", mesh->getNumberOfNodes(),
          mesh->getNumberOfElements());
 
@@ -104,8 +117,13 @@ int main (int argc, char* argv[])
 
     std::string out_fname(mesh_out.getValue());
     if (out_fname.empty())
+    {
         out_fname = BaseLib::dropFileExtension(mesh_in.getValue()) + "_sfc.vtu";
-    MeshLib::IO::writeMeshToFile(*surface_mesh, out_fname);
+    }
+
+    auto const data_mode =
+        use_ascii_arg.getValue() ? vtkXMLWriter::Ascii : vtkXMLWriter::Binary;
+    MeshLib::IO::writeVtu(*surface_mesh, out_fname, data_mode);
 
     return EXIT_SUCCESS;
 }

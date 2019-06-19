@@ -6,7 +6,7 @@
  * \brief  Definition of the RunTime class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -38,7 +38,7 @@ class RunTime
 #if defined(USE_MPI)
             _start_time = MPI_Wtime();
 #else
-#ifndef _MSC_VER
+#ifndef WIN32
             timeval t;
             gettimeofday(&t, nullptr);
             _start_time = t.tv_sec + t.tv_usec/1000000.0;
@@ -54,7 +54,7 @@ class RunTime
 #if defined(USE_MPI)
             return MPI_Wtime() - _start_time;
 #else
-#ifndef _MSC_VER
+#ifndef WIN32
             timeval t;
             gettimeofday(&t, nullptr);
             return t.tv_sec + t.tv_usec/1000000.0 - _start_time;

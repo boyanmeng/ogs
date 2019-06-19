@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,6 +35,10 @@ namespace LIE
  * elements connecting to the fracture (grouped by fracture IDs)
  * @param vec_fracture_nodes  a vector of fracture element nodes (grouped by
  * fracture IDs)
+ * @param vec_branch_nodeID_matIDs  a vector of branch node IDs found in the
+ * mesh (and corresponding fracture material IDs)
+ * @param vec_junction_nodeID_matIDs  a vector of junction node IDs found in the
+ * mesh (and corresponding fracture material IDs)
  */
 void getFractureMatrixDataInMesh(
     MeshLib::Mesh const& mesh,
@@ -42,7 +46,11 @@ void getFractureMatrixDataInMesh(
     std::vector<int>& vec_fracture_mat_IDs,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_elements,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_matrix_elements,
-    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes);
+    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes,
+    std::vector<std::pair<std::size_t, std::vector<int>>>&
+        vec_branch_nodeID_matIDs,
+    std::vector<std::pair<std::size_t, std::vector<int>>>&
+        vec_junction_nodeID_matIDs);
 
 }  // namespace LIE
 }  // namespace ProcessLib

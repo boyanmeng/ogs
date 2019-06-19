@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,14 +20,16 @@ namespace ThermoMechanics
 {
 struct ThermoMechanicsLocalAssemblerInterface;
 
-struct SigmaIntegrationPointWriter final : public IntegrationPointWriter
+struct KelvinVectorIntegrationPointWriter final : public IntegrationPointWriter
 {
-    explicit SigmaIntegrationPointWriter(
+    explicit KelvinVectorIntegrationPointWriter(
+        std::string const& name,
         int const n_components,
         int const integration_order,
         std::function<std::vector<std::vector<double>>()>
             callback)
-        : _n_components(n_components),
+        : _name(name),
+          _n_components(n_components),
           _integration_order(integration_order),
           _callback(callback)
     {
@@ -41,7 +43,7 @@ struct SigmaIntegrationPointWriter final : public IntegrationPointWriter
         // TODO (naumov) remove ip suffix. Probably needs modification of the
         // mesh properties, s.t. there is no "overlapping" with cell/point data.
         // See getOrCreateMeshProperty.
-        return "sigma_ip";
+        return _name;
     }
 
     std::vector<std::vector<double>> values() const override
@@ -50,6 +52,7 @@ struct SigmaIntegrationPointWriter final : public IntegrationPointWriter
     }
 
 private:
+    std::string const _name;
     int const _n_components;
     int const _integration_order;
     std::function<std::vector<std::vector<double>>()> _callback;
@@ -63,7 +66,8 @@ public:
         MeshLib::Mesh& mesh,
         std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
             jacobian_assembler,
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters,
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
@@ -110,6 +114,9 @@ private:
 
     std::unique_ptr<NumLib::LocalToGlobalIndexMap>
         _local_to_global_index_map_single_component;
+
+    MeshLib::PropertyVector<double>* _nodal_forces = nullptr;
+    MeshLib::PropertyVector<double>* _heat_flux = nullptr;
 };
 
 extern template class ThermoMechanicsProcess<2>;

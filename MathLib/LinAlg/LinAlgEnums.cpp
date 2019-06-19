@@ -2,7 +2,7 @@
  * \author Wenqing Wang
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,9 +27,18 @@ std::string convertVecNormTypeToString(VecNormType normType)
 
 VecNormType convertStringToVecNormType(const std::string &str)
 {
-    if (str == "NORM1") return VecNormType::NORM1;
-    if (str == "NORM2") return VecNormType::NORM2;
-    if (str == "INFINITY_N") return VecNormType::INFINITY_N;
+    if (str == "NORM1")
+    {
+        return VecNormType::NORM1;
+    }
+    if (str == "NORM2")
+    {
+        return VecNormType::NORM2;
+    }
+    if (str == "INFINITY_N")
+    {
+        return VecNormType::INFINITY_N;
+    }
     return VecNormType::INVALID;
 }
 

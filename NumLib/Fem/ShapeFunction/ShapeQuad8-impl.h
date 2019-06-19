@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -53,5 +53,4 @@ void ShapeQuad8::computeGradShapeFunction(const T_X &rs, T_N &dNdr)
     dNdr[15] = -(1 + r) * s;
 }
 
-}
-
+}  // namespace NumLib

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,9 +18,9 @@
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/SpatialPosition.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "LocalAssemblerInterface.h"
@@ -72,7 +72,7 @@ struct IntegrationPointData final
 
     template <typename DisplacementVectorType>
     void updateConstitutiveRelation(double const t,
-                                    SpatialPosition const& x,
+                                    ParameterLib::SpatialPosition const& x,
                                     double const /*dt*/,
                                     DisplacementVectorType const& /*u*/,
                                     double const alpha,
@@ -97,7 +97,7 @@ struct IntegrationPointData final
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
-/// Used by for extrapolation of the integration point values. It is ordered
+/// Used for the extrapolation of the integration point values. It is ordered
 /// (and stored) by integration points.
 template <typename ShapeMatrixType>
 struct SecondaryData
@@ -169,7 +169,7 @@ public:
                               IntegrationMethod, DisplacementDim>(
                 e, is_axially_symmetric, _integration_method);
 
-        SpatialPosition x_position;
+        ParameterLib::SpatialPosition x_position;
         x_position.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -269,7 +269,7 @@ private:
         return cache;
     }
 
-    virtual std::vector<double> const& getIntPtEpsilon(
+    std::vector<double> const& getIntPtEpsilon(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,

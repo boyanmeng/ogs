@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -38,10 +38,10 @@ double computeDamage(double const damage_prev,
 template <int DisplacementDim>
 void CohesiveZoneModeI<DisplacementDim>::computeConstitutiveRelation(
     double const t,
-    ProcessLib::SpatialPosition const& x,
+    ParameterLib::SpatialPosition const& x,
     double const aperture0,
     Eigen::Ref<Eigen::VectorXd const>
-        /*sigma0*/,
+    /*sigma0*/,
     Eigen::Ref<Eigen::VectorXd const>
     /*w_prev*/,
     Eigen::Ref<Eigen::VectorXd const>
@@ -58,9 +58,8 @@ void CohesiveZoneModeI<DisplacementDim>::computeConstitutiveRelation(
     assert(dynamic_cast<StateVariables<DisplacementDim> const*>(
                &material_state_variables) != nullptr);
 
-    StateVariables<DisplacementDim>& state =
-        static_cast<StateVariables<DisplacementDim> &>(
-            material_state_variables);
+    auto& state =
+        static_cast<StateVariables<DisplacementDim>&>(material_state_variables);
     //reset damage in each iteration
     state.setInitialConditions();
 
@@ -73,7 +72,9 @@ void CohesiveZoneModeI<DisplacementDim>::computeConstitutiveRelation(
     const int index_ns = DisplacementDim - 1;
     double const w_n = w[index_ns];
     for (int i = 0; i < index_ns; i++)
+    {
         C(i, i) = mp.Ks;
+    }
 
     sigma.noalias() = C * w;
 

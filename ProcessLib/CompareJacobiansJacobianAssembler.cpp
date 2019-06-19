@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -401,12 +401,12 @@ createCompareJacobiansJacobianAssembler(BaseLib::ConfigTree const& config)
     //! \ogs_file_param{prj__processes__process__jacobian_assembler__type}
     config.checkConfigParameter("type", "CompareJacobians");
 
-    //! \ogs_file_param{prj__processes__process__jacobian_assembler__CompareJacobians__jacobian_assembler}
     auto asm1 =
+        //! \ogs_file_param{prj__processes__process__jacobian_assembler__CompareJacobians__jacobian_assembler}
         createJacobianAssembler(config.getConfigSubtree("jacobian_assembler"));
 
-    //! \ogs_file_param{prj__processes__process__jacobian_assembler__CompareJacobians__reference_jacobian_assembler}
     auto asm2 = createJacobianAssembler(
+        //! \ogs_file_param{prj__processes__process__jacobian_assembler__CompareJacobians__reference_jacobian_assembler}
         config.getConfigSubtree("reference_jacobian_assembler"));
 
     //! \ogs_file_param{prj__processes__process__jacobian_assembler__CompareJacobians__abs_tol}

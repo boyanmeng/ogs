@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,6 +33,11 @@ class LocalAssemblerInterface
 {
 public:
     virtual ~LocalAssemblerInterface() = default;
+
+    virtual void setInitialConditions(
+        std::size_t const mesh_item_id,
+        NumLib::LocalToGlobalIndexMap const& dof_table, GlobalVector const& x,
+        double const t);
 
     virtual void preAssemble(double const /*t*/,
                              std::vector<double> const& /*local_x*/){};
@@ -87,6 +92,7 @@ public:
 
     /// Computes the flux in the point \c p_local_coords that is given in local
     /// coordinates using the values from \c local_x.
+    /// Fits to monolithic scheme.
     virtual Eigen::Vector3d getFlux(
         MathLib::Point3d const& /*p_local_coords*/,
         double const /*t*/,
@@ -95,7 +101,21 @@ public:
         return Eigen::Vector3d{};
     }
 
+    /// Fits to staggered scheme.
+    virtual Eigen::Vector3d getFlux(
+        MathLib::Point3d const& /*p_local_coords*/,
+        double const /*t*/,
+        std::vector<std::vector<double>> const& /*local_xs*/) const
+    {
+        return Eigen::Vector3d{};
+    }
+
 private:
+    virtual void setInitialConditionsConcrete(
+        std::vector<double> const& /*local_x*/, double const /*t*/)
+    {
+    }
+
     virtual void preTimestepConcrete(std::vector<double> const& /*local_x*/,
                                      double const /*t*/, double const /*dt*/)
     {

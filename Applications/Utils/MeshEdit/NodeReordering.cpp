@@ -3,7 +3,7 @@
  * 2013/13/06 KR Initial implementation
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -33,7 +33,9 @@ void reorderNodes(std::vector<MeshLib::Element*> &elements)
     for (std::size_t i=0; i<nElements; ++i)
     {
         if (elements[i]->testElementNodeOrder())
+        {
             continue;
+        }
         n_corrected_elements++;
 
         const unsigned nElemNodes (elements[i]->getNumberOfBaseNodes());
@@ -42,12 +44,16 @@ void reorderNodes(std::vector<MeshLib::Element*> &elements)
         switch (elements[i]->getGeomType())
         {
             case MeshLib::MeshElemType::TETRAHEDRON:
-                for(std::size_t j = 0; j < 4; ++j)
-                    elements[i]->setNode(j, nodes[(j+1)%4]);
+                for (std::size_t j = 0; j < 4; ++j)
+                {
+                    elements[i]->setNode(j, nodes[(j + 1) % 4]);
+                }
                 break;
             case MeshLib::MeshElemType::PYRAMID:
-                for(std::size_t j = 0; j < 5; ++j)
-                    elements[i]->setNode(j, nodes[(j+1)%5]);
+                for (std::size_t j = 0; j < 5; ++j)
+                {
+                    elements[i]->setNode(j, nodes[(j + 1) % 5]);
+                }
                 break;
             case MeshLib::MeshElemType::PRISM:
                 for(std::size_t j = 0; j < 3; ++j)
@@ -64,8 +70,10 @@ void reorderNodes(std::vector<MeshLib::Element*> &elements)
                 }
                 break;
             default:
-                for(std::size_t j = 0; j < nElemNodes; ++j)
+                for (std::size_t j = 0; j < nElemNodes; ++j)
+                {
                     elements[i]->setNode(j, nodes[nElemNodes - j - 1]);
+                }
         }
     }
 
@@ -81,16 +89,18 @@ void reorderNodes2(std::vector<MeshLib::Element*> &elements)
         const unsigned nElemNodes (elements[i]->getNumberOfBaseNodes());
         std::vector<MeshLib::Node*> nodes(elements[i]->getNodes(), elements[i]->getNodes() + nElemNodes);
 
-        for(std::size_t j = 0; j < nElemNodes; ++j)
+        for (std::size_t j = 0; j < nElemNodes; ++j)
+        {
             if (elements[i]->getGeomType() == MeshLib::MeshElemType::PRISM)
             {
-                for(std::size_t j = 0; j < 3; ++j)
+                for (std::size_t k = 0; k < 3; ++k)
                 {
-                    elements[i]->setNode(j, nodes[j+3]);
-                    elements[i]->setNode(j+3, nodes[j]);
+                    elements[i]->setNode(k, nodes[k + 3]);
+                    elements[i]->setNode(k + 3, nodes[k]);
                 }
                 break;
             }
+        }
     }
 }
 
@@ -100,10 +110,16 @@ void reorderNonlinearNodes(MeshLib::Mesh &mesh)
     std::vector<MeshLib::Node*> nonlinear_nodes;
     for (MeshLib::Element const* e : mesh.getElements())
     {
-        for (unsigned i=0; i<e->getNumberOfBaseNodes(); i++)
+        for (unsigned i = 0; i < e->getNumberOfBaseNodes(); i++)
+        {
             base_nodes.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
-        for (unsigned i=e->getNumberOfBaseNodes(); i<e->getNumberOfNodes(); i++)
-            nonlinear_nodes.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
+        }
+        for (unsigned i = e->getNumberOfBaseNodes(); i < e->getNumberOfNodes();
+             i++)
+        {
+            nonlinear_nodes.push_back(
+                const_cast<MeshLib::Node*>(e->getNode(i)));
+        }
     }
 
     BaseLib::makeVectorUnique(base_nodes,
@@ -137,11 +153,11 @@ int main (int argc, char* argv[])
         "Method 2 is the re-ordering with and without InSitu-Lib in OGS6.\n"
         "Method 3 is the re-ordering of nonlinear nodes.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::UnlabeledValueArg<std::string> input_mesh_arg("input_mesh",
                                                          "the name of the input mesh file",
                                                          true, "", "oldmesh.msh");
@@ -157,13 +173,24 @@ int main (int argc, char* argv[])
 
     std::unique_ptr<MeshLib::Mesh> mesh(MeshLib::IO::readMeshFromFile(input_mesh_arg.getValue().c_str()));
 
+    if (!mesh)
+    {
+        return EXIT_FAILURE;
+    }
+
     INFO("Reordering nodes... ");
     if (!method_arg.isSet() || method_arg.getValue() == 1)
+    {
         reorderNodes(const_cast<std::vector<MeshLib::Element*>&>(mesh->getElements()));
+    }
     else if (method_arg.getValue() == 2)
+    {
         reorderNodes2(const_cast<std::vector<MeshLib::Element*>&>(mesh->getElements()));
+    }
     else if (method_arg.getValue() == 3)
+    {
         reorderNonlinearNodes(*mesh);
+    }
     else
     {
         ERR ("Unknown re-ordering method. Exit program...");

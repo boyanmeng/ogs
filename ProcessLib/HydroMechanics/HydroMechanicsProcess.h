@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -31,7 +31,8 @@ public:
         MeshLib::Mesh& mesh,
         std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
             jacobian_assembler,
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters,
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
@@ -55,7 +56,7 @@ public:
      *                               process_id = 0. For the staggered scheme,
      *                               process_id = 0 represents the
      *                               hydraulic (H) process, while process_id = 1
-     *                               represents the mechanical (M) process.                         
+     *                               represents the mechanical (M) process.
      * @return Matrix specifications including size and sparse pattern.
      */
     MathLib::MatrixSpecifications getMatrixSpecifications(
@@ -116,8 +117,8 @@ private:
     /// Solutions of the previous time step
     std::array<std::unique_ptr<GlobalVector>, 2> _xs_previous_timestep;
 
-    void computeSecondaryVariableConcrete(const double t,
-                                          GlobalVector const& x) override;
+    void computeSecondaryVariableConcrete(const double t, GlobalVector const& x,
+                                          const int process_id) override;
     /**
      * @copydoc ProcessLib::Process::getDOFTableForExtrapolatorData()
      */

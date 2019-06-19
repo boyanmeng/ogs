@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,8 +23,10 @@ namespace TwoPhaseFlowWithPrho
 std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties>
 createTwoPhaseFlowPrhoMaterialProperties(
     BaseLib::ConfigTree const& config,
-    boost::optional<MeshLib::PropertyVector<int> const&> material_ids,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters);
+    boost::optional<MeshLib::PropertyVector<int> const&>
+        material_ids,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+        parameters);
 
 }  // end namespace
-}  // end namespace
+}  // namespace ProcessLib

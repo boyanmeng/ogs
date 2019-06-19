@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -56,6 +56,7 @@ struct IntegrationPointDataFracture final
     {
         w_prev = w;
         sigma_eff_prev = sigma_eff;
+        material_state_variables->pushBackState();
     }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;

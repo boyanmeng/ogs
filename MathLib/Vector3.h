@@ -7,7 +7,7 @@
  *         with modifications to derive from TemplatePoint
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -80,20 +80,28 @@ public:
 
     TemplateVector3& operator+=(TemplateVector3 const& v)
     {
-        for (std::size_t i(0); i < 3; i++) this->_x[i] += v[i];
+        for (std::size_t i(0); i < 3; i++)
+        {
+            this->_x[i] += v[i];
+        }
         return *this;
     }
 
     TemplateVector3& operator-=(const TemplateVector3 & pV)
     {
-        for (std::size_t i(0); i < 3; i++) this->_x[i] -= pV[i];
+        for (std::size_t i(0); i < 3; i++)
+        {
+            this->_x[i] -= pV[i];
+        }
         return *this;
     }
 
     TemplateVector3& operator*=(double s)
     {
         for (std::size_t i(0); i < 3; i++)
+        {
             this->_x[i] *= s;
+        }
         return *this;
     }
 
@@ -104,30 +112,31 @@ public:
     {
         const double s(1/getLength());
         for (std::size_t i(0); i < 3; i++)
+        {
             this->_x[i] *= s;
+        }
     }
 
     /// Returns a normalized version of this vector
     TemplateVector3<double> getNormalizedVector() const
     {
         if (getSqrLength() == 0)
-            return TemplateVector3<double>(0,0,0);
+        {
+            return TemplateVector3<double>(0, 0, 0);
+        }
         TemplateVector3<double> norm_vec (this->_x[0], this->_x[1], this->_x[2]);
         norm_vec.normalize();
         return norm_vec;
     }
 
     /// Returns the squared length
-    double getSqrLength(void) const
+    double getSqrLength() const
     {
         return this->_x[0]*this->_x[0] + this->_x[1]*this->_x[1] + this->_x[2]*this->_x[2];
     }
 
     /// Returns the length
-    double getLength(void) const
-    {
-        return sqrt(getSqrLength());
-    }
+    double getLength() const { return sqrt(getSqrLength()); }
 
     /** scalarProduct, implementation of scalar product,
      * sometimes called dot or inner product.
@@ -191,4 +200,4 @@ using Vector3 = TemplateVector3<double>;
 double scalarTriple(MathLib::Vector3 const& u, MathLib::Vector3 const& v,
                     MathLib::Vector3 const& w);
 
-}
+}  // namespace MathLib

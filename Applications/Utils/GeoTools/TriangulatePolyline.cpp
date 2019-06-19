@@ -4,7 +4,7 @@
  * \date   2015-02-02
  * \brief  Utility for triangulating polylines.
  *
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -45,17 +45,21 @@ int main(int argc, char *argv[])
     TCLAP::CmdLine cmd(
         "Triangulates the specified polyline in the given geometry file.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string>  input_arg("i", "input",  "GML input file (*.gml)", true, "", "string");
     TCLAP::ValueArg<std::string> output_arg("o", "output", "GML output file (*.gml)", true, "", "string");
     TCLAP::ValueArg<std::string>   name_arg("n", "name",   "Name of polyline in given file", true, "", "string");
+    TCLAP::ValueArg<std::string> gmsh_path_arg("g", "gmsh-path",
+                                               "the path to the gmsh binary",
+                                               false, "", "path as string");
     cmd.add( input_arg );
     cmd.add( name_arg );
     cmd.add( output_arg );
+    cmd.add(gmsh_path_arg);
     cmd.parse( argc, argv );
 
     std::string const& file_name(input_arg.getValue());
@@ -86,7 +90,8 @@ int main(int argc, char *argv[])
     // check if line exists
     if (line == nullptr)
     {
-        ERR ("No polyline found with name \"%s\". Aborting...", polyline_name.c_str());
+        ERR("No polyline found with name '%s'. Aborting...",
+            polyline_name.c_str());
         return EXIT_FAILURE;
     }
 
@@ -113,7 +118,8 @@ int main(int argc, char *argv[])
     }
 
     INFO ("Creating a surface by triangulation of the polyline ...");
-    if (FileIO::createSurface(*line, geo_objects, geo_names[0]))
+    if (FileIO::createSurface(*line, geo_objects, geo_names[0],
+                              gmsh_path_arg.getValue()))
     {
         INFO("\t done");
     }

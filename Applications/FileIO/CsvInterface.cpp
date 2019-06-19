@@ -5,7 +5,7 @@
  * @brief Implementation of the CsvInterface class.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,12 +20,40 @@
 #include "GeoLib/Point.h"
 
 namespace FileIO {
+CsvInterface::CsvInterface() = default;
 
-CsvInterface::CsvInterface()
-: _writeCsvHeader(true)
+std::vector<std::string> CsvInterface::getColumnNames(std::string const& fname,
+                                                      char const delim)
 {
-}
+    std::ifstream in(fname.c_str());
 
+    if (!in.is_open())
+    {
+        ERR("CsvInterface::readPoints(): Could not open file %s.",
+            fname.c_str());
+        return std::vector<std::string>();
+    }
+    std::string line;
+    if (!getline(in, line))
+        return {};
+
+    std::list<std::string> fields;
+    if (delim != '\n')
+        fields = BaseLib::splitString(line, delim);
+
+    if (fields.size() < 2)
+    {
+        for (char const d : {'\t', ';', ','})
+        {
+            fields = BaseLib::splitString(line, d);
+            if (fields.size() > 1)
+            {
+                break;
+            }
+        }
+    }
+    return {begin(fields), end(fields)};
+}
 
 int CsvInterface::readPoints(std::string const& fname, char delim,
                              std::vector<GeoLib::Point*> &points)
@@ -90,12 +118,15 @@ int CsvInterface::readPoints(std::string const& fname, char delim,
            (z_column_name.empty()) ?  CsvInterface::findColumn(line, delim, y_column_name) :
                                       CsvInterface::findColumn(line, delim, z_column_name) }};
 
-    for (std::size_t i=0; i<3; ++i)
+    for (std::size_t i = 0; i < 3; ++i)
+    {
         if (column_idx[i] == std::numeric_limits<std::size_t>::max())
         {
-            ERR ("Column \"%s\" not found in file header.", column_names[i].c_str());
+            ERR("Column '%s' not found in file header.",
+                column_names[i].c_str());
             return -1;
         }
+    }
 
     return readPoints(in, delim, points, column_idx);
 }
@@ -114,7 +145,9 @@ int CsvInterface::readPoints(std::string const& fname, char delim,
     }
 
     if (z_column_idx == std::numeric_limits<std::size_t>::max())
+    {
         z_column_idx = y_column_idx;
+    }
     std::array<std::size_t, 3> const column_idx = {{ x_column_idx, y_column_idx, z_column_idx }};
 
     return readPoints(in, delim, points, column_idx);
@@ -171,19 +204,25 @@ std::size_t CsvInterface::findColumn(std::string const& line, char delim, std::s
 {
     std::list<std::string> const fields = BaseLib::splitString(line, delim);
     if (fields.empty())
+    {
         return std::numeric_limits<std::size_t>::max();
+    }
 
     std::size_t count(0);
     for (const auto& field : fields)
     {
         if (field == column_name)
+        {
             break;
+        }
 
         count++;
     }
 
     if (count == fields.size())
+    {
         return std::numeric_limits<std::size_t>::max();
+    }
 
     return count;
 }
@@ -209,8 +248,10 @@ bool CsvInterface::write()
     if (_writeCsvHeader)
     {
         _out << _vec_names[0];
-        for (std::size_t i=1; i<n_vecs; ++i)
+        for (std::size_t i = 1; i < n_vecs; ++i)
+        {
             _out << "\t" << _vec_names[i];
+        }
         _out << "\n";
     }
 
@@ -230,22 +271,34 @@ bool CsvInterface::write()
 std::size_t CsvInterface::getVectorSize(std::size_t idx) const
 {
     if (_data[idx].type() == typeid(std::vector<std::string>))
+    {
         return boost::any_cast<std::vector<std::string>>(_data[idx]).size();
+    }
     if (_data[idx].type() == typeid(std::vector<double>))
+    {
         return boost::any_cast<std::vector<double>>(_data[idx]).size();
+    }
     if (_data[idx].type() == typeid(std::vector<int>))
+    {
         return boost::any_cast<std::vector<int>>(_data[idx]).size();
+    }
     return 0;
 }
 
 void CsvInterface::writeValue(std::size_t vec_idx, std::size_t in_vec_idx)
 {
     if (_data[vec_idx].type() == typeid(std::vector<std::string>))
+    {
         _out << boost::any_cast<std::vector<std::string>>(_data[vec_idx])[in_vec_idx];
+    }
     else if (_data[vec_idx].type() == typeid(std::vector<double>))
+    {
         _out << boost::any_cast<std::vector<double>>(_data[vec_idx])[in_vec_idx];
+    }
     else if (_data[vec_idx].type() == typeid(std::vector<int>))
+    {
         _out << boost::any_cast<std::vector<int>>(_data[vec_idx])[in_vec_idx];
+    }
 }
 
 } // end namespace FileIO

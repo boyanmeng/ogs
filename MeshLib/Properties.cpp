@@ -4,7 +4,7 @@
  *         properties.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -22,8 +22,7 @@ void Properties::removePropertyVector(std::string const& name)
         _properties.find(name)
     );
     if (it == _properties.end()) {
-        WARN("A property of the name \"%s\" does not exist.",
-            name.c_str());
+        WARN("A property of the name '%s' does not exist.", name.c_str());
         return;
     }
     delete it->second;
@@ -39,7 +38,9 @@ std::vector<std::string> Properties::getPropertyVectorNames() const
 {
     std::vector<std::string> names;
     for (auto p : _properties)
+    {
         names.push_back(p.first);
+    }
     return names;
 }
 
@@ -50,7 +51,9 @@ std::vector<std::string> Properties::getPropertyVectorNames(
     for (auto p : _properties)
     {
         if (p.second->getMeshItemType() == t)
+        {
             names.push_back(p.first);
+        }
     }
     return names;
 }
@@ -89,7 +92,9 @@ Properties Properties::excludeCopyProperties(
                       exclude_mesh_item_types.end(),
                       name_vector_pair.second->getMeshItemType()) !=
             exclude_mesh_item_types.end())
+        {
             continue;
+        }
 
         std::vector<std::size_t> const exclude_positions{};
         new_properties._properties.insert(

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,6 +16,8 @@
 
 namespace ProcessLib
 {
+struct SurfaceFluxData;
+
 namespace ComponentTransport
 {
 /**
@@ -90,20 +92,45 @@ public:
         MeshLib::Mesh& mesh,
         std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
             jacobian_assembler,
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters,
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
         ComponentTransportProcessData&& process_data,
         SecondaryVariableCollection&& secondary_variables,
         NumLib::NamedFunctionCaller&& named_function_caller,
-        bool const use_monolithic_scheme);
+        bool const use_monolithic_scheme,
+        std::unique_ptr<ProcessLib::SurfaceFluxData>&& surfaceflux,
+        std::vector<std::pair<int, std::string>>&&
+            process_id_to_component_name_map);
 
     //! \name ODESystem interface
     //! @{
 
     bool isLinear() const override { return false; }
     //! @}
+
+    Eigen::Vector3d getFlux(std::size_t const element_id,
+                            MathLib::Point3d const& p, double const t,
+                            GlobalVector const& x) const override;
+
+    std::vector<std::pair<int, std::string>> const&
+    getProcessIDToComponentNameMap() const
+    {
+        return _process_id_to_component_name_map;
+    }
+
+    void setCoupledTermForTheStaggeredSchemeToLocalAssemblers() override;
+
+    void preTimestepConcreteProcess(GlobalVector const& x, const double /*t*/,
+                                    const double /*delta_t*/,
+                                    int const process_id) override;
+
+    void postTimestepConcreteProcess(GlobalVector const& x,
+                                     const double t,
+                                     const double delta_t,
+                                     int const process_id) override;
 
 private:
     void initializeConcreteProcess(
@@ -120,10 +147,20 @@ private:
         const double dxdot_dx, const double dx_dx, GlobalMatrix& M,
         GlobalMatrix& K, GlobalVector& b, GlobalMatrix& Jac) override;
 
+    void setCoupledSolutionsOfPreviousTimeStep();
+
     ComponentTransportProcessData _process_data;
 
     std::vector<std::unique_ptr<ComponentTransportLocalAssemblerInterface>>
         _local_assemblers;
+
+    /// Solutions of the previous time step
+    std::vector<std::unique_ptr<GlobalVector>> _xs_previous_timestep;
+
+    std::unique_ptr<ProcessLib::SurfaceFluxData> _surfaceflux;
+
+    std::vector<std::pair<int, std::string>> const
+        _process_id_to_component_name_map;
 };
 
 }  // namespace ComponentTransport

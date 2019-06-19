@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,7 +9,11 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <vector>
+
+#include "ProcessLib/LIE/Common/FractureProperty.h"
+#include "ProcessLib/LIE/Common/JunctionProperty.h"
 
 #include "HydroMechanicsLocalAssemblerMatrix.h"
 
@@ -72,6 +76,11 @@ private:
 
     static const int displacement_jump_index =
         displacement_index + displacement_size;
+
+    std::vector<FractureProperty*> _fracture_props;
+    std::vector<JunctionProperty*> _junction_props;
+    std::unordered_map<int, int> _fracID_to_local;
+    Eigen::Vector3d _e_center_coords;
 };
 
 }  // namespace HydroMechanics

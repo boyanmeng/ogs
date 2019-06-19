@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,10 +39,14 @@ public:
      * @param n the number of rows (that is equal to the number of columns)
      * @param n_nonzero_columns the number of non-zero columns used for preallocation
      */
-    explicit EigenMatrix(IndexType n, IndexType n_nonzero_columns = 0) :_mat(n, n)
+    explicit EigenMatrix(IndexType n, IndexType n_nonzero_columns = 0)
+        : _mat(n, n)
     {
         if (n_nonzero_columns > 0)
-            _mat.reserve(Eigen::VectorXi::Constant(n, n_nonzero_columns));
+        {
+            _mat.reserve(Eigen::Matrix<IndexType, Eigen::Dynamic, 1>::Constant(
+                n, n_nonzero_columns));
+        }
     }
 
     /// return the number of rows
@@ -61,8 +65,10 @@ public:
     void setZero()
     {
         auto const N = _mat.nonZeros();
-        for (auto i = decltype(N){0}; i<N; i++)
+        for (auto i = decltype(N){0}; i < N; i++)
+        {
             _mat.valuePtr()[i] = 0;
+        }
         // don't use _mat.setZero(). it makes a matrix uncompressed
     }
 
@@ -147,15 +153,21 @@ public:
     {
         std::ofstream of(filename);
         if (of)
+        {
             write(of);
+        }
     }
 
     /// printout this matrix for debugging
     void write(std::ostream &os) const
     {
-        for (int k=0; k<_mat.outerSize(); ++k)
-          for (RawMatrixType::InnerIterator it(_mat,k); it; ++it)
-              os << it.row() << " " << it.col() << ": " << it.value() << "\n";
+        for (int k = 0; k < _mat.outerSize(); ++k)
+        {
+            for (RawMatrixType::InnerIterator it(_mat, k); it; ++it)
+            {
+                os << it.row() << " " << it.col() << ": " << it.value() << "\n";
+            }
+        }
         os << std::endl;
     }
 

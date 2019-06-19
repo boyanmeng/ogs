@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,7 +32,8 @@ namespace FileIO
 {
 bool createSurface(GeoLib::Polyline const& ply,
                    GeoLib::GEOObjects& geometries,
-                   std::string const& geometry_name)
+                   std::string const& geometry_name,
+                   std::string const& gmsh_binary)
 {
     if (!ply.isClosed())
     {
@@ -53,13 +54,17 @@ bool createSurface(GeoLib::Polyline const& ply,
     GeoLib::GEOObjects geo;
     auto ply_points = ply.getPointsVec();
     for (auto p : ply_points)
+    {
         polyline_points->push_back(new GeoLib::Point(*p));
+    }
     std::string ply_name = "temporary_polyline_name";
     geo.addPointVec(std::move(polyline_points), ply_name);
     auto polyline =
         std::make_unique<GeoLib::Polyline>(*geo.getPointVec(ply_name));
     for (std::size_t k(0); k < ply.getNumberOfPoints(); ++k)
+    {
         polyline->addPoint(ply.getPointID(k));
+    }
     auto polylines = std::make_unique<std::vector<GeoLib::Polyline*>>();
     polylines->push_back(polyline.release());
     geo.addPolylineVec(std::move(polylines), ply_name);
@@ -80,9 +85,14 @@ bool createSurface(GeoLib::Polyline const& ply,
     std::string const file_base_name(file_base_name_c);
     gmsh_io.writeToFile(file_base_name + ".geo");
     std::string gmsh_command =
-        "gmsh -2 -algo meshadapt \"" + file_base_name + ".geo\"";
+        gmsh_binary + " -2 -algo meshadapt \"" + file_base_name + ".geo\"";
     gmsh_command += " -o \"" + file_base_name + ".msh\"";
-    std::system(gmsh_command.c_str());
+    int const gmsh_return_value = std::system(gmsh_command.c_str());
+    if (gmsh_return_value != 0)
+    {
+        WARN("Call to '%s' returned non-zero value %d.", gmsh_command.c_str(),
+             gmsh_return_value);
+    }
     auto surface_mesh =
         FileIO::GMSH::readGMSHMesh("\"" + file_base_name + ".msh\"");
     if (!surface_mesh)
@@ -118,4 +128,4 @@ bool createSurface(GeoLib::Polyline const& ply,
     return true;
 }
 
-} // end namespace
+}  // namespace FileIO

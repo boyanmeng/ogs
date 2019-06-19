@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <logog/include/logog.hpp>
 #include <vector>
-#include "ProcessLib/Utils/ProcessUtils.h"
 
 namespace ProcessLib
 {
@@ -20,7 +19,7 @@ void PhaseFieldIrreversibleDamageOracleBoundaryCondition::getEssentialBCValues(
     const double /*t*/, GlobalVector const& /*x*/,
     NumLib::IndexValueVector<GlobalIndexType>& bc_values) const
 {
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
 
     bc_values.ids.clear();
     bc_values.values.clear();

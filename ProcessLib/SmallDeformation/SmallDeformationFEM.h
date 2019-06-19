@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -18,12 +18,12 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/Deformation/BMatrixPolicy.h"
 #include "ProcessLib/Deformation/GMatrixPolicy.h"
 #include "ProcessLib/Deformation/LinearBMatrix.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "LocalAssemblerInterface.h"
@@ -48,6 +48,13 @@ struct IntegrationPointData final
 
     typename BMatricesType::KelvinVectorType sigma, sigma_prev;
     typename BMatricesType::KelvinVectorType eps, eps_prev;
+
+    /// Non-equilibrium initial stress.
+    typename BMatricesType::KelvinVectorType sigma_neq =
+        BMatricesType::KelvinVectorType::Zero(
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value);
+
     double free_energy_density = 0;
 
     MaterialLib::Solids::MechanicsBase<DisplacementDim> const& solid_material;
@@ -69,7 +76,7 @@ struct IntegrationPointData final
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
-/// Used by for extrapolation of the integration point values. It is ordered
+/// Used for the extrapolation of the integration point values. It is ordered
 /// (and stored) by integration points.
 template <typename ShapeMatrixType>
 struct SecondaryData
@@ -132,6 +139,8 @@ public:
                 _process_data.material_ids,
                 e.getID());
 
+        ParameterLib::SpatialPosition x_position;
+
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
             _ip_data.emplace_back(solid_material);
@@ -147,8 +156,30 @@ public:
             static const int kelvin_vector_size =
                 MathLib::KelvinVector::KelvinVectorDimensions<
                     DisplacementDim>::value;
+
             // Initialize current time step values
-            ip_data.sigma.setZero(kelvin_vector_size);
+            if (_process_data.nonequilibrium_stress)
+            {
+                // Computation of non-equilibrium stress.
+                x_position.setCoordinates(MathLib::Point3d(
+                    interpolateCoordinates<ShapeFunction, ShapeMatricesType>(
+                        e, ip_data.N)));
+                std::vector<double> sigma_neq_data =
+                    (*_process_data.nonequilibrium_stress)(
+                        std::numeric_limits<
+                            double>::quiet_NaN() /* time independent */,
+                        x_position);
+                ip_data.sigma_neq =
+                    Eigen::Map<typename BMatricesType::KelvinVectorType>(
+                        sigma_neq_data.data(),
+                        MathLib::KelvinVector::KelvinVectorDimensions<
+                            DisplacementDim>::value,
+                        1);
+            }
+            // Initialization from non-equilibrium sigma, which is zero by
+            // default, or is set to some value.
+            ip_data.sigma = ip_data.sigma_neq;
+
             ip_data.eps.setZero(kelvin_vector_size);
 
             // Previous time step values are not initialized and are set later.
@@ -212,7 +243,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition x_position;
+        ParameterLib::SpatialPosition x_position;
         x_position.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -229,10 +260,12 @@ public:
                     displacement_size>::Zero(DisplacementDim,
                                              displacement_size);
             for (int i = 0; i < DisplacementDim; ++i)
+            {
                 N_u_op
                     .template block<1, displacement_size / DisplacementDim>(
                         i, i * displacement_size / DisplacementDim)
                     .noalias() = N;
+            }
 
             auto const x_coord =
                 interpolateXCoordinate<ShapeFunction, ShapeMatricesType>(
@@ -244,6 +277,7 @@ public:
 
             auto const& eps_prev = _ip_data[ip].eps_prev;
             auto const& sigma_prev = _ip_data[ip].sigma_prev;
+            auto const& sigma_neq = _ip_data[ip].sigma_neq;
 
             auto& eps = _ip_data[ip].eps;
             auto& sigma = _ip_data[ip].sigma;
@@ -259,15 +293,18 @@ public:
                 *state, _process_data.reference_temperature);
 
             if (!solution)
+            {
                 OGS_FATAL("Computation of local constitutive relation failed.");
+            }
 
             MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
             std::tie(sigma, state, C) = std::move(*solution);
 
             auto const rho = _process_data.solid_density(t, x_position)[0];
             auto const& b = _process_data.specific_body_force;
-            local_b.noalias() -=
-                (B.transpose() * sigma - N_u_op.transpose() * rho * b) * w;
+            local_b.noalias() -= (B.transpose() * (sigma - sigma_neq) -
+                                  N_u_op.transpose() * rho * b) *
+                                 w;
             local_Jac.noalias() += B.transpose() * C * B * w;
         }
     }
@@ -290,7 +327,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition x_position;
+        ParameterLib::SpatialPosition x_position;
         x_position.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -352,7 +389,6 @@ public:
                 DisplacementDim>::value;
         auto const n_integration_points = _ip_data.size();
 
-        std::vector<double> ip_sigma_values;
         auto sigma_values =
             Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
                                      Eigen::ColMajor> const>(
@@ -419,7 +455,7 @@ public:
         return cache;
     }
 
-    virtual std::vector<double> const& getIntPtEpsilon(
+    std::vector<double> const& getIntPtEpsilon(
         const double /*t*/,
         GlobalVector const& /*current_solution*/,
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,

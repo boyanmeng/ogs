@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,7 +35,9 @@ bool PiecewiseLinearMonotonicCurve::isStrongMonotonic() const
     const double gradient0 = getDerivative(_supp_pnts[0]);
 
     if (std::fabs(gradient0) < std::numeric_limits<double>::min())
+    {
         return false;
+    }
 
     return std::none_of(_supp_pnts.begin(), _supp_pnts.end(),
                         [&](const double p) {
@@ -93,4 +95,4 @@ double PiecewiseLinearMonotonicCurve::getInverseVariable(const double y) const
     return m * (y - yi) + xi;
 }
 
-}  // namespace
+}  // namespace MathLib

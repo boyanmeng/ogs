@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -36,11 +36,11 @@ int main(int argc, char *argv[])
     TCLAP::CmdLine cmd(
         "Checks mesh properties.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::UnlabeledValueArg<std::string> mesh_arg("mesh-file","input mesh file",true,"","string");
     cmd.add( mesh_arg );
     TCLAP::SwitchArg valid_arg("v","validation","validate the mesh");
@@ -58,7 +58,9 @@ int main(int argc, char *argv[])
     std::unique_ptr<MeshLib::Mesh> mesh(
         MeshLib::IO::readMeshFromFile(mesh_arg.getValue()));
     if (!mesh)
+    {
         return EXIT_FAILURE;
+    }
 
     const unsigned long mem_with_mesh (mem_watch.getVirtMemUsage());
     if (mem_with_mesh>0)
@@ -114,26 +116,25 @@ int main(int argc, char *argv[])
 
     std::vector<std::string> const& vec_names (mesh->getProperties().getPropertyVectorNames());
     INFO("There are %d properties in the mesh:", vec_names.size());
-    for (const auto & vec_name : vec_names)
+    for (const auto& vec_name : vec_names)
     {
-        auto vec_bounds (MeshLib::MeshInformation::getValueBounds<int>(*mesh, vec_name));
-        if (vec_bounds.second != std::numeric_limits<int>::max())
+        if (auto const vec_bounds =
+                MeshLib::MeshInformation::getValueBounds<int>(*mesh, vec_name))
         {
-            INFO("\t%s: [%d, %d]", vec_name.c_str(), vec_bounds.first,
-                 vec_bounds.second);
+            INFO("\t%s: [%d, %d]", vec_name.c_str(), vec_bounds->first,
+                 vec_bounds->second);
+        }
+        else if (auto const vec_bounds =
+                     MeshLib::MeshInformation::getValueBounds<double>(*mesh,
+                                                                      vec_name))
+        {
+            INFO("\t%s: [%g, %g]", vec_name.c_str(), vec_bounds->first,
+                 vec_bounds->second);
         }
         else
         {
-            auto vec_bounds (MeshLib::MeshInformation::getValueBounds<double>(*mesh, vec_name));
-            if (vec_bounds.second != std::numeric_limits<double>::max())
-            {
-                INFO("\t%s: [%g, %g]", vec_name.c_str(), vec_bounds.first,
-                     vec_bounds.second);
-            }
-            else
-            {
-                INFO("\t%s: Unknown properties", vec_name.c_str());
-            }
+            INFO("\t%s: Could not get value bounds for property vector.",
+                 vec_name.c_str());
         }
     }
 

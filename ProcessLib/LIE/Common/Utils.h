@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -51,7 +51,9 @@ MathLib::Point3d computePhysicalCoordinates(
     {
         MeshLib::Node const& node = *e.getNode(i);
         for (unsigned j = 0; j < 3; j++)
+        {
             pt[j] += shape[i] * node[j];
+        }
     }
     return pt;
 }

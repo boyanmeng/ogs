@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,13 +20,13 @@
 #include "MaterialLib/PorousMedium/Permeability/Permeability.h"
 #include "MaterialLib/PorousMedium/Storage/Storage.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
-#include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/DOF/DOFTableUtil.h"
+#include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "LiquidFlowMaterialProperties.h"
@@ -205,7 +205,7 @@ private:
                                  std::vector<double>& local_M_data,
                                  std::vector<double>& local_K_data,
                                  std::vector<double>& local_b_data,
-                                 SpatialPosition const& pos,
+                                 ParameterLib::SpatialPosition const& pos,
                                  Eigen::MatrixXd const& permeability);
 
     template <typename LaplacianGravityVelocityCalculator>
@@ -220,7 +220,7 @@ private:
     const LiquidFlowMaterialProperties& _material_properties;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace LiquidFlow
+}  // namespace ProcessLib
 
 #include "LiquidFlowLocalAssembler-impl.h"

@@ -5,7 +5,7 @@
  * \brief  Implementation of the LisLinearSolver class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -55,11 +55,15 @@ bool LisLinearSolver::solve(LisMatrix &A, LisVector &b, LisVector &x)
     {
         int precon;
         ierr = lis_solver_get_precon(solver, &precon);
+        if (!checkLisError(ierr))
+            return false;
         INFO("-> precon: %i", precon);
     }
     {
         int slv;
         ierr = lis_solver_get_solver(solver, &slv);
+        if (!checkLisError(ierr))
+            return false;
         INFO("-> solver: %i", slv);
     }
 

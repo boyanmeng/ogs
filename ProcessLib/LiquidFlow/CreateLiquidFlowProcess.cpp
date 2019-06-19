@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,9 +13,9 @@
 
 #include <algorithm>
 
-#include "MeshLib/MeshGenerators/MeshGenerator.h"
-
 #include "MaterialLib/PhysicalConstant.h"
+#include "MeshLib/MeshGenerators/MeshGenerator.h"
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
@@ -29,7 +29,7 @@ std::unique_ptr<Process> createLiquidFlowProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config)
 {
@@ -91,39 +91,22 @@ std::unique_ptr<Process> createLiquidFlowProcess(
     //! \ogs_file_param{prj__processes__process__LIQUID_FLOW__material_property}
     auto const& mat_config = config.getConfigSubtree("material_property");
 
-    if (mesh.getProperties().existsPropertyVector<int>("MaterialIDs"))
+    auto const material_ids = materialIDs(mesh);
+    if (material_ids)
     {
         INFO("The liquid flow is in heterogeneous porous media.");
-        const bool has_material_ids = true;
-        auto const& mat_ids =
-            mesh.getProperties().getPropertyVector<int>("MaterialIDs");
-        return std::unique_ptr<Process>{new LiquidFlowProcess{
-            mesh, std::move(jacobian_assembler), parameters, integration_order,
-            std::move(process_variables), std::move(secondary_variables),
-            std::move(named_function_caller), *mat_ids, has_material_ids,
-            gravity_axis_id, g, reference_temperature, mat_config}};
     }
-
-    INFO("The liquid flow is in homogeneous porous media.");
-
-    MeshLib::Properties dummy_property;
-    // For a reference argument of LiquidFlowProcess(...).
-    auto const& dummy_property_vector =
-        dummy_property.createNewPropertyVector<int>(
-            "MaterialIDs", MeshLib::MeshItemType::Cell, 1);
-
-    // Since dummy_property_vector is only visible in this function,
-    // the following constant, has_material_ids, is employed to indicate
-    // that material_ids does not exist.
-    const bool has_material_ids = false;
+    else
+    {
+        INFO("The liquid flow is in homogeneous porous media.");
+    }
 
     return std::unique_ptr<Process>{new LiquidFlowProcess{
         mesh, std::move(jacobian_assembler), parameters, integration_order,
         std::move(process_variables), std::move(secondary_variables),
-        std::move(named_function_caller), *dummy_property_vector,
-        has_material_ids, gravity_axis_id, g, reference_temperature,
-        mat_config}};
+        std::move(named_function_caller), material_ids, gravity_axis_id, g,
+        reference_temperature, mat_config}};
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace LiquidFlow
+}  // namespace ProcessLib

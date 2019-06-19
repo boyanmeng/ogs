@@ -6,7 +6,7 @@
  *         OGS meshes to VTK unstructured grids.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -115,22 +115,21 @@ public:
     vtkIdType InsertNextTupleValue(const Scalar* t) override;
 #endif  // vtk version
 
-protected:
-    VtkMeshNodalCoordinatesTemplate();
-    ~VtkMeshNodalCoordinatesTemplate() override;
-
-    const std::vector<MeshLib::Node*>* _nodes;
-
-private:
-    // Not implemented
     VtkMeshNodalCoordinatesTemplate(const VtkMeshNodalCoordinatesTemplate&) =
         delete;
     void operator=(const VtkMeshNodalCoordinatesTemplate&) = delete;
 
+protected:
+    VtkMeshNodalCoordinatesTemplate();
+    ~VtkMeshNodalCoordinatesTemplate() override;
+
+    const std::vector<MeshLib::Node*>* _nodes{nullptr};
+
+private:
     vtkIdType Lookup(const Scalar &val, vtkIdType startIndex);
-    double *TempDoubleArray;
+    double* TempDoubleArray{nullptr};
 };
 
-} // end namespace
+}  // namespace MeshLib
 
 #include "VtkMeshNodalCoordinatesTemplate-impl.h"

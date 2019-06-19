@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,6 +14,7 @@
 #include <logog/include/logog.hpp>
 
 #include "ConvergenceCriterion.h"
+#include "NonlinearSolverStatus.h"
 #include "NonlinearSystem.h"
 #include "Types.h"
 
@@ -53,9 +54,10 @@ public:
      * \retval true if the equation system could be solved
      * \retval false otherwise
      */
-    virtual bool solve(GlobalVector& x,
-                       std::function<void(unsigned, GlobalVector const&)> const&
-                           postIterationCallback) = 0;
+    virtual NonlinearSolverStatus solve(
+        GlobalVector& x,
+        std::function<void(int, GlobalVector const&)> const&
+            postIterationCallback) = 0;
 
     virtual ~NonlinearSolverBase() = default;
 };
@@ -86,10 +88,11 @@ public:
      * \param linear_solver the linear solver used by this nonlinear solver.
      * \param maxiter the maximum number of iterations used to solve the
      *                equation.
-     * \param damping \copydoc _damping
+     * \param damping A positive damping factor.
+     * \see _damping
      */
     explicit NonlinearSolver(GlobalLinearSolver& linear_solver,
-                             const unsigned maxiter,
+                             int const maxiter,
                              double const damping = 1.0)
         : _linear_solver(linear_solver), _maxiter(maxiter), _damping(damping)
     {
@@ -105,9 +108,10 @@ public:
 
     void assemble(GlobalVector const& x) const override;
 
-    bool solve(GlobalVector& x,
-               std::function<void(unsigned, GlobalVector const&)> const&
-                   postIterationCallback) override;
+    NonlinearSolverStatus solve(
+        GlobalVector& x,
+        std::function<void(int, GlobalVector const&)> const&
+            postIterationCallback) override;
 
 private:
     GlobalLinearSolver& _linear_solver;
@@ -115,7 +119,7 @@ private:
 
     // TODO doc
     ConvergenceCriterion* _convergence_criterion = nullptr;
-    const unsigned _maxiter;  //!< maximum number of iterations
+    int const _maxiter;  //!< maximum number of iterations
 
     //! A positive damping factor. The default value 1.0 gives a non-damped
     //! Newton method. Common values are in the range 0.5 to 0.7 for somewhat
@@ -149,7 +153,7 @@ public:
      *                equation.
      */
     explicit NonlinearSolver(GlobalLinearSolver& linear_solver,
-                             const unsigned maxiter)
+                             const int maxiter)
         : _linear_solver(linear_solver), _maxiter(maxiter)
     {
     }
@@ -164,9 +168,10 @@ public:
 
     void assemble(GlobalVector const& x) const override;
 
-    bool solve(GlobalVector& x,
-               std::function<void(unsigned, GlobalVector const&)> const&
-                   postIterationCallback) override;
+    NonlinearSolverStatus solve(
+        GlobalVector& x,
+        std::function<void(int, GlobalVector const&)> const&
+            postIterationCallback) override;
 
 private:
     GlobalLinearSolver& _linear_solver;
@@ -174,7 +179,7 @@ private:
 
     // TODO doc
     ConvergenceCriterion* _convergence_criterion = nullptr;
-    const unsigned _maxiter;  //!< maximum number of iterations
+    const int _maxiter;  //!< maximum number of iterations
 
     std::size_t _A_id = 0u;      //!< ID of the \f$ A \f$ matrix.
     std::size_t _rhs_id = 0u;    //!< ID of the right-hand side vector.

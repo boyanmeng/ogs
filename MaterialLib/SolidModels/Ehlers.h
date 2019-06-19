@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,7 +25,7 @@
 #include "BaseLib/Error.h"
 #include "MathLib/KelvinVector.h"
 #include "NumLib/NewtonRaphson.h"
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 #include "MechanicsBase.h"
 
@@ -35,12 +35,36 @@ namespace Solids
 {
 namespace Ehlers
 {
+enum class TangentType
+{
+    Elastic,
+    PlasticDamageSecant,
+    Plastic
+};
+inline TangentType makeTangentType(std::string const& s)
+{
+    if (s == "Elastic")
+    {
+        return TangentType::Elastic;
+    }
+    if (s == "PlasticDamageSecant")
+    {
+        return TangentType::PlasticDamageSecant;
+    }
+    if (s == "Plastic")
+    {
+        return TangentType::Plastic;
+    }
+    OGS_FATAL("Not valid string '%s' to create a tangent type from.",
+              s.c_str());
+}
+
 /// material parameters in relation to Ehler's single-surface model see Ehler's
 /// paper "A single-surface yield function for geomaterials" for more details
 /// \cite Ehlers1995.
 struct MaterialPropertiesParameters
 {
-    using P = ProcessLib::Parameter<double>;
+    using P = ParameterLib::Parameter<double>;
 
     MaterialPropertiesParameters(P const& G_, P const& K_, P const& alpha_,
                                  P const& beta_, P const& gamma_,
@@ -93,7 +117,7 @@ struct MaterialPropertiesParameters
 
 struct DamagePropertiesParameters
 {
-    using P = ProcessLib::Parameter<double>;
+    using P = ParameterLib::Parameter<double>;
     P const& alpha_d;
     P const& beta_d;
     P const& h_d;
@@ -103,7 +127,7 @@ struct DamagePropertiesParameters
 /// details.
 struct MaterialProperties final
 {
-    MaterialProperties(double const t, ProcessLib::SpatialPosition const& x,
+    MaterialProperties(double const t, ParameterLib::SpatialPosition const& x,
                        MaterialPropertiesParameters const& mp)
         : G(mp.G(t, x)[0]),
           K(mp.K(t, x)[0]),
@@ -149,7 +173,7 @@ struct MaterialProperties final
 struct DamageProperties
 {
     DamageProperties(double const t,
-                     ProcessLib::SpatialPosition const& x,
+                     ParameterLib::SpatialPosition const& x,
                      DamagePropertiesParameters const& dp)
         : alpha_d(dp.alpha_d(t, x)[0]),
           beta_d(dp.beta_d(t, x)[0]),
@@ -279,42 +303,27 @@ public:
         MathLib::KelvinVector::KelvinMatrixType<DisplacementDim>;
 
 public:
-    explicit SolidEhlers(
+    SolidEhlers(
         NumLib::NewtonRaphsonSolverParameters nonlinear_solver_parameters,
         MaterialPropertiesParameters material_properties,
-        std::unique_ptr<DamagePropertiesParameters>&& damage_properties)
-        : _nonlinear_solver_parameters(std::move(nonlinear_solver_parameters)),
-          _mp(std::move(material_properties)),
-          _damage_properties(std::move(damage_properties))
-    {
-    }
+        std::unique_ptr<DamagePropertiesParameters>&& damage_properties,
+        TangentType tangent_type);
 
     double computeFreeEnergyDensity(
         double const /*t*/,
-        ProcessLib::SpatialPosition const& /*x*/,
+        ParameterLib::SpatialPosition const& /*x*/,
         double const /*dt*/,
         KelvinVector const& eps,
         KelvinVector const& sigma,
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
-            material_state_variables) const override
-    {
-        assert(dynamic_cast<StateVariables<DisplacementDim> const*>(
-                   &material_state_variables) != nullptr);
-
-        auto const& eps_p = static_cast<StateVariables<DisplacementDim> const&>(
-                                material_state_variables)
-                                .eps_p;
-        using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
-        auto const& identity2 = Invariants::identity2;
-        return (eps - eps_p.D - eps_p.V / 3 * identity2).dot(sigma) / 2;
-    }
+            material_state_variables) const override;
 
     boost::optional<std::tuple<KelvinVector,
                                std::unique_ptr<typename MechanicsBase<
                                    DisplacementDim>::MaterialStateVariables>,
                                KelvinMatrix>>
     integrateStress(
-        double const t, ProcessLib::SpatialPosition const& x, double const dt,
+        double const t, ParameterLib::SpatialPosition const& x, double const dt,
         KelvinVector const& eps_prev, KelvinVector const& eps,
         KelvinVector const& sigma_prev,
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -325,13 +334,13 @@ public:
     getInternalVariables() const override;
 
     MaterialProperties evaluatedMaterialProperties(
-        double const t, ProcessLib::SpatialPosition const& x) const
+        double const t, ParameterLib::SpatialPosition const& x) const
     {
         return MaterialProperties(t, x, _mp);
     }
 
     DamageProperties evaluatedDamageProperties(
-        double const t, ProcessLib::SpatialPosition const& x) const
+        double const t, ParameterLib::SpatialPosition const& x) const
     {
         return DamageProperties(t, x, *_damage_properties);
     }
@@ -341,6 +350,7 @@ private:
 
     MaterialPropertiesParameters _mp;
     std::unique_ptr<DamagePropertiesParameters> _damage_properties;
+    TangentType const _tangent_type;
 };
 
 extern template class SolidEhlers<2>;

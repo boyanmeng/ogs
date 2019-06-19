@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -15,9 +15,8 @@
 #include "MaterialLib/FractureModels/CreateLinearElasticIsotropic.h"
 #include "MaterialLib/FractureModels/CreateMohrCoulomb.h"
 #include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
-
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
-#include "ProcessLib/Utils/ProcessUtils.h"  // required for findParameter
 
 #include "HydroMechanicsProcess.h"
 #include "HydroMechanicsProcessData.h"
@@ -33,7 +32,9 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config)
 {
@@ -79,7 +80,7 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
                 "list for config tag <%s>.",
                 pv_name.c_str(), "process_variable");
         }
-        DBUG("Found process variable \'%s\' for config tag <%s>.",
+        DBUG("Found process variable '%s' for config tag <%s>.",
              variable->getName().c_str(), "process_variable");
 
         if (pv_name.find("displacement") != std::string::npos &&
@@ -97,8 +98,10 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         if (!use_monolithic_scheme)
         {
             if (pv_name == "pressure")
+            {
                 p_process_variables.emplace_back(
                     const_cast<ProcessVariable&>(*variable));
+            }
             else
             {
                 u_process_variables.emplace_back(
@@ -113,7 +116,9 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     }
 
     if (p_u_process_variables.size() > 3 || u_process_variables.size() > 2)
+    {
         OGS_FATAL("Currently only one displacement jump is supported");
+    }
 
     if (!use_monolithic_scheme)
     {
@@ -121,66 +126,68 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         process_variables.push_back(std::move(u_process_variables));
     }
     else
+    {
         process_variables.push_back(std::move(p_u_process_variables));
+    }
 
     auto solid_constitutive_relations =
-        MaterialLib::Solids::createConstitutiveRelations<GlobalDim>(parameters,
-                                                                    config);
+        MaterialLib::Solids::createConstitutiveRelations<GlobalDim>(
+            parameters, local_coordinate_system, config);
 
     // Intrinsic permeability
-    auto& intrinsic_permeability = findParameter<double>(
+    auto& intrinsic_permeability = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__intrinsic_permeability}
-        "intrinsic_permeability", parameters, 1);
+        "intrinsic_permeability", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as intrinsic permeabiltiy parameter.",
+    DBUG("Use '%s' as intrinsic permeabiltiy parameter.",
          intrinsic_permeability.name.c_str());
 
     // Storage coefficient
-    auto& specific_storage = findParameter<double>(
+    auto& specific_storage = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__specific_storage}
-        "specific_storage", parameters, 1);
+        "specific_storage", parameters, 1, &mesh);
 
-    DBUG("Use \'%s\' as specific storage parameter.",
+    DBUG("Use '%s' as specific storage parameter.",
          specific_storage.name.c_str());
 
     // Fluid viscosity
-    auto& fluid_viscosity = findParameter<double>(
+    auto& fluid_viscosity = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fluid_viscosity}
-        "fluid_viscosity", parameters, 1);
-    DBUG("Use \'%s\' as fluid viscosity parameter.",
+        "fluid_viscosity", parameters, 1, &mesh);
+    DBUG("Use '%s' as fluid viscosity parameter.",
          fluid_viscosity.name.c_str());
 
     // Fluid density
-    auto& fluid_density = findParameter<double>(
+    auto& fluid_density = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fluid_density}
-        "fluid_density", parameters, 1);
-    DBUG("Use \'%s\' as fluid density parameter.", fluid_density.name.c_str());
+        "fluid_density", parameters, 1, &mesh);
+    DBUG("Use '%s' as fluid density parameter.", fluid_density.name.c_str());
 
     // Biot coefficient
-    auto& biot_coefficient = findParameter<double>(
+    auto& biot_coefficient = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__biot_coefficient}
-        "biot_coefficient", parameters, 1);
-    DBUG("Use \'%s\' as Biot coefficient parameter.",
+        "biot_coefficient", parameters, 1, &mesh);
+    DBUG("Use '%s' as Biot coefficient parameter.",
          biot_coefficient.name.c_str());
 
     // Porosity
-    auto& porosity = findParameter<double>(
+    auto& porosity = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__porosity}
-        "porosity", parameters, 1);
-    DBUG("Use \'%s\' as porosity parameter.", porosity.name.c_str());
+        "porosity", parameters, 1, &mesh);
+    DBUG("Use '%s' as porosity parameter.", porosity.name.c_str());
 
     // Solid density
-    auto& solid_density = findParameter<double>(
+    auto& solid_density = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__solid_density}
-        "solid_density", parameters, 1);
-    DBUG("Use \'%s\' as solid density parameter.", solid_density.name.c_str());
+        "solid_density", parameters, 1, &mesh);
+    DBUG("Use '%s' as solid density parameter.", solid_density.name.c_str());
 
     // Specific body force
     Eigen::Matrix<double, GlobalDim, 1> specific_body_force;
@@ -237,7 +244,7 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         {
             OGS_FATAL(
                 "Cannot construct fracture constitutive relation of given type "
-                "\'%s\'.",
+                "'%s'.",
                 frac_type.c_str());
         }
     }
@@ -251,43 +258,47 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     {
         auto& fracture_properties_config = *opt_fracture_properties_config;
 
-        frac_prop = std::make_unique<ProcessLib::LIE::FracturePropertyHM>();
-        frac_prop->mat_id =
+        frac_prop = std::make_unique<ProcessLib::LIE::FracturePropertyHM>(
+            0 /*fracture_id*/,
             //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__material_id}
-            fracture_properties_config.getConfigParameter<int>("material_id");
-        frac_prop->aperture0 = &ProcessLib::findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__initial_aperture}
-            fracture_properties_config, "initial_aperture", parameters, 1);
-        if (frac_prop->aperture0->isTimeDependent())
+            fracture_properties_config.getConfigParameter<int>("material_id"),
+            ParameterLib::findParameter<double>(
+                //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__initial_aperture}
+                fracture_properties_config, "initial_aperture", parameters, 1,
+                &mesh),
+            ParameterLib::findParameter<double>(
+                //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__specific_storage}
+                fracture_properties_config, "specific_storage", parameters, 1,
+                &mesh),
+            ParameterLib::findParameter<double>(
+                //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__biot_coefficient}
+                fracture_properties_config, "biot_coefficient", parameters, 1,
+                &mesh));
+        if (frac_prop->aperture0.isTimeDependent())
         {
             OGS_FATAL(
                 "The initial aperture parameter '%s' must not be "
                 "time-dependent.",
-                frac_prop->aperture0->name.c_str());
+                frac_prop->aperture0.name.c_str());
         }
-        frac_prop->specific_storage = &ProcessLib::findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__specific_storage}
-            fracture_properties_config, "specific_storage", parameters, 1);
-        frac_prop->biot_coefficient = &ProcessLib::findParameter<double>(
-            //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__biot_coefficient}
-            fracture_properties_config, "biot_coefficient", parameters, 1);
     }
 
     // initial effective stress in matrix
-    auto& initial_effective_stress = findParameter<double>(
+    auto& initial_effective_stress = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__initial_effective_stress}
         "initial_effective_stress", parameters,
-        MathLib::KelvinVector::KelvinVectorDimensions<GlobalDim>::value);
-    DBUG("Use \'%s\' as initial effective stress parameter.",
+        MathLib::KelvinVector::KelvinVectorDimensions<GlobalDim>::value, &mesh);
+    DBUG("Use '%s' as initial effective stress parameter.",
          initial_effective_stress.name.c_str());
 
     // initial effective stress in fracture
-    auto& initial_fracture_effective_stress = findParameter<double>(
+    auto& initial_fracture_effective_stress = ParameterLib::findParameter<
+        double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__initial_fracture_effective_stress}
-        "initial_fracture_effective_stress", parameters, GlobalDim);
-    DBUG("Use \'%s\' as initial fracture effective stress parameter.",
+        "initial_fracture_effective_stress", parameters, GlobalDim, &mesh);
+    DBUG("Use '%s' as initial fracture effective stress parameter.",
          initial_fracture_effective_stress.name.c_str());
 
     // deactivation of matrix elements in flow
@@ -343,14 +354,18 @@ template std::unique_ptr<Process> createHydroMechanicsProcess<2>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 template std::unique_ptr<Process> createHydroMechanicsProcess<3>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 

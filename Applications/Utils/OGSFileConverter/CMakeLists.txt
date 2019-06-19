@@ -1,47 +1,36 @@
-set(SOURCES
+add_library(OGSFileConverterLib
+    FileListDialog.h
+    OGSFileConverter.h
     FileListDialog.cpp
     OGSFileConverter.cpp
 )
-
-include_directories(
-    # Qt generated file includes
-    ${CMAKE_CURRENT_BINARY_DIR}
-
-    # Workaround for CMake 3.8
-    ${CMAKE_CURRENT_BINARY_DIR}/OGSFileConverterLib_autogen/include
-)
-
-add_library(OGSFileConverterLib
-    ${SOURCES}
-    ${HEADERS}
-)
 target_link_libraries(OGSFileConverterLib
-    PUBLIC QtBase MathLib
-    INTERFACE MeshLib ApplicationsFileIO
+    PUBLIC ApplicationsFileIO MathLib QtBase ${VTK_LIBRARIES}
+    INTERFACE MeshLib
+)
+if(BUILD_SHARED_LIBS)
+    install(TARGETS OGSFileConverterLib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
+set_target_properties(OGSFileConverterLib PROPERTIES
+    AUTOMOC TRUE
+    AUTOUIC TRUE
 )
 
 add_executable(OGSFileConverter main.cpp)
 
 target_link_libraries(OGSFileConverter
-    OGSFileConverterLib
-    ApplicationsFileIO
+    PUBLIC OGSFileConverterLib ApplicationsFileIO
 )
 
+add_autogen_include(OGSFileConverterLib)
+
 set_target_properties(OGSFileConverter OGSFileConverterLib
-    PROPERTIES
-    FOLDER "Utilities"
-    AUTOMOC ON
-    AUTOUIC ON
+    PROPERTIES FOLDER "Utilities"
 )
 
 if(OGS_USE_PCH)
-    cotire(OGSFileConverter)
+    cotire(OGSFileConverterLib)
 endif()
 
-####################
-### Installation ###
-####################
-
-install(TARGETS OGSFileConverter RUNTIME DESTINATION bin COMPONENT ogs_cli)
-set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} "OGSFileConverter" "File Converter")
-set(CPACK_NSIS_MENU_LINKS ${CPACK_NSIS_MENU_LINKS} "bin/OGSFileConverter.exe" "File Converter" PARENT_SCOPE)
+install(TARGETS OGSFileConverter RUNTIME DESTINATION bin COMPONENT Utilities)

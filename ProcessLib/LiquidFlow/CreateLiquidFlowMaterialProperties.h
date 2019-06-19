@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,11 +26,12 @@ template <typename PROP_VAL_TYPE>
 class PropertyVector;
 }
 
-namespace ProcessLib
+namespace ParameterLib
 {
 struct ParameterBase;
+}
 
-namespace LiquidFlow
+namespace ProcessLib::LiquidFlow
 {
 class LiquidFlowMaterialProperties;
 
@@ -44,9 +45,7 @@ class LiquidFlowMaterialProperties;
 std::unique_ptr<LiquidFlowMaterialProperties>
 createLiquidFlowMaterialProperties(
     BaseLib::ConfigTree const& config,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
-    bool const has_material_ids,
-    MeshLib::PropertyVector<int> const& material_ids);
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    MeshLib::PropertyVector<int> const* const material_ids);
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace ProcessLib::LiquidFlow

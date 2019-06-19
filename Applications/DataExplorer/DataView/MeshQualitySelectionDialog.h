@@ -5,7 +5,7 @@
  * \brief  Definition of the MshQualitySelectionDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,7 +30,7 @@ class MeshQualitySelectionDialog : public QDialog, private Ui_MeshQualitySelecti
 
 public:
     MeshQualitySelectionDialog(QDialog* parent = nullptr);
-    ~MeshQualitySelectionDialog(void) override;
+    ~MeshQualitySelectionDialog() override;
 
     /// Returns selected metric
     MeshLib::MeshQualityType getSelectedMetric() const { return _metric; }
@@ -42,7 +42,7 @@ public:
     std::string getHistogramPath() const { return _histogram_path; }
 
 private:
-    MeshLib::MeshQualityType _metric;
+    MeshLib::MeshQualityType _metric{MeshLib::MeshQualityType::EDGERATIO};
     std::string _histogram_path;
 
 private slots:

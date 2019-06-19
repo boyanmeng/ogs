@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -11,7 +11,7 @@
 
 #include "MathLib/KelvinVector.h"
 #include "NumLib/NewtonRaphson.h"
-#include "ProcessLib/Parameter/Parameter.h"
+#include "ParameterLib/Parameter.h"
 
 #include "MechanicsBase.h"
 
@@ -26,7 +26,7 @@ namespace Lubby2
 //
 struct Lubby2MaterialProperties
 {
-    using P = ProcessLib::Parameter<double>;
+    using P = ParameterLib::Parameter<double>;
     Lubby2MaterialProperties(P const& GK0_,
                              P const& GM0_,
                              P const& KM0_,
@@ -63,7 +63,7 @@ template <int DisplacementDim>
 struct LocalLubby2Properties
 {
     LocalLubby2Properties(double const t,
-                          ProcessLib::SpatialPosition const& x,
+                          ParameterLib::SpatialPosition const& x,
                           Lubby2MaterialProperties const& mp)
         : GM0(mp.GM0(t, x)[0]),
           KM0(mp.KM0(t, x)[0]),
@@ -94,11 +94,11 @@ struct LocalLubby2Properties
     double const mvM;
 
     // Solution dependent values.
-    double GK;
-    double etaK;
-    double etaM;
+    double GK = std::numeric_limits<double>::quiet_NaN();
+    double etaK = std::numeric_limits<double>::quiet_NaN();
+    double etaM = std::numeric_limits<double>::quiet_NaN();
 };
-}
+}  // namespace detail
 
 template <int DisplacementDim>
 class Lubby2 final : public MechanicsBase<DisplacementDim>
@@ -192,7 +192,7 @@ public:
 
     double computeFreeEnergyDensity(
         double const t,
-        ProcessLib::SpatialPosition const& x,
+        ParameterLib::SpatialPosition const& x,
         double const dt,
         KelvinVector const& eps,
         KelvinVector const& sigma,
@@ -209,8 +209,21 @@ public:
 
         auto const& eps_M = state.eps_M_j;
 
-        auto const local_lubby2_properties =
+        auto local_lubby2_properties =
             detail::LocalLubby2Properties<DisplacementDim>{t, x, _mp};
+
+        // calculation of deviatoric parts
+        using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
+        auto const& P_dev = Invariants::deviatoric_projection;
+        KelvinVector const epsd_i = P_dev * eps;
+
+        // initial guess as elastic predictor
+        KelvinVector sigd_j = 2.0 * (epsd_i - state.eps_M_t - state.eps_K_t);
+
+        // Calculate effective stress and update material properties
+        double sig_eff = Invariants::equivalentStress(sigd_j);
+        local_lubby2_properties.update(sig_eff);
+
         auto const& eta_K = local_lubby2_properties.etaK;
 
         // This is specific to the backward Euler time scheme and needs to be
@@ -224,7 +237,7 @@ public:
                                    DisplacementDim>::MaterialStateVariables>,
                                KelvinMatrix>>
     integrateStress(
-        double const t, ProcessLib::SpatialPosition const& x, double const dt,
+        double const t, ParameterLib::SpatialPosition const& x, double const dt,
         KelvinVector const& eps_prev, KelvinVector const& eps,
         KelvinVector const& sigma_prev,
         typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -247,7 +260,7 @@ private:
     /// Calculates the 18x18 Jacobian.
     void calculateJacobianBurgers(
         double const t,
-        ProcessLib::SpatialPosition const& x,
+        ParameterLib::SpatialPosition const& x,
         double const dt,
         JacobianMatrix& Jac,
         double s_eff,

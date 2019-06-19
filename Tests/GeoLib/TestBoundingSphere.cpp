@@ -4,7 +4,7 @@
  * \date   2014-08-29
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -117,7 +117,9 @@ TEST(GeoLib, TestBoundingSphere)
         std::vector<MathLib::Point3d*>>(s.getRandomSpherePoints(1000));
     GeoLib::MinimalBoundingSphere t(*sphere_points);
     for (auto p : *sphere_points)
+    {
         delete p;
+    }
     MathLib::Point3d center = s.getCenter();
     ASSERT_NEAR(0.5, center[0], std::numeric_limits<double>::epsilon());
     ASSERT_NEAR(0.5, center[1], std::numeric_limits<double>::epsilon());

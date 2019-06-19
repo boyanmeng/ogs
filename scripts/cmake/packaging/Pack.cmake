@@ -16,8 +16,11 @@ set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
 # set(CPACK_RESOURCE_FILE_WELCOME "${PROJECT_SOURCE_DIR}/README.md")
 
 # Package file name
+if(OGS_USE_PYTHON)
+    set(SUFFIX "${SUFFIX}-python-${Python_VERSION}")
+endif()
 if(OGS_BUILD_GUI)
-    set(SUFFIX "-de")
+    set(SUFFIX "${SUFFIX}-de")
 endif()
 if(OGS_BUILD_UTILS)
     set(SUFFIX "${SUFFIX}-utils")
@@ -103,24 +106,20 @@ cpack_add_component(ogs_docs
 )
 
 if(OGS_USE_CONAN)
-    # Install shared libraries, copied to bin-dir
-    file(GLOB MATCHED_FILES "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.dll")
-    install(FILES ${MATCHED_FILES} DESTINATION bin)
-    file(GLOB LIST_DIRECTORIES false MATCHED_FILES "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.dylib*")
-    install(FILES ${MATCHED_FILES} DESTINATION bin)
-
-    # Install shared libraries, copied to lib-dir
-    file(GLOB MATCHED_FILES "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/*.so*")
-    install(FILES ${MATCHED_FILES} DESTINATION lib)
-
-    # macOS frameworks are directories, exclude header files
-    file(GLOB MATCHED_DIRECTORIES "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/*.framework")
-    install(DIRECTORY ${MATCHED_DIRECTORIES} DESTINATION bin
-        PATTERN "Headers" EXCLUDE)
-
     # Install Qt platform shared libraries
     install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms DESTINATION bin OPTIONAL)
 endif()
+
+if(OGS_USE_PYTHON)
+    if(WIN32)
+        file(GLOB PYTHON_RUNTIME_LIBS "${Python_RUNTIME_LIBRARY_DIRS}/*.dll")
+        message(STATUS "Install Python: ${PYTHON_RUNTIME_LIBS}")
+        install(FILES ${PYTHON_RUNTIME_LIBS} DESTINATION bin)
+    else()
+        install(FILES ${Python_LIBRARIES} DESTINATION bin)
+    endif()
+endif()
+
 
 configure_file(Documentation/README.txt.in ${PROJECT_BINARY_DIR}/README.txt)
 install(FILES ${PROJECT_BINARY_DIR}/README.txt DESTINATION .)

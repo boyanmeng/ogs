@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,9 +33,8 @@ static ProcessLib::IntegrationPointMetaData addIntegrationPointData(
         writer.numberOfComponents());
     field_data.clear();
 
-    for (std::size_t e = 0; e < ip_values.size(); ++e)
+    for (const auto& element_ip_values : ip_values)
     {
-        auto const& element_ip_values = ip_values[e];
         std::copy(element_ip_values.begin(), element_ip_values.end(),
                   std::back_inserter(field_data));
     }
@@ -83,7 +82,7 @@ static ProcessLib::IntegrationPointMetaData extractIntegrationPointMetaData(
             return {name, md["number_of_components"], md["integration_order"]};
         }
     }
-    OGS_FATAL("No integration point meta data with name \"%s\" found.",
+    OGS_FATAL("No integration point meta data with name '%s' found.",
               name.c_str());
 }
 
@@ -113,7 +112,7 @@ IntegrationPointMetaData getIntegrationPointMetaData(MeshLib::Mesh const& mesh,
     {
         OGS_FATAL(
             "Integration point data '%s' is present in the vtk field "
-            "data but the required \"IntegrationPointMetaData\" array "
+            "data but the required 'IntegrationPointMetaData' array "
             "is not available.",
             name.c_str());
     }

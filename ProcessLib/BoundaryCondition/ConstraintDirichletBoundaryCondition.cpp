@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,15 +13,15 @@
 #include <vector>
 #include <logog/include/logog.hpp>
 
-#include "MeshLib/Node.h"
 #include "MeshLib/MeshSearch/NodeSearch.h"  // for getUniqueNodes
+#include "MeshLib/Node.h"
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Utils/CreateLocalAssemblers.h"
-#include "ProcessLib/Utils/ProcessUtils.h"
 
 namespace ProcessLib
 {
 ConstraintDirichletBoundaryCondition::ConstraintDirichletBoundaryCondition(
-    Parameter<double> const& parameter,
+    ParameterLib::Parameter<double> const& parameter,
     NumLib::LocalToGlobalIndexMap const& dof_table_bulk, int const variable_id,
     int const component_id, MeshLib::Mesh const& bc_mesh,
     unsigned const integration_order, MeshLib::Mesh const& bulk_mesh,
@@ -70,24 +70,10 @@ ConstraintDirichletBoundaryCondition::ConstraintDirichletBoundaryCondition(
     // create _bulk_ids vector
     auto const* bulk_element_ids =
         _bc_mesh.getProperties().getPropertyVector<std::size_t>(
-            "bulk_element_ids");
-    if (!bulk_element_ids)
-    {
-        OGS_FATAL(
-            "The boundary mesh '%s' doesn't contain the needed property "
-            "'bulk_element_ids'.",
-            _bc_mesh.getName().c_str());
-    }
+            "bulk_element_ids", MeshLib::MeshItemType::Cell, 1);
     auto const* bulk_node_ids =
         _bc_mesh.getProperties().getPropertyVector<std::size_t>(
-            "bulk_node_ids");
-    if (!bulk_node_ids)
-    {
-        OGS_FATAL(
-            "The boundary mesh '%s' doesn't contain the needed property "
-            "'bulk_node_ids'.",
-            _bc_mesh.getName().c_str());
-    }
+            "bulk_node_ids", MeshLib::MeshItemType::Node, 1);
     auto const& bulk_nodes = bulk_mesh.getNodes();
 
     auto get_bulk_element_face_id =
@@ -142,7 +128,7 @@ void ConstraintDirichletBoundaryCondition::getEssentialBCValues(
     const double t, const GlobalVector& /*x*/,
     NumLib::IndexValueVector<GlobalIndexType>& bc_values) const
 {
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
 
     bc_values.ids.clear();
     bc_values.values.clear();
@@ -175,7 +161,9 @@ void ConstraintDirichletBoundaryCondition::getEssentialBCValues(
             const auto g_idx = _dof_table_boundary->getGlobalIndex(
                 l, _variable_id, _component_id);
             if (g_idx == NumLib::MeshComponentMap::nop)
+            {
                 continue;
+            }
             // For the DDC approach (e.g. with PETSc option), the negative
             // index of g_idx means that the entry by that index is a ghost one,
             // which should be dropped. Especially for PETSc routines
@@ -240,7 +228,7 @@ createConstraintDirichletBoundaryCondition(
     BaseLib::ConfigTree const& config, MeshLib::Mesh const& bc_mesh,
     NumLib::LocalToGlobalIndexMap const& dof_table_bulk, int const variable_id,
     unsigned const integration_order, int const component_id,
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     Process const& constraining_process)
 {
     DBUG("Constructing ConstraintDirichletBoundaryCondition from config.");
@@ -310,7 +298,8 @@ createConstraintDirichletBoundaryCondition(
     auto const param_name = config.getConfigParameter<std::string>("parameter");
     DBUG("Using parameter %s", param_name.c_str());
 
-    auto& param = findParameter<double>(param_name, parameters, 1);
+    auto& param = ParameterLib::findParameter<double>(param_name, parameters, 1,
+                                                      &bc_mesh);
 
     // In case of partitioned mesh the boundary could be empty, i.e. there is no
     // boundary condition.

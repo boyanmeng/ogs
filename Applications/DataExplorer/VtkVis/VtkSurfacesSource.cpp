@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkSurfacesSource class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,7 +32,7 @@
 
 vtkStandardNewMacro(VtkSurfacesSource);
 
-VtkSurfacesSource::VtkSurfacesSource() : _surfaces(nullptr)
+VtkSurfacesSource::VtkSurfacesSource()
 {
     _removable = false; // From VtkAlgorithmProperties
     this->SetNumberOfInputPorts(0);
@@ -90,7 +90,7 @@ int VtkSurfacesSource::RequestData( vtkInformation* request,
         newPoints->SetPoint(i, coords);
     }
 
-    vtkIdType count(0);
+    int count(0);
     for (auto surface : *_surfaces)
     {
         const std::size_t nTriangles = surface->getNumberOfTriangles();

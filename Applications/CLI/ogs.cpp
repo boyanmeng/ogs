@@ -3,7 +3,7 @@
  * \brief  Implementation of OpenGeoSys simulation application
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,7 +39,7 @@
 #include "Applications/ApplicationsLib/ProjectData.h"
 #include "Applications/ApplicationsLib/TestDefinition.h"
 #include "Applications/InSituLib/Adaptor.h"
-#include "ProcessLib/UncoupledProcessesTimeLoop.h"
+#include "ProcessLib/TimeLoop.h"
 
 #include "NumLib/NumericsConfig.h"
 
@@ -52,17 +52,17 @@ int main(int argc, char* argv[])
     // Parse CLI arguments.
     TCLAP::CmdLine cmd(
         "OpenGeoSys-6 software.\n"
-        "Copyright (c) 2012-2018, OpenGeoSys Community "
+        "Copyright (c) 2012-2019, OpenGeoSys Community "
         "(http://www.opengeosys.org) "
         "Distributed under a Modified BSD License. "
         "See accompanying file LICENSE.txt or "
         "http://www.opengeosys.org/project/license\n"
         "version: " +
-            BaseLib::BuildInfo::git_describe + "\n" +
+            BaseLib::BuildInfo::ogs_version + "\n" +
         "CMake arguments: " +
             BaseLib::BuildInfo::cmake_args,
         ' ',
-        BaseLib::BuildInfo::git_describe);
+        BaseLib::BuildInfo::ogs_version);
 
     TCLAP::ValueArg<std::string> reference_path_arg(
         "r", "reference",
@@ -118,22 +118,26 @@ int main(int argc, char* argv[])
 
     // deactivate buffer for standard output if specified
     if (unbuffered_cout_arg.isSet())
+    {
         std::cout.setf(std::ios::unitbuf);
+    }
 
     ApplicationsLib::LogogSetup logog_setup;
     logog_setup.setLevel(log_level_arg.getValue());
 
     INFO("This is OpenGeoSys-6 version %s.",
-         BaseLib::BuildInfo::git_describe.c_str());
+         BaseLib::BuildInfo::ogs_version.c_str());
 
 #ifndef _WIN32  // On windows this command line option is not present.
     // Enable floating point exceptions
     if (enable_fpe_arg.isSet())
+    {
 #ifdef __APPLE__
         _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 #else
         feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 #endif  // __APPLE__
+    }
 #endif  // _WIN32
 
 #ifdef OGS_USE_PYTHON

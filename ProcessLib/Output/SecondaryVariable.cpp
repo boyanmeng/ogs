@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,8 +14,6 @@ namespace ProcessLib
 void SecondaryVariableCollection::addNameMapping(
     std::string const& internal_name, std::string const& external_name)
 {
-    _all_secondary_variables.insert(internal_name);
-
     // TODO check for missing secondary vars.
     // TODO check primary vars, too
     BaseLib::insertIfKeyUniqueElseError(
@@ -40,15 +38,27 @@ void SecondaryVariableCollection::addSecondaryVariable(
     }
 }
 
+std::map<std::string, std::string>::const_iterator
+SecondaryVariableCollection::begin() const
+{
+    return _map_external_to_internal.cbegin();
+}
+
+std::map<std::string, std::string>::const_iterator
+SecondaryVariableCollection::end() const
+{
+    return _map_external_to_internal.cend();
+}
+
 SecondaryVariable const& SecondaryVariableCollection::get(
-    std::string const& external_name)
+    std::string const& external_name) const
 {
     auto const it = _map_external_to_internal.find(external_name);
 
     if (it == _map_external_to_internal.cend())
     {
         OGS_FATAL(
-            "A secondary variable with external name `%s' has not been set up.",
+            "A secondary variable with external name '%s' has not been set up.",
             external_name.c_str());
     }
 
@@ -58,7 +68,7 @@ SecondaryVariable const& SecondaryVariableCollection::get(
     if (it2 == _configured_secondary_variables.end())
     {
         OGS_FATAL(
-            "A secondary variable with internal name `%s' has not been set up.",
+            "A secondary variable with internal name '%s' has not been set up.",
             internal_name.c_str());
     }
 

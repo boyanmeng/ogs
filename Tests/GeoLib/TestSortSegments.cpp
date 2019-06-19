@@ -1,7 +1,7 @@
 /**
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -29,13 +29,6 @@ public:
 
     ac::gtest_reporter gtest_reporter;
 };
-
-#if !defined(_MSC_VER) || (_MSC_VER >= 2000)
-// Compilers of MVS below 2015 do not support unrestricted unions. The
-// unrestricted union is used by autocheck to handle test data. The autocheck
-// workaround for MVS compilers (below version 2015) contains a bug and in the
-// consequence the tests crashes. For this reason the tests are disabled under
-// this environments.
 
 // Use a chord of the unit circle as the original line segment. The line segment
 // will be partitioned into several sub segments. The set of subsegments are
@@ -71,15 +64,21 @@ TEST_F(GeoLibSortLineSegments, SortSubSegments)
         double eps(std::numeric_limits<double>::epsilon());
         if (MathLib::sqrDist(s0.getBeginPoint(),
                              sub_segments.front().getBeginPoint()) >= eps)
+        {
             return false;
+        }
         if (MathLib::sqrDist(s0.getEndPoint(),
                              sub_segments.back().getEndPoint()) >= eps)
+        {
             return false;
+        }
         for (std::size_t k(0); k < sub_segments.size() - 1; ++k)
         {
             if (MathLib::sqrDist(sub_segments[k].getEndPoint(),
                                  sub_segments[k + 1].getBeginPoint()) >= eps)
+            {
                 return false;
+            }
         }
         return true;
     };
@@ -96,7 +95,10 @@ TEST_F(GeoLibSortLineSegments, SortSubSegments)
             std::vector<GeoLib::LineSegment> sub_segments;
             partitionSegment(s0, sub_seg_ids, dt, sub_segments);
             GeoLib::sortSegments(s0.getBeginPoint(), sub_segments);
-            if (!checkSortedSubSegments(s0, sub_segments)) return false;
+            if (!checkSortedSubSegments(s0, sub_segments))
+            {
+                return false;
+            }
         } while (std::next_permutation(sub_seg_ids.begin(), sub_seg_ids.end()));
         return true;
     };
@@ -106,5 +108,3 @@ TEST_F(GeoLibSortLineSegments, SortSubSegments)
         ac::make_arbitrary(segment_generator),
         gtest_reporter);
 }
-
-#endif

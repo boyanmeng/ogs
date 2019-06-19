@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -58,7 +58,9 @@ void computeHMatrix(N_Type const& N, HMatrixType& H)
     H.setZero();
 
     for (unsigned j = 0; j < DisplacementDim; j++)
+    {
         H.block(j, j * NPOINTS, 1, NPOINTS) = N;
+    }
 }
 
 }  // namespace ProcessLib

@@ -11,7 +11,7 @@
             <type>ComponentTransport</type>
             <integration_order>2</integration_order>
             <process_variables>
-                <concentration>concentration</concentration>
+                <concentration>Si</concentration>
                 <pressure>pressure</pressure>
             </process_variables>
             <fluid>
@@ -26,24 +26,21 @@
             </fluid>
             <porous_medium>
                 <porous_medium id="0">
-                <permeability>
-                    <permeability_tensor_entries>kappa1</permeability_tensor_entries>
-                    <type>Constant</type>
-                </permeability>
-                <porosity>
-                    <type>Constant</type>
-                    <porosity_parameter>constant_porosity_parameter</porosity_parameter>
-                </porosity>
-                <storage>
-                    <type>Constant</type>
-                    <value>0</value>
-                </storage>
+                    <permeability>
+                        <permeability_tensor_entries>kappa1</permeability_tensor_entries>
+                        <type>Constant</type>
+                    </permeability>
+                    <porosity>
+                        <type>Constant</type>
+                        <porosity_parameter>constant_porosity_parameter</porosity_parameter>
+                    </porosity>
+                    <storage>
+                        <type>Constant</type>
+                        <value>0</value>
+                    </storage>
                 </porous_medium>
             </porous_medium>
             <fluid_reference_density>rho_fluid</fluid_reference_density>
-            <solute_dispersivity_longitudinal>beta_l</solute_dispersivity_longitudinal>
-            <solute_dispersivity_transverse>beta_t</solute_dispersivity_transverse>
-            <molecular_diffusion_coefficient>Dm</molecular_diffusion_coefficient>
             <retardation_factor>retardation</retardation_factor>
             <decay_rate>decay</decay_rate>
             <specific_body_force>0 0</specific_body_force>
@@ -52,6 +49,39 @@
             </secondary_variables>
         </process>
     </processes>
+    <media>
+        <medium id="0">
+            <phases>
+                <phase>
+                    <type>AqueousLiquid</type>
+                    <components>
+                        <component>
+                            <name>Si</name>
+                            <properties>
+                                <property>
+                                    <name>molecular_diffusion</name>
+                                    <type>Constant</type>
+                                    <value>0</value>
+                                </property>
+                            </properties>
+                        </component>
+                    </components>
+                </phase>
+            </phases>
+            <properties>
+                <property>
+                    <name>longitudinal_dispersivity</name>
+                    <type>Constant</type>
+                    <value>0</value>
+                </property>
+                <property>
+                    <name>transversal_dispersivity</name>
+                    <type>Constant</type>
+                    <value>0</value>
+                </property>
+            </properties>
+        </medium>
+    </media>
     <time_loop>
         <processes>
             <process ref="hc">
@@ -64,13 +94,6 @@
                 <time_discretization>
                     <type>BackwardEuler</type>
                 </time_discretization>
-                <output>
-                    <variables>
-                        <variable>concentration</variable>
-                        <variable>pressure</variable>
-                        <variable>darcy_velocity</variable>
-                    </variables>
-                </output>
                 <time_stepping>
                     <type>FixedTimeStepping</type>
                     <t_initial>0.0</t_initial>
@@ -113,6 +136,11 @@
                     <each_steps>6000</each_steps>
                 </pair>
             </timesteps>
+            <variables>
+                <variable>Si</variable>
+                <variable>pressure</variable>
+                <variable>darcy_velocity</variable>
+            </variables>
         </output>
     </time_loop>
     <parameters>
@@ -122,27 +150,12 @@
             <value>1000</value>
         </parameter>
         <parameter>
-            <name>Dm</name>
-            <type>Constant</type>
-            <value>0</value>
-        </parameter>
-        <parameter>
             <name>retardation</name>
             <type>Constant</type>
             <value>1</value>
         </parameter>
         <parameter>
             <name>decay</name>
-            <type>Constant</type>
-            <value>0</value>
-        </parameter>
-        <parameter>
-            <name>beta_l</name>
-            <type>Constant</type>
-            <value>0</value>
-        </parameter>
-        <parameter>
-            <name>beta_t</name>
             <type>Constant</type>
             <value>0</value>
         </parameter>
@@ -157,6 +170,18 @@
             <field_name>p_ini</field_name>
         </parameter>
         <parameter>
+            <name>c_left</name>
+            <mesh>vdbc_input_leftBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>c_ini</field_name>
+        </parameter>
+        <parameter>
+            <name>p_left</name>
+            <mesh>vdbc_input_leftBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>p_ini</field_name>
+        </parameter>
+        <parameter>
             <name>constant_porosity_parameter</name>
             <type>Constant</type>
             <value>0.1</value>
@@ -166,26 +191,77 @@
             <type>Constant</type>
             <values>1.e-9 0 0 1.e-9</values>
         </parameter>
+        <parameter>
+            <name>Cconstant</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Cconstant</field_name>
+        </parameter>
+        <parameter>
+            <name>Cprefac1</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Cprefac1</field_name>
+        </parameter>
+        <parameter>
+            <name>Cprefac2</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Cprefac2</field_name>
+        </parameter>
+        <parameter>
+            <name>Cprefac3</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Cprefac3</field_name>
+        </parameter>
+        <parameter>
+            <name>Pconstant</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Pconstant</field_name>
+        </parameter>
+        <parameter>
+            <name>Pprefac1</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Pprefac1</field_name>
+        </parameter>
+        <parameter>
+            <name>Pprefac2</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Pprefac2</field_name>
+        </parameter>
+        <parameter>
+            <name>Pprefac3</name>
+            <mesh>vdbc_input_rightBoundary</mesh>
+            <type>MeshNode</type>
+            <field_name>Pprefac3</field_name>
+        </parameter>
     </parameters>
     <process_variables>
         <process_variable>
-            <name>concentration</name>
+            <name>Si</name>
             <components>1</components>
             <order>1</order>
             <initial_condition>c_ini</initial_condition>
             <boundary_conditions>
+                <!-- By means of this boundary condition the advective form and the results
+                of non-advective form can be mapped on each other. Might be used for consis-
+                tency tests.
                 <boundary_condition>
-                    <type>NonuniformVariableDependentNeumann</type>
+                    <type>VariableDependentNeumann</type>
                     <mesh>vdbc_input_rightBoundary</mesh>
                     <constant_name>Cconstant</constant_name>
                     <coefficient_current_variable_name>Cprefac1</coefficient_current_variable_name>
                     <coefficient_other_variable_name>Cprefac2</coefficient_other_variable_name>
                     <coefficient_mixed_variables_name>Cprefac3</coefficient_mixed_variables_name>
-                </boundary_condition>
+                </boundary_condition>-->
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>vdbc_input_leftBoundary</mesh>
-                    <field_name>c_ini</field_name>
+                    <parameter>c_left</parameter>
                 </boundary_condition>
             </boundary_conditions>
         </process_variable>
@@ -196,7 +272,7 @@
             <initial_condition>p_ini</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
-                    <type>NonuniformVariableDependentNeumann</type>
+                    <type>VariableDependentNeumann</type>
                     <mesh>vdbc_input_rightBoundary</mesh>
                     <constant_name>Pconstant</constant_name>
                     <coefficient_current_variable_name>Pprefac1</coefficient_current_variable_name>
@@ -204,9 +280,9 @@
                     <coefficient_mixed_variables_name>Pprefac3</coefficient_mixed_variables_name>
                 </boundary_condition>
                 <boundary_condition>
-                    <type>NonuniformDirichlet</type>
+                    <type>Dirichlet</type>
                     <mesh>vdbc_input_leftBoundary</mesh>
-                    <field_name>p_ini</field_name>
+                    <parameter>p_left</parameter>
                 </boundary_condition>
             </boundary_conditions>
         </process_variable>
@@ -218,7 +294,7 @@
             <max_iter>200</max_iter>
             <linear_solver>general_linear_solver</linear_solver>
         </nonlinear_solver>
-        </nonlinear_solvers>
+    </nonlinear_solvers>
     <linear_solvers>
         <linear_solver>
             <name>general_linear_solver</name>

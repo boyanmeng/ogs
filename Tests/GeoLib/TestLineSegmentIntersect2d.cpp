@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -49,13 +49,6 @@ public:
 
     ac::gtest_reporter gtest_reporter;
 };
-
-#if !defined(_MSC_VER) || (_MSC_VER >= 2000)
-// Compilers of MVS below 2015 do not support unrestricted unions. The
-// unrestricted union is used by autocheck to handle test data. The autocheck
-// workaround for MVS compilers (below version 2015) contains a bug and in the
-// consequence the tests crashes. For this reason the tests are disabled under
-// this environments.
 
 // Test the intersection of intersecting line segments. Line segments are chords
 // of the same circle that both contains the center of the circle. As a
@@ -139,5 +132,3 @@ TEST_F(LineSegmentIntersect2dTest, ParallelIntersectingSegmentOrientation)
         ac::make_arbitrary(pair_segment_generator2),
         gtest_reporter);
 }
-
-#endif

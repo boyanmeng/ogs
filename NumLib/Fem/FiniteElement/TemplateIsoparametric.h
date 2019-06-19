@@ -3,7 +3,7 @@
  * \date   2013-08-13
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -55,7 +55,7 @@ public:
      *
      * @param e                      Mesh element object
      */
-    TemplateIsoparametric(const MeshElementType& e) : _ele(&e) {}
+    explicit TemplateIsoparametric(const MeshElementType& e) : _ele(&e) {}
     ~TemplateIsoparametric() = default;
 
     /// return current mesh element
@@ -157,4 +157,16 @@ private:
     const MeshElementType* _ele;
 };
 
+/// Creates a TemplateIsoparametric element for the given shape functions and
+/// the underlying mesh element.
+template <typename ShapeFunction, typename ShapeMatricesType>
+NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>
+createIsoparametricFiniteElement(MeshLib::Element const& e)
+{
+    using FemType =
+        NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
+
+    return FemType{
+        *static_cast<const typename ShapeFunction::MeshElement*>(&e)};
+}
 }  // namespace NumLib

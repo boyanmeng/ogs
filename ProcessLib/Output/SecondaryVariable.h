@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,8 +39,6 @@ struct SecondaryVariableFunctions final
         GlobalVector const& x,
         NumLib::LocalToGlobalIndexMap const& dof_table,
         std::unique_ptr<GlobalVector>& result_cache)>;
-
-    SecondaryVariableFunctions() = default;
 
     template <typename F1, typename F2>
     SecondaryVariableFunctions(const unsigned num_components_, F1&& eval_field_,
@@ -130,7 +128,10 @@ public:
                               SecondaryVariableFunctions&& fcts);
 
     //! Returns the secondary variable with the given external name.
-    SecondaryVariable const& get(std::string const& external_name);
+    SecondaryVariable const& get(std::string const& external_name) const;
+
+    std::map<std::string, std::string>::const_iterator begin() const;
+    std::map<std::string, std::string>::const_iterator end() const;
 
 private:
     //! Maps external variable names to internal ones.
@@ -141,9 +142,6 @@ private:
     //! Maps the internal variable name to the corresponding SecondaryVariable
     //! instance.
     std::map<std::string, SecondaryVariable> _configured_secondary_variables;
-
-    //! Set of all internal variable names known to this instance.
-    std::set<std::string> _all_secondary_variables;
 };
 
 /*! Creates an object that computes a secondary variable via extrapolation of

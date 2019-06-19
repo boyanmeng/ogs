@@ -5,7 +5,7 @@
  * \brief  Definition of the Mesh class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -113,6 +113,9 @@ public:
     /// Resets the IDs of all mesh-nodes to their position in the node vector
     void resetNodeIDs();
 
+    /// Finds the maximum id among all of the base nodes.
+    void recalculateMaxBaseNodeId();
+
     /// Changes the name of the mesh.
     void setName(const std::string &name) { this->_name = name; }
 
@@ -185,6 +188,16 @@ protected:
 }; /* class */
 
 
+/// Meshes are equal if their id's are equal.
+inline bool operator==(Mesh const& a, Mesh const& b)
+{
+    return a.getID() == b.getID();
+}
+
+inline bool operator!=(Mesh const& a, Mesh const& b)
+{
+    return !(a == b);
+}
 
 /// Scales the mesh property with name \c property_name by given \c factor.
 /// \note The property must be a "double" property.
@@ -209,24 +222,32 @@ void addPropertyToMesh(MeshLib::Mesh& mesh, std::string const& name,
                        std::vector<T> const& values)
 {
     if (item_type == MeshLib::MeshItemType::Node)
+    {
         if (mesh.getNumberOfNodes() != values.size() / number_of_components)
+        {
             OGS_FATAL(
                 "Error number of nodes (%u) does not match the number of "
                 "tuples (%u).",
                 mesh.getNumberOfNodes(), values.size() / number_of_components);
+        }
+    }
     if (item_type == MeshLib::MeshItemType::Cell)
+    {
         if (mesh.getNumberOfElements() != values.size() / number_of_components)
+        {
             OGS_FATAL(
                 "Error number of elements (%u) does not match the number of "
                 "tuples (%u).",
                 mesh.getNumberOfElements(),
                 values.size() / number_of_components);
+        }
+    }
 
     auto* const property = mesh.getProperties().createNewPropertyVector<T>(
         name, item_type, number_of_components);
     if (!property)
     {
-        OGS_FATAL("Error while creating PropertyVector \"%s\".", name.c_str());
+        OGS_FATAL("Error while creating PropertyVector '%s'.", name.c_str());
     }
     property->reserve(values.size());
     std::copy(values.cbegin(), values.cend(), std::back_inserter(*property));
@@ -243,8 +264,10 @@ PropertyVector<T>* getOrCreateMeshProperty(Mesh& mesh,
                                            int const number_of_components)
 {
     if (property_name.empty())
+    {
         OGS_FATAL(
             "Trying to get or to create a mesh property with empty name.");
+    }
 
     auto numberOfMeshItems = [&mesh, &item_type]() -> std::size_t {
         switch (item_type)
@@ -300,4 +323,4 @@ PropertyVector<int> const* materialIDs(Mesh const& mesh);
 std::unique_ptr<MeshLib::Mesh> createMeshFromElementSelection(
     std::string mesh_name, std::vector<MeshLib::Element*> const& elements);
 
-} /* namespace */
+}  // namespace MeshLib

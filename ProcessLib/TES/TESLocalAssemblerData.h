@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -53,5 +53,5 @@ struct TESLocalAssemblerData
     std::vector<double> reaction_rate_prev_ts;  // could also be calculated from
                                                 // solid_density_prev_ts
 };
-}
-}  // namespaces
+}  // namespace TES
+}  // namespace ProcessLib

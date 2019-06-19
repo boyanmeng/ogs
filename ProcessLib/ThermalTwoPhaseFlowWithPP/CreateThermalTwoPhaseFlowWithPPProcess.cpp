@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,8 +12,9 @@
 
 #include "BaseLib/Functional.h"
 #include "MeshLib/MeshGenerators/MeshGenerator.h"
+#include "ParameterLib/ConstantParameter.h"
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
-#include "ProcessLib/Parameter/ConstantParameter.h"
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/CreateThermalTwoPhaseFlowWithPPMaterialProperties.h"
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/ThermalTwoPhaseFlowWithPPMaterialProperties.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
@@ -29,7 +30,7 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config,
     std::map<std::string,
@@ -70,34 +71,36 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
     Eigen::VectorXd specific_body_force(b.size());
     bool const has_gravity = MathLib::toVector(b).norm() > 0;
     if (has_gravity)
+    {
         std::copy_n(b.data(), b.size(), specific_body_force.data());
+    }
 
     //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__mass_lumping}
     auto mass_lumping = config.getConfigParameter<bool>("mass_lumping");
     // diffusion coeff
-    auto& diff_coeff_b = findParameter<double>(
+    auto& diff_coeff_b = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__diffusion_coeff_component_b}
-        "diffusion_coeff_component_b", parameters, 1);
-    auto& diff_coeff_a = findParameter<double>(
+        "diffusion_coeff_component_b", parameters, 1, &mesh);
+    auto& diff_coeff_a = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__diffusion_coeff_component_a}
-        "diffusion_coeff_component_a", parameters, 1);
+        "diffusion_coeff_component_a", parameters, 1, &mesh);
 
     // Parameter for the density of the solid.
 
-    auto& density_solid = findParameter<double>(
+    auto& density_solid = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__density_solid}
-        "density_solid", parameters, 1);
-    DBUG("Use \'%s\' as density_solid parameter.", density_solid.name.c_str());
+        "density_solid", parameters, 1, &mesh);
+    DBUG("Use '%s' as density_solid parameter.", density_solid.name.c_str());
 
     // Parameter for the latent heat of evaporation.
-    auto& latent_heat_evaporation = findParameter<double>(
+    auto& latent_heat_evaporation = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_THERMAL__latent_heat_evaporation}
-        "latent_heat_evaporation", parameters, 1);
-    DBUG("Use \'%s\' as latent_heat_evaporation parameter.",
+        "latent_heat_evaporation", parameters, 1, &mesh);
+    DBUG("Use '%s' as latent_heat_evaporation parameter.",
          latent_heat_evaporation.name.c_str());
 
     //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__material_property}
@@ -141,5 +144,5 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
         mat_config, curves);
 }
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace ThermalTwoPhaseFlowWithPP
+}  // namespace ProcessLib

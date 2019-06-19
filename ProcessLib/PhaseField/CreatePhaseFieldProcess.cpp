@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,6 +13,7 @@
 
 #include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
 #include "MaterialLib/SolidModels/MechanicsBase.h"
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
@@ -28,7 +29,9 @@ std::unique_ptr<Process> createPhaseFieldProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config)
 {
@@ -53,20 +56,17 @@ std::unique_ptr<Process> createPhaseFieldProcess(
         process_variables;
     if (use_monolithic_scheme)  // monolithic scheme.
     {
-        auto per_process_variables = findProcessVariables(
-            variables, pv_config,
-            {//! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__process_variables__phasefield}
-             "phasefield",
-             //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__process_variables__displacement}
-             "displacement"});
-        variable_ph = &per_process_variables[0].get();
-        variable_u = &per_process_variables[1].get();
-        process_variables.push_back(std::move(per_process_variables));
+        OGS_FATAL("Monolithic implementation is not available.");
     }
     else  // staggered scheme.
     {
         using namespace std::string_literals;
-        for (auto const& variable_name : {"displacement"s, "phasefield"s})
+        for (
+            auto const& variable_name :
+            {//! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__process_variables__displacement}
+             "displacement"s,
+             //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__process_variables__phasefield}
+             "phasefield"s})
         {
             auto per_process_variables =
                 findProcessVariables(variables, pv_config, {variable_name});
@@ -76,7 +76,7 @@ std::unique_ptr<Process> createPhaseFieldProcess(
         variable_ph = &process_variables[1][0].get();
     }
 
-    DBUG("Associate displacement with process variable \'%s\'.",
+    DBUG("Associate displacement with process variable '%s'.",
          variable_u->getName().c_str());
 
     if (variable_u->getNumberOfComponents() != DisplacementDim)
@@ -89,7 +89,7 @@ std::unique_ptr<Process> createPhaseFieldProcess(
             DisplacementDim);
     }
 
-    DBUG("Associate phase field with process variable \'%s\'.",
+    DBUG("Associate phase field with process variable '%s'.",
          variable_ph->getName().c_str());
     if (variable_ph->getNumberOfComponents() != 1)
     {
@@ -102,54 +102,53 @@ std::unique_ptr<Process> createPhaseFieldProcess(
 
     auto solid_constitutive_relations =
         MaterialLib::Solids::createConstitutiveRelations<DisplacementDim>(
-            parameters, config);
+            parameters, local_coordinate_system, config);
 
     auto const phasefield_parameters_config =
         //! \ogs_file_param{prj__processes__process__PHASE_FIELD__phasefield_parameters}
         config.getConfigSubtree("phasefield_parameters");
 
     // Residual stiffness
-    auto& residual_stiffness = findParameter<double>(
+    auto& residual_stiffness = ParameterLib::findParameter<double>(
         phasefield_parameters_config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__phasefield_parameters__residual_stiffness}
         "residual_stiffness", parameters, 1);
-    DBUG("Use \'%s\' as residual stiffness.", residual_stiffness.name.c_str());
+    DBUG("Use '%s' as residual stiffness.", residual_stiffness.name.c_str());
 
     // Crack resistance
-    auto& crack_resistance = findParameter<double>(
+    auto& crack_resistance = ParameterLib::findParameter<double>(
         phasefield_parameters_config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__phasefield_parameters__crack_resistance}
         "crack_resistance", parameters, 1);
-    DBUG("Use \'%s\' as crack resistance.", crack_resistance.name.c_str());
+    DBUG("Use '%s' as crack resistance.", crack_resistance.name.c_str());
 
     // Crack length scale
-    auto& crack_length_scale = findParameter<double>(
+    auto& crack_length_scale = ParameterLib::findParameter<double>(
         phasefield_parameters_config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__phasefield_parameters__crack_length_scale}
         "crack_length_scale", parameters, 1);
-    DBUG("Use \'%s\' as crack length scale.", crack_length_scale.name.c_str());
+    DBUG("Use '%s' as crack length scale.", crack_length_scale.name.c_str());
 
     // Kinetic coefficient
-    auto& kinetic_coefficient = findParameter<double>(
+    auto& kinetic_coefficient = ParameterLib::findParameter<double>(
         phasefield_parameters_config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__phasefield_parameters__kinetic_coefficient}
         "kinetic_coefficient", parameters, 1);
-    DBUG("Use \'%s\' as kinetic coefficient.",
-         kinetic_coefficient.name.c_str());
+    DBUG("Use '%s' as kinetic coefficient.", kinetic_coefficient.name.c_str());
 
     // Solid density
-    auto& solid_density = findParameter<double>(
+    auto& solid_density = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__solid_density}
         "solid_density", parameters, 1);
-    DBUG("Use \'%s\' as solid density parameter.", solid_density.name.c_str());
+    DBUG("Use '%s' as solid density parameter.", solid_density.name.c_str());
 
     // History field
-    auto& history_field = findParameter<double>(
+    auto& history_field = ParameterLib::findParameter<double>(
         phasefield_parameters_config,
         //! \ogs_file_param_special{prj__processes__process__PHASE_FIELD__phasefield_parameters__history_field}
         "history_field", parameters, 1);
-    DBUG("Use \'%s\' as history field.", history_field.name.c_str());
+    DBUG("Use '%s' as history field.", history_field.name.c_str());
 
     // Specific body force
     Eigen::Matrix<double, DisplacementDim, 1> specific_body_force;
@@ -159,11 +158,13 @@ std::unique_ptr<Process> createPhaseFieldProcess(
             config.getConfigParameter<std::vector<double>>(
                 "specific_body_force");
         if (b.size() != DisplacementDim)
+        {
             OGS_FATAL(
                 "The size of the specific body force vector does not match the "
                 "displacement dimension. Vector size is %d, displacement "
                 "dimension is %d",
                 b.size(), DisplacementDim);
+        }
 
         std::copy_n(b.data(), b.size(), specific_body_force.data());
     }
@@ -175,8 +176,8 @@ std::unique_ptr<Process> createPhaseFieldProcess(
         ((*crack_scheme != "propagating") && (*crack_scheme != "static")))
     {
         OGS_FATAL(
-            "hydro_crack_scheme must be \"propagating\" or \"static\" but "
-            "\"%s\" was given",
+            "hydro_crack_scheme must be 'propagating' or 'static' but "
+            "'%s' was given",
             crack_scheme->c_str());
     }
 
@@ -213,7 +214,9 @@ template std::unique_ptr<Process> createPhaseFieldProcess<2>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 
@@ -221,7 +224,9 @@ template std::unique_ptr<Process> createPhaseFieldProcess<3>(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
+    boost::optional<ParameterLib::CoordinateSystem> const&
+        local_coordinate_system,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config);
 

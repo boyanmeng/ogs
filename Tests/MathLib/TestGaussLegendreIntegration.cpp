@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -77,7 +77,9 @@ public:
         : _e(e)
     {
         if (is_axially_symmetric)
+        {
             OGS_FATAL("Only testing Cartesian meshes!");
+        }
     }
 
     double integrate(const Function& f,
@@ -166,7 +168,10 @@ private:
     }
 
 public:
-    FBase(std::size_t const num_coeffs) : coeffs(initCoeffs(num_coeffs)) {}
+    explicit FBase(std::size_t const num_coeffs)
+        : coeffs(initCoeffs(num_coeffs))
+    {
+    }
 
     virtual double operator()(
         std::array<double, 3> const& /*coords*/) const = 0;
@@ -245,7 +250,7 @@ struct FQuad final : FBase
 
 struct F3DSeparablePolynomial final : FBase
 {
-    F3DSeparablePolynomial(unsigned polynomial_degree)
+    explicit F3DSeparablePolynomial(unsigned polynomial_degree)
         : FBase(3 * polynomial_degree + 3), _degree(polynomial_degree)
     {
     }
@@ -322,7 +327,7 @@ struct F3DNonseparablePolynomial final : FBase
     // The number of coefficients/monomials are obtained as follows: Compute the
     // number of combinations with repititions when drawing
     // polynomial_degree times from the set { x, y, z, 1 }
-    F3DNonseparablePolynomial(unsigned polynomial_degree)
+    explicit F3DNonseparablePolynomial(unsigned polynomial_degree)
         : FBase(binomial_coefficient(4 + polynomial_degree - 1, 4 - 1)),
           _degree(polynomial_degree)
     {
@@ -457,7 +462,9 @@ OGS_DONT_TEST_THIS_IF_PETSC(MathLib, IntegrationGaussLegendreTet)
         for (unsigned polynomial_order : {0, 1, 2})
         {
             if (polynomial_order > 2 * integration_order - 1)
+            {
                 break;
+            }
 
             DBUG("  == polynomial order: %u.", polynomial_order);
             auto f = GaussLegendreTest::getF(polynomial_order);
@@ -484,7 +491,9 @@ OGS_DONT_TEST_THIS_IF_PETSC(MathLib, IntegrationGaussLegendreHex)
         for (unsigned polynomial_order : {0, 1, 2})
         {
             if (polynomial_order > 2 * integration_order - 1)
+            {
                 break;
+            }
 
             DBUG("  == polynomial order: %u.", polynomial_order);
             auto f = GaussLegendreTest::getF(polynomial_order);

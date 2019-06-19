@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -28,7 +28,7 @@ namespace NumLib
 class ConvergenceCriterion
 {
 public:
-    ConvergenceCriterion(const MathLib::VecNormType norm_type)
+    explicit ConvergenceCriterion(const MathLib::VecNormType norm_type)
         : _norm_type(norm_type)
     {
     }

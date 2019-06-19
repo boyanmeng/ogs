@@ -5,7 +5,7 @@
  * @brief Base part of implementation of reading XML files using Qt stuff.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -31,8 +31,8 @@ namespace BaseLib
 {
 namespace IO
 {
-XMLQtInterface::XMLQtInterface(const QString &schemaFile)
-    : _schemaFile(schemaFile)
+XMLQtInterface::XMLQtInterface(QString schemaFile)
+    : _schemaFile(std::move(schemaFile))
 {}
 
 int XMLQtInterface::readFile(const QString &fileName)

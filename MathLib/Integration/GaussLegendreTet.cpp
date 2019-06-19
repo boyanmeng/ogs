@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,7 +30,7 @@ initGLTet3X()
 {
     // Cf. Gellert, M., Harbord, R., 1991. Moderate degree cubature formulas for
     // 3-D tetrahedral finite-element approximations. Communications in Applied
-    // Numerical Methods 7, 487–495. doi:10.1002/cnm.1630070609
+    // Numerical Methods 7, 487-495. doi:10.1002/cnm.1630070609
     const double a = 0.0673422422100983;
     const double b = 0.3108859192633005;
     const double c = 0.7217942490673264;
@@ -63,4 +63,4 @@ static const double r = 0.0425460207770812 / 6.;
 
 double const GaussLegendreTet<3>::W[GaussLegendreTet<3>::NPoints] = {
     p, p, p, p, q, q, q, q, r, r, r, r, r, r};
-}
+}  // namespace MathLib

@@ -5,7 +5,7 @@
  * \brief  Implementation of the shp to gli converter tool.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -137,11 +137,11 @@ int main (int argc, char* argv[])
     TCLAP::CmdLine cmd(
         "Converts points contained in shape file\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> shapefile_arg("s",
                                                "shape-file",
                                                "the name of the shape file ",
@@ -155,11 +155,11 @@ int main (int argc, char* argv[])
     std::string fname (shapefile_arg.getValue());
 
     int shape_type, number_of_elements;
-    double padfMinBound[4], padfMaxBound[4];
 
     SHPHandle hSHP = SHPOpen(fname.c_str(),"rb");
     if (hSHP) {
-        SHPGetInfo( hSHP, &number_of_elements, &shape_type, padfMinBound, padfMaxBound );
+        SHPGetInfo(hSHP, &number_of_elements, &shape_type,
+                   nullptr /*padfMinBound*/, nullptr /*padfMinBound*/);
 
         if ((shape_type - 1) % 10 == 0)
             INFO("Shape file contains %d points.", number_of_elements);

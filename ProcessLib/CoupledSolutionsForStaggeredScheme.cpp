@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,9 @@ std::vector<std::vector<double>> getPreviousLocalSolutions(
     const std::vector<std::vector<GlobalIndexType>>& indices)
 {
     if (cpl_xs.coupled_xs_t0.empty())
+    {
         return {};
+    }
 
     const auto number_of_coupled_solutions = cpl_xs.coupled_xs.size();
     std::vector<std::vector<double>> local_xs_t0;
@@ -53,7 +55,9 @@ std::vector<std::vector<double>> getCurrentLocalSolutions(
     const std::vector<std::vector<GlobalIndexType>>& indices)
 {
     if (cpl_xs.coupled_xs.empty())
+    {
         return {};
+    }
 
     const auto number_of_coupled_solutions = cpl_xs.coupled_xs.size();
     std::vector<std::vector<double>> local_xs_t1;

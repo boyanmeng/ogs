@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,8 +20,8 @@
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/PropertyVector.h"
-#include "ProcessLib/Parameter/Parameter.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
+#include "ParameterLib/Parameter.h"
+#include "ParameterLib/SpatialPosition.h"
 #include "TwoPhaseFlowWithPrhoMaterialProperties.h"
 
 namespace ProcessLib
@@ -31,8 +31,9 @@ namespace TwoPhaseFlowWithPrho
 std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties>
 createTwoPhaseFlowPrhoMaterialProperties(
     BaseLib::ConfigTree const& config,
-    boost::optional<MeshLib::PropertyVector<int> const&> material_ids,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters)
+    boost::optional<MeshLib::PropertyVector<int> const&>
+        material_ids,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters)
 {
     DBUG("Reading material properties of two-phase flow process.");
 
@@ -136,5 +137,5 @@ createTwoPhaseFlowPrhoMaterialProperties(
         std::move(_relative_permeability_models));
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ProcessLib

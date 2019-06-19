@@ -5,7 +5,7 @@
  * \brief  Calculation of a minimum bounding sphere for a vector of points
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,11 +26,13 @@ namespace GeoLib
 /**
  * Calculated center and radius of a minimal bounding sphere for a given number of geometric points.
  */
-class MinimalBoundingSphere
+class MinimalBoundingSphere final
 {
 public:
     /// Point-Sphere
-    MinimalBoundingSphere(MathLib::Point3d const& p, double radius = std::numeric_limits<double>::epsilon());
+    explicit MinimalBoundingSphere(
+        MathLib::Point3d const& p,
+        double radius = std::numeric_limits<double>::epsilon());
     /// Bounding sphere using two points
     MinimalBoundingSphere(MathLib::Point3d const& p, MathLib::Point3d const& q);
     /// Bounding sphere using three points
@@ -42,7 +44,8 @@ public:
         MathLib::Point3d const& r,
         MathLib::Point3d const& s);
     /// Bounding sphere of n points
-    MinimalBoundingSphere(std::vector<MathLib::Point3d*> const& points);
+    explicit MinimalBoundingSphere(
+        std::vector<MathLib::Point3d*> const& points);
 
     /// Returns the center point of the sphere
     MathLib::Point3d getCenter() const { return MathLib::Point3d(_center); }
@@ -80,8 +83,10 @@ private:
         std::size_t length,
         std::size_t n_boundary_points);
 
-    double _radius;
-    MathLib::Vector3 _center;
+    double _radius{-1};
+    MathLib::Vector3 _center{std::numeric_limits<double>::max(),
+                             std::numeric_limits<double>::max(),
+                             std::numeric_limits<double>::max()};
 };
 
-} // namespace
+}  // namespace GeoLib

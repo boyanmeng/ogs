@@ -29,6 +29,7 @@
                 <mp>mp</mp>
                 <betap>betap</betap>
                 <gammap>gammap</gammap>
+                <tangent_type>Plastic</tangent_type>
                 <nonlinear_solver>
                     <maximum_iterations>1000</maximum_iterations>
                     <error_tolerance>1e-8</error_tolerance>
@@ -56,12 +57,6 @@
                 <time_discretization>
                     <type>BackwardEuler</type>
                 </time_discretization>
-                <output>
-                    <variables>
-                        <variable>displacement</variable>
-                        <variable>sigma</variable>
-                    </variables>
-                </output>
                 <time_stepping>
                     <type>FixedTimeStepping</type>
                     <t_initial>0</t_initial>
@@ -84,6 +79,10 @@
                     <each_steps>1</each_steps>
                 </pair>
             </timesteps>
+            <variables>
+                <variable>displacement</variable>
+                <variable>sigma</variable>
+            </variables>
         </output>
     </time_loop>
     <parameters>

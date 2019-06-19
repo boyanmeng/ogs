@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkVisTabWidget class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,8 +30,7 @@
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
 
-VtkVisTabWidget::VtkVisTabWidget( QWidget* parent /*= 0*/ )
-    : QWidget(parent), _item(nullptr)
+VtkVisTabWidget::VtkVisTabWidget(QWidget* parent /*= 0*/) : QWidget(parent)
 {
     setupUi(this);
 

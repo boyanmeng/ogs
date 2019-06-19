@@ -5,7 +5,7 @@
  * \brief  GTest test executables main function.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -30,13 +30,21 @@
 /// Implementation of the googletest testrunner
 int main(int argc, char* argv[])
 {
+#ifdef NDEBUG
+    std::string logLevel("info");
+#else
     std::string logLevel("all");
+#endif
     for (int i = 1; i < argc; i++)
     {
-        if(i + 1 == argc)
+        if (i + 1 == argc)
+        {
             break;
-        if(std::strcmp(argv[i], "-l") == 0)
+        }
+        if (std::strcmp(argv[i], "-l") == 0)
+        {
             logLevel = argv[i + 1];
+        }
     }
 
     setlocale(LC_ALL, "C");

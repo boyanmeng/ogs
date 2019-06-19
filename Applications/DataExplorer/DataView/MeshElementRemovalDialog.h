@@ -5,7 +5,7 @@
  * \brief  Definition of the MeshElementRemovalDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -41,7 +41,7 @@ class MeshElementRemovalDialog : public QDialog, private Ui_MeshElementRemoval
 public:
     MeshElementRemovalDialog(DataHolderLib::Project const& project,
                              QDialog* parent = nullptr);
-    ~MeshElementRemovalDialog(void) override;
+    ~MeshElementRemovalDialog() override;
 
 private slots:
     void on_boundingBoxCheckBox_toggled(bool is_checked);

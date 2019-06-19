@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,7 +23,9 @@ std::vector<NumLib::NamedFunction> CachedSecondaryVariable::getNamedFunctions()
 double CachedSecondaryVariable::getValue() const
 {
     if (_needs_recomputation)
+    {
         evalFieldNoArgs();
+    }
     return _cached_nodal_values.get(_context.index);
 }
 

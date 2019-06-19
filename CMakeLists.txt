@@ -3,13 +3,16 @@
 #####################
 
 # Specify minimum CMake version
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.10)
 
 # Set CMake policies
 cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0054 NEW)
-if(${CMAKE_VERSION} VERSION_GREATER 3.9.6)
+if(POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
+endif()
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
 endif()
 
 if(WIN32 AND
@@ -24,17 +27,18 @@ project( OGS-6 )
 
 include(scripts/cmake/CMakeSetup.cmake)
 include(ParseCMakeArgs)
+include(CTest)
 
 ###########################
 ### Preliminary Options ###
 ###########################
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "Create shared libraries?" OFF)
 set(CMAKE_LIBRARY_SEARCH_PATH "" CACHE PATH
     "Additional library installation path, e.g. /opt/local or C:/libs")
 set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, \
     defaults to native (*nix) / blend (MSVC).")
 option(OGS_ENABLE_AVX2 "Enable the use of AVX2 instructions" OFF)
-option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
 option(OGS_USE_PCH "Should pre-compiled headers be used?" ON)
 if(DEFINED CMAKE_CXX_CLANG_TIDY)
     set(OGS_USE_PCH OFF CACHE INTERNAL "")
@@ -42,9 +46,20 @@ endif()
 option(OGS_USE_CONAN "Should Conan package manager be used?" ON)
 set(OGS_CONAN_BUILD "missing" CACHE STRING "Possible values: all, missing, \
     never or list of libs to build" )
+
+# Third-party libraries, names come from Conan package names
+set(OGS_LIBS
+    VTK Boost Eigen3 Qt Shapelib libgeotiff petsc lis cvode
+    CACHE INTERNAL "")
+foreach(LIB ${OGS_LIBS})
+    set(OGS_LIB_${LIB} "Default" CACHE STRING "Which ${LIB} library should be used?")
+    set_property(CACHE OGS_LIB_${LIB} PROPERTY STRINGS "Default" "System")
+endforeach(LIB)
+
 if(OGS_USE_PETSC)
     set(OGS_USE_MPI ON CACHE BOOL "Use MPI" FORCE)
 endif()
+option(OGS_USE_CVODE "Use the Sundials CVODE module?" OFF)
 
 ### CMake includes ###
 include(PreFind)
@@ -61,6 +76,7 @@ include(test/Test)
 if(OGS_COVERAGE AND NOT IS_SUBPROJECT)
     include(Coverage)
 endif()
+include(CppCheck)
 
 ####################
 ### More Options ###
@@ -78,8 +94,14 @@ option(OGS_BUILD_CLI "Should the OGS simulator be built?" ON)
 option(OGS_BUILD_GUI "Should the Data Explorer be built?" OFF)
 if(OGS_BUILD_GUI)
     add_definitions(-DOGS_BUILD_GUI)
+    option(OGS_USE_NETCDF "Add NetCDF support." ON)
 endif()
 option(OGS_BUILD_UTILS "Should the utilities programms be built?" OFF)
+if(OGS_BUILD_UTILS AND OGS_USE_MPI)
+    message(WARNING "OGS_BUILD_UTILS cannot be used with OGS_USE_MPI "
+        "(OGS_USE_PETSC)! Disabling OGS_BUILD_UTILS.")
+    set(OGS_BUILD_UTILS OFF CACHE BOOL "" FORCE)
+endif()
 
 
 # A list of processes to be build. Also used in the ProcessLib to select
@@ -98,8 +120,10 @@ set(ProcessesList
     RichardsFlow
     RichardsMechanics
     SmallDeformation
+    SmallDeformationNonlocal
     TES
     ThermalTwoPhaseFlowWithPP
+    ThermoHydroMechanics
     ThermoMechanicalPhaseField
     ThermoMechanics
     TwoPhaseFlowWithPP
@@ -207,17 +231,6 @@ option(OGS_COVERAGE "Enables code coverage measurements with gcov/lcov." OFF)
 
 option(OGS_SYNC_SUBMODULES "Sync git submodules on CMake run. Overwrites custom URLs!" ON)
 
-# Packaging
-option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should additional content such as manuals be downloaded and packaged?" OFF)
-include(scripts/cmake/packaging/Pack.cmake)
-
-# Third-party libraries, names come from Conan package names
-set(OGS_LIBS VTK Boost Eigen3 Qt Shapelib libgeotiff CACHE INTERNAL "")
-foreach(LIB ${OGS_LIBS})
-    set(OGS_LIB_${LIB} "Default" CACHE STRING "Which ${LIB} library should be used?")
-    set_property(CACHE OGS_LIB_${LIB} PROPERTY STRINGS "Default" "System")
-endforeach(LIB)
-
 # Options controlling which FEM elements will be compiled
 set(OGS_MAX_ELEMENT_DIM   3 CACHE STRING "Maximum dimension of FEM elements to be built.")
 set(OGS_MAX_ELEMENT_ORDER 2 CACHE STRING "Maximum order of FEM elements to be built.")
@@ -229,6 +242,9 @@ option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
 option(OGS_CHECK_HEADER_COMPILATION "Check header for standalone compilation." OFF)
 
 option(OGS_USE_PYTHON "Interface with Python" OFF)
+if(OGS_USE_PYTHON AND NOT Python_FOUND)
+    message(FATAL_ERROR "Python not found but required for OGS_USE_PYTHON=ON!")
+endif()
 
 option(OGS_USE_MFRONT "Enable solid material models by MFront (https://tfel.sourceforge.net)" OFF)
 
@@ -293,6 +309,9 @@ endif()
 # Logging level
 add_definitions(-DLOGOG_LEVEL=${OGS_LOG_LEVEL})
 
+# Packaging
+option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should additional content such as manuals be downloaded and packaged?" OFF)
+include(scripts/cmake/packaging/Pack.cmake)
 
 ######################
 ### Subdirectories ###
@@ -308,10 +327,11 @@ endif()
 # Add subdirectories with the projects
 add_subdirectory( ThirdParty )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty )
-include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gtest/include )
+include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/googletest/googletest/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/autocheck/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tclap/include )
 include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/json/include )
+include_directories( SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/exprtk )
 
 include(scripts/cmake/CheckHeaderCompilation.cmake)
 
@@ -322,19 +342,18 @@ add_subdirectory( MathLib )
 add_subdirectory( MeshLib )
 add_subdirectory( MeshGeoToolsLib )
 add_subdirectory( NumLib )
-if(OGS_BUILD_CLI OR OGS_BUILD_UTILS OR OGS_BUILD_TESTS)
+add_subdirectory( ChemistryLib )
+if(OGS_BUILD_CLI OR OGS_BUILD_UTILS OR BUILD_TESTING)
+    add_subdirectory( ParameterLib )
     add_subdirectory( MaterialLib )
     add_subdirectory( ProcessLib )
 endif()
-if( OGS_BUILD_TESTS AND NOT IS_SUBPROJECT )
+if( BUILD_TESTING AND NOT IS_SUBPROJECT )
     add_subdirectory( Tests )
+endif()
 
-    if(OGS_USE_MPI)
-        add_subdirectory( SimpleTests/MeshTests/MPI )
-    else()
-        add_subdirectory( SimpleTests/MeshTests )
-    endif()
-endif() # OGS_BUILD_TESTS
+file(WRITE ${PROJECT_BINARY_DIR}/disabled-tests.log "${DISABLED_TESTS_LOG}")
+unset(DISABLED_TESTS_LOG CACHE) # Don't write to CMakeCache.txt
 
 # The configuration must be called from the source dir and not BaseLib/.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/BaseLib/BuildInfo.cpp.in"
@@ -344,3 +363,6 @@ check_header_compilation()
 
 include(scripts/cmake/MarkVariablesAdvanced.cmake)
 unset(PRE_INSTALL_RUN CACHE)
+
+include(FeatureSummary)
+feature_summary(WHAT ALL)

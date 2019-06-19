@@ -5,7 +5,7 @@
  * \brief
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -43,8 +43,7 @@ public:
      *
      * @param order     integration order (default 2)
      */
-    explicit IntegrationGaussLegendreTri(unsigned order = 2)
-        : _order(order), _n_sampl_pt(0)
+    explicit IntegrationGaussLegendreTri(unsigned order = 2) : _order(order)
     {
         this->setIntegrationOrder(order);
     }
@@ -122,7 +121,7 @@ public:
 
 private:
     unsigned _order;
-    unsigned _n_sampl_pt;
+    unsigned _n_sampl_pt{0};
 };
 
 }  // namespace NumLib

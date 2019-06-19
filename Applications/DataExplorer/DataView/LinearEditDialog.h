@@ -5,7 +5,7 @@
  * \brief  Definition of the LinearEditDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -31,7 +31,7 @@ public:
                      const std::vector<std::size_t>& dis_nodes,
                      const std::vector<double>& dis_values,
                      QDialog* parent = nullptr);
-    ~LinearEditDialog(void) override;
+    ~LinearEditDialog() override;
 
 private:
     void setupDialog(const std::vector<std::size_t> &dis_nodes, const std::vector<double> &dis_values);

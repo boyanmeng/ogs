@@ -5,7 +5,7 @@
  * \brief  Definition of FileListDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -37,7 +37,7 @@ public:
     /// Constructor
     FileListDialog(FileType input, FileType output, QWidget* parent = nullptr);
     /// Destructor
-    ~FileListDialog(void) override;
+    ~FileListDialog() override;
 
     /// Returns list of all selected files
     const QStringList getInputFileList() const { return _allFiles.stringList(); };

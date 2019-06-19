@@ -5,7 +5,7 @@
  * @brief Test functionality of class Polygon.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -35,8 +35,7 @@
 class PolygonTest : public testing::Test
 {
 public:
-    PolygonTest() :
-        _polygon(nullptr)
+    PolygonTest()
     {
         // create points and construct polygon
         _pnts.push_back(new GeoLib::Point( 0.0, 0.0,0.0)); // 0
@@ -67,19 +66,23 @@ public:
     ~PolygonTest() override
     {
         delete _polygon;
-        for (auto & _pnt : _pnts)
+        for (auto& _pnt : _pnts)
+        {
             delete _pnt;
+        }
     }
 
 protected:
     std::vector<GeoLib::Point*> _pnts;
-    GeoLib::Polygon *_polygon;
+    GeoLib::Polygon* _polygon{nullptr};
 };
 
 TEST_F(PolygonTest, isPntInPolygonCheckCorners)
 {
-    for (auto & _pnt : _pnts)
+    for (auto& _pnt : _pnts)
+    {
         EXPECT_TRUE(_polygon->isPntInPolygon(*_pnt));
+    }
 }
 
 TEST_F(PolygonTest, isPntInPolygonCheckPointsRestOnPolygonEdges)
@@ -190,8 +193,10 @@ TEST_F(PolygonTest, isPolylineInPolygon)
     outer_ply.addPoint(0);
     outer_ply.addPoint(1);
     ASSERT_FALSE(_polygon->isPolylineInPolygon(outer_ply));
-    for (auto & pnt : pnts)
+    for (auto& pnt : pnts)
+    {
         delete pnt;
+    }
     pnts.clear();
 
     pnts.push_back(new GeoLib::Point(-1.0,2.0,0.0)); // 3
@@ -200,8 +205,10 @@ TEST_F(PolygonTest, isPolylineInPolygon)
     inner_ply.addPoint(0);
     inner_ply.addPoint(1);
     ASSERT_TRUE(_polygon->isPolylineInPolygon(inner_ply));
-    for (auto & pnt : pnts)
+    for (auto& pnt : pnts)
+    {
         delete pnt;
+    }
 }
 
 TEST_F(PolygonTest, CopyConstructor)
@@ -212,5 +219,7 @@ TEST_F(PolygonTest, CopyConstructor)
     // Check if all line segments of the original polygon are contained in the
     // copy
     for (auto const& segment : *_polygon)
+    {
         ASSERT_TRUE(polygon_copy.containsSegment(segment));
+    }
 }

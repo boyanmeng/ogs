@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -19,11 +19,7 @@ namespace BaseLib
 namespace detail
 {
 template <typename Msg>
-#if defined(_MSC_VER) && _MSC_VER < 1500
-__declspec(noreturn)
-#else
 [[noreturn]]
-#endif
     bool error_impl(Msg&& msg)
 {
     ERR("%s", msg.data());
@@ -43,11 +39,7 @@ namespace BaseLib
 namespace detail
 {
 template <typename Msg>
-#if defined(_MSC_VER) && _MSC_VER < 1500
-__declspec(noreturn)
-#else
 [[noreturn]]
-#endif
     bool error_impl(Msg&& msg)
 {
     throw std::runtime_error(std::forward<Msg>(msg));
@@ -64,9 +56,9 @@ __declspec(noreturn)
 
 #define OGS_STR(x) #x
 #define OGS_STRINGIFY(x) OGS_STR(x)
-#define OGS_LOCATION                              \
-    " at " + BaseLib::extractBaseName(__FILE__) + \
-        ", line " OGS_STRINGIFY(__LINE__)
+#define OGS_LOCATION                               \
+    (" at " + BaseLib::extractBaseName(__FILE__) + \
+     ", line " OGS_STRINGIFY(__LINE__))
 
 #define OGS_FATAL(fmt, ...)                                           \
     BaseLib::detail::error_impl(BaseLib::format(fmt, ##__VA_ARGS__) + \

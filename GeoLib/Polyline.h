@@ -5,7 +5,7 @@
  * \brief  Definition of the PolyLine class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -93,7 +93,7 @@ public:
     /** constructor
      * \param pnt_vec a reference to the point vector
      */
-    Polyline(const std::vector<Point*>& pnt_vec);
+    explicit Polyline(const std::vector<Point*>& pnt_vec);
     /**
      * Copy constructor
      * @param ply Polyline
@@ -142,9 +142,6 @@ public:
      * Closes a polyline by adding a line segment that connects start- and end-point.
      */
     void closePolyline();
-
-    /// Update a the PointIDs vector based on given map, e.g. after the corresponding PointVec has changed
-    void updatePointIDs(const std::vector<std::size_t> &pnt_ids);
 
     /// Constructs one polyline from a vector of connected polylines.
     /// All polylines in this vector need to reference the same point vector.
@@ -261,4 +258,4 @@ bool operator==(Polyline const& lhs, Polyline const& rhs);
 
 bool pointsAreIdentical(const std::vector<Point*> &pnt_vec, std::size_t i, std::size_t j,
                         double prox);
-} // end namespace
+}  // namespace GeoLib

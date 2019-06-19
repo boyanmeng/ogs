@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -95,7 +95,7 @@ void ThermoMechanicalPhaseFieldLocalAssembler<ShapeFunction, IntegrationMethod,
 
     double const& dt = _process_data.dt;
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     int const n_integration_points = _integration_method.getNumberOfPoints();
@@ -149,9 +149,11 @@ void ThermoMechanicalPhaseFieldLocalAssembler<ShapeFunction, IntegrationMethod,
                                                           displacement_size);
 
         for (int i = 0; i < DisplacementDim; ++i)
+        {
             N_u.template block<1, displacement_size / DisplacementDim>(
                    i, i * displacement_size / DisplacementDim)
                 .noalias() = N;
+        }
 
         local_Jac.noalias() += B.transpose() * C_eff * B * w;
 
@@ -200,7 +202,7 @@ void ThermoMechanicalPhaseFieldLocalAssembler<ShapeFunction, IntegrationMethod,
 
     double const& dt = _process_data.dt;
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     int const n_integration_points = _integration_method.getNumberOfPoints();
@@ -295,7 +297,7 @@ void ThermoMechanicalPhaseFieldLocalAssembler<ShapeFunction, IntegrationMethod,
         typename ShapeMatricesType::template VectorType<phasefield_size>>(
         local_b_data, phasefield_size);
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     int const n_integration_points = _integration_method.getNumberOfPoints();

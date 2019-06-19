@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -31,11 +31,11 @@ int main(int argc, char *argv[])
     TCLAP::CmdLine cmd(
         "Query mesh information.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::UnlabeledValueArg<std::string> mesh_arg("mesh-file","input mesh file",true,"","string");
     cmd.add( mesh_arg );
     TCLAP::MultiArg<std::size_t> eleId_arg("e","element-id","element ID",false,"number");
@@ -53,7 +53,9 @@ int main(int argc, char *argv[])
     auto const mesh = std::unique_ptr<MeshLib::Mesh>(
         MeshLib::IO::readMeshFromFile(filename));
     if (!mesh)
+    {
         return EXIT_FAILURE;
+    }
 
     std::vector<std::size_t> selected_node_ids;
     if  (showNodeWithMaxEle_arg.getValue())
@@ -68,10 +70,7 @@ int main(int argc, char *argv[])
     }
     selected_node_ids.insert(selected_node_ids.end(), nodeId_arg.getValue().begin(), nodeId_arg.getValue().end());
 
-    MeshLib::PropertyVector<int> const*const materialIds =
-        mesh->getProperties().existsPropertyVector<int>("MaterialIDs")
-            ? mesh->getProperties().getPropertyVector<int>("MaterialIDs")
-            : nullptr;
+    auto const materialIds = materialIDs(*mesh);
     for (auto ele_id : eleId_arg.getValue())
     {
         std::stringstream out;
@@ -82,18 +81,27 @@ int main(int argc, char *argv[])
         out << "# Element " << ele->getID() << std::endl;
         out << "Type : " << CellType2String(ele->getCellType()) << std::endl;
         if (materialIds)
+        {
             out << "Mat ID : " << (*materialIds)[ele_id] << std::endl;
+        }
         out << "Nodes: " << std::endl;
-        for (unsigned i=0; i<ele->getNumberOfNodes(); i++)
-            out <<  ele->getNode(i)->getID() << " " << *ele->getNode(i) << std::endl;
+        for (unsigned i = 0; i < ele->getNumberOfNodes(); i++)
+        {
+            out << ele->getNode(i)->getID() << " " << *ele->getNode(i)
+                << std::endl;
+        }
         out << "Content: " << ele->getContent() << std::endl;
         out << "Neighbors: ";
         for (unsigned i=0; i<ele->getNumberOfNeighbors(); i++)
         {
             if (ele->getNeighbor(i))
+            {
                 out << ele->getNeighbor(i)->getID() << " ";
+            }
             else
+            {
                 out << "none ";
+            }
         }
         out << std::endl;
         INFO("%s", out.str().c_str());
@@ -110,11 +118,15 @@ int main(int argc, char *argv[])
         out << "Coordinates: " << *node << std::endl;
         out << "Connected elements (" << node->getNumberOfElements() << "): ";
         for (auto ele : node->getElements())
+        {
             out << ele->getID() << " ";
+        }
         out << std::endl;
         out << "Connected nodes (" << node->getConnectedNodes().size() << "): ";
         for (auto nd : node->getConnectedNodes())
+        {
             out << nd->getID() << " ";
+        }
         out << std::endl;
         INFO("%s", out.str().c_str());
     }

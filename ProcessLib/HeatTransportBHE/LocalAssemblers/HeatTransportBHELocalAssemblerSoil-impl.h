@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -47,7 +47,7 @@ HeatTransportBHELocalAssemblerSoil<ShapeFunction, IntegrationMethod>::
                                         3 /* GlobalDim */>(
         e, is_axially_symmetric, _integration_method);
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element_id);
 
     // ip data initialization
@@ -85,7 +85,7 @@ void HeatTransportBHELocalAssemblerSoil<ShapeFunction, IntegrationMethod>::
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element_id);
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)

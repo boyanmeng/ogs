@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,7 +35,8 @@ void processOutputData(
     NumLib::LocalToGlobalIndexMap const& dof_table,
     std::vector<std::reference_wrapper<ProcessVariable>> const&
         process_variables,
-    SecondaryVariableCollection secondary_variables,
+    SecondaryVariableCollection const& secondary_variables,
+    bool const output_secondary_variable,
     std::vector<std::unique_ptr<IntegrationPointWriter>> const&
         integration_point_writer,
     ProcessOutput const& process_output);
@@ -44,7 +45,7 @@ void processOutputData(
 ///
 /// See Output::_output_file_data_mode documentation for the data_mode
 /// parameter.
-void makeOutput(std::string const& file_name, MeshLib::Mesh& mesh,
+void makeOutput(std::string const& file_name, MeshLib::Mesh const& mesh,
                 bool const compress_output, int const data_mode);
 
 }  // namespace ProcessLib

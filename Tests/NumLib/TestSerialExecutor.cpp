@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -33,7 +33,10 @@ public:
 
         PtrContainer container;
         container.reserve(size);
-        for (auto& el : container_back) container.push_back(&el);
+        for (auto& el : container_back)
+        {
+            container.push_back(&el);
+        }
 
         cb(container, reference);
 

@@ -5,7 +5,7 @@
  * \brief  Definition of the VtkMeshConverter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -76,6 +76,7 @@ private:
                                    MeshElemType elem_type)
     {
         for (std::size_t i = 0; i < imgHeight; i++)
+        {
             for (std::size_t j = 0; j < imgWidth; j++)
             {
                 if (!pix_vis[i * imgWidth + j])
@@ -89,6 +90,7 @@ private:
                 else if (elem_type == MeshElemType::QUAD)
                     prop_vec.push_back(val);
             }
+        }
     }
 
     static void convertArray(vtkDataArray& array,

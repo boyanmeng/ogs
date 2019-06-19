@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,10 +12,10 @@
 #include "BaseLib/FileTools.h"
 #include "GroundwaterFlowProcess.h"
 #include "GroundwaterFlowProcessData.h"
+#include "MeshLib/IO/readMeshFromFile.h"
+#include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
-
-#include "MeshLib/IO/readMeshFromFile.h"
 
 namespace ProcessLib
 {
@@ -25,7 +25,7 @@ std::unique_ptr<Process> createGroundwaterFlowProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
     std::vector<ProcessVariable> const& variables,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     BaseLib::ConfigTree const& config,
     std::vector<std::unique_ptr<MeshLib::Mesh>> const& meshes,
@@ -50,21 +50,20 @@ std::unique_ptr<Process> createGroundwaterFlowProcess(
     process_variables.push_back(std::move(per_process_variables));
 
     // Hydraulic conductivity parameter.
-    auto& hydraulic_conductivity = findParameter<double>(
+    auto& hydraulic_conductivity = ParameterLib::findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__GROUNDWATER_FLOW__hydraulic_conductivity}
-        "hydraulic_conductivity",
-        parameters, 1);
+        "hydraulic_conductivity", parameters, 0 /*arbitrary many components*/,
+        &mesh);
 
-    DBUG("Use \'%s\' as hydraulic conductivity parameter.",
+    DBUG("Use '%s' as hydraulic conductivity parameter.",
          hydraulic_conductivity.name.c_str());
 
     GroundwaterFlowProcessData process_data{hydraulic_conductivity};
 
     SecondaryVariableCollection secondary_variables;
 
-    NumLib::NamedFunctionCaller named_function_caller(
-        {"GWFlow_pressure"});
+    NumLib::NamedFunctionCaller named_function_caller({"GWFlow_pressure"});
 
     ProcessLib::createSecondaryVariables(config, secondary_variables,
                                          named_function_caller);
@@ -75,9 +74,8 @@ std::unique_ptr<Process> createGroundwaterFlowProcess(
         config.getConfigSubtreeOptional("calculatesurfaceflux");
     if (calculatesurfaceflux_config)
     {
-        surfaceflux = ProcessLib::SurfaceFluxData::
-            createSurfaceFluxData(*calculatesurfaceflux_config, meshes,
-                                           output_directory);
+        surfaceflux = ProcessLib::SurfaceFluxData::createSurfaceFluxData(
+            *calculatesurfaceflux_config, meshes, output_directory);
     }
 
     return std::make_unique<GroundwaterFlowProcess>(

@@ -61,6 +61,7 @@ AddTest(
 AddTest(
     NAME LARGE_LiquidFlow_Anisotropic_GravityDriven3D
     PATH Parabolic/LiquidFlow/GravityDriven3D
+    RUNTIME 70
     EXECUTABLE ogs
     EXECUTABLE_ARGS anisotropic_gravity_driven3D.prj
     WRAPPER time
@@ -73,6 +74,7 @@ AddTest(
 AddTest(
     NAME LARGE_LiquidFlow_Isotropic_GravityDriven3D
     PATH Parabolic/LiquidFlow/GravityDriven3D
+    RUNTIME 70
     EXECUTABLE ogs
     EXECUTABLE_ARGS isotropic_gravity_driven3D.prj
     WRAPPER time
@@ -80,6 +82,76 @@ AddTest(
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
     hex.vtu isotropic_gravity_driven3D_pcs_0_ts_1_t_1.000000.vtu analytic_pressure pressure 1e-6 1e-6
+)
+
+AddTest(
+    NAME LiquidFlowDirichletBCWithinTimeInterval
+    PATH Parabolic/LiquidFlow/TimeIntervalDirichletBC
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS TimeIntervalDirichletBC.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    mesh2D.vtu dirichlet_bc_wihin_interval_pcs_0_ts_2_t_10.000000.vtu analytical_solution_t_lt_10 pressure 1e-6 1e-12
+    mesh2D.vtu dirichlet_bc_wihin_interval_pcs_0_ts_4_t_20.000000.vtu analytical_solution_t_gt_10 pressure 1e-6 1e-12
+)
+
+AddTest(
+    NAME LiquidFlow_h1_1Dsource
+    PATH Parabolic/LiquidFlow/Verification/h1_1Dsource
+    EXECUTABLE_ARGS h1_1Dsource.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    h1_1Dsource_pcs_0_ts_1_t_1.000000.vtu h1_1Dsource_pcs_0_ts_1_t_1.000000.vtu pressure pressure 5e-8 0.0
+)
+
+AddTest(
+    NAME LiquidFlow_h1_1Dsteady
+    PATH Parabolic/LiquidFlow/Verification/h1_1Dsteady
+    EXECUTABLE_ARGS h1_1Dsteady.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    h1_1Dsteady_pcs_0_ts_1_t_1.000000.vtu h1_1Dsteady_pcs_0_ts_1_t_1.000000.vtu pressure pressure 1e-9 0.0
+)
+
+AddTest(
+    NAME LiquidFlow_h1_3Dhydstat
+    PATH Parabolic/LiquidFlow/Verification/h1_3Dhydstat
+    EXECUTABLE_ARGS h1_3Dhydstat.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    h1_3Dhydstat_pcs_0_ts_1_t_1.000000.vtu h1_3Dhydstat_pcs_0_ts_1_t_1.000000.vtu pressure pressure 1e-5 0.0
+)
+
+AddTest(
+    NAME LiquidFlow_h2_1D1bt
+    PATH Parabolic/LiquidFlow/Verification/h2_1D1bt
+    EXECUTABLE_ARGS h2_1D1bt.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    h2_1D1bt_pcs_0_ts_500_t_21600.000000.vtu h2_1D1bt_pcs_0_ts_500_t_21600.000000.vtu pressure pressure 1e-5 0.0
+    h2_1D1bt_pcs_0_ts_1000_t_43200.000000.vtu h2_1D1bt_pcs_0_ts_1000_t_43200.000000.vtu pressure pressure 1e-5 0.0
+)
+
+AddTest(
+    NAME LiquidFlow_h2_1D2bt
+    PATH Parabolic/LiquidFlow/Verification/h2_1D2bt
+    EXECUTABLE_ARGS h2_1D2bt.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT OGS_USE_MPI
+    DIFF_DATA
+    h2_1D2bt_pcs_0_ts_1500_t_3888.000000.vtu h2_1D2bt_pcs_0_ts_1500_t_3888.000000.vtu pressure pressure 1e-5 0.0
+    h2_1D2bt_pcs_0_ts_3000_t_7776.000000.vtu h2_1D2bt_pcs_0_ts_3000_t_7776.000000.vtu pressure pressure 1e-5 0.0
 )
 
 #===============================================================================
@@ -152,4 +224,17 @@ AddTest(
     REQUIREMENTS OGS_USE_MPI
     DIFF_DATA
     hex.vtu isotropic_gravity_driven3D_pcs_0_ts_1_t_1_000000_0.vtu analytic_pressure pressure 1e-6 1e-6
+)
+
+AddTest(
+    NAME LiquidFlowDirichletBCWithinTimeInterval
+    PATH Parabolic/LiquidFlow/TimeIntervalDirichletBC
+    EXECUTABLE_ARGS TimeIntervalDirichletBC.prj
+    WRAPPER mpirun
+    WRAPPER_ARGS -np 1
+    TESTER vtkdiff
+    REQUIREMENTS OGS_USE_MPI
+    DIFF_DATA
+    mesh2D.vtu dirichlet_bc_wihin_interval_pcs_0_ts_2_t_10_000000_0.vtu analytical_solution_t_lt_10 pressure 1e-6 1e-12
+    mesh2D.vtu dirichlet_bc_wihin_interval_pcs_0_ts_4_t_20_000000_0.vtu analytical_solution_t_gt_10 pressure 1e-6 1e-12
 )

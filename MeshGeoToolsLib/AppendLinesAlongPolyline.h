@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -40,4 +40,4 @@ namespace MeshGeoToolsLib
  */
 std::unique_ptr<MeshLib::Mesh> appendLinesAlongPolylines(
     const MeshLib::Mesh& mesh, const GeoLib::PolylineVec& ply_vec);
-}
+}  // namespace MeshGeoToolsLib

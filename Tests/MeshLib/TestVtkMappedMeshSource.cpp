@@ -5,7 +5,7 @@
  * \brief  Unit tests for In-Situ mesh source
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -40,7 +40,6 @@ class InSituMesh : public ::testing::Test
 {
     public:
     InSituMesh()
-     : mesh(nullptr)
     {
         mesh = MeshLib::MeshGenerator::generateRegularHexMesh(
             this->length, this->subdivisions);
@@ -129,7 +128,7 @@ class InSituMesh : public ::testing::Test
     }
 
     ~InSituMesh() override { delete mesh; }
-    MeshLib::Mesh * mesh;
+    MeshLib::Mesh* mesh{nullptr};
     const std::size_t subdivisions = 5;
     const double length = 1.0;
     const double dx = length / subdivisions;
@@ -239,8 +238,10 @@ TEST_F(InSituMesh, DISABLED_MappedMeshSourceRoundtrip)
     {
         for(bool compressed : { true, false })
         {
-            if(dataMode == vtkXMLWriter::Ascii && compressed)
+            if (dataMode == vtkXMLWriter::Ascii && compressed)
+            {
                 continue;
+            }
             MeshLib::IO::VtuInterface vtuInterface(mesh, dataMode, compressed);
             ASSERT_TRUE(vtuInterface.writeToFile(test_data_file));
 
@@ -327,7 +328,9 @@ TEST_F(InSituMesh, DISABLED_MappedMeshSourceRoundtrip)
                       doubleProps->getNumberOfTuples());
             ASSERT_EQ(newDoubleProps->size(), doubleProps->size());
             for (std::size_t i = 0; i < doubleProps->size(); i++)
+            {
                 ASSERT_EQ((*newDoubleProps)[i], (*doubleProps)[i]);
+            }
 
             auto unsignedProps = meshProperties.getPropertyVector<unsigned>(
                 "CellUnsignedProperty");
@@ -340,7 +343,9 @@ TEST_F(InSituMesh, DISABLED_MappedMeshSourceRoundtrip)
                       unsignedProps->getNumberOfTuples());
             ASSERT_EQ(newUnsignedIds->size(), unsignedProps->size());
             for (std::size_t i = 0; i < unsignedProps->size(); i++)
+            {
                 ASSERT_EQ((*newUnsignedIds)[i], (*unsignedProps)[i]);
+            }
 
             {   // Field data
                 auto p =
@@ -353,7 +358,9 @@ TEST_F(InSituMesh, DISABLED_MappedMeshSourceRoundtrip)
                 ASSERT_EQ(new_p->getNumberOfTuples(), p->getNumberOfTuples());
                 ASSERT_EQ(new_p->size(), p->size());
                 for (std::size_t i = 0; i < unsignedProps->size(); i++)
+                {
                     ASSERT_EQ((*newUnsignedIds)[i], (*unsignedProps)[i]);
+                }
             }
 
             auto const* const materialIds =
@@ -366,7 +373,9 @@ TEST_F(InSituMesh, DISABLED_MappedMeshSourceRoundtrip)
                       materialIds->getNumberOfTuples());
             ASSERT_EQ(newMaterialIds->size(), materialIds->size());
             for (std::size_t i = 0; i < materialIds->size(); i++)
+            {
                 ASSERT_EQ((*newMaterialIds)[i], (*materialIds)[i]);
+            }
         }
     }
 }

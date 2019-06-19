@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.net)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.net)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,7 +20,7 @@
 #include "ElementTreeModel.h"
 #include "FemConditionModel.h"
 #include "GEOModels.h"
-#include "MshModel.h"
+#include "MeshModel.h"
 #include "ProcessModel.h"
 #include "VisPrefsDialog.h"
 #include "VtkVisPipeline.h"
@@ -76,6 +76,7 @@ protected slots:
     void loadPetrelFiles();
     void mapGeometry(const std::string &geo_name);
     void convertMeshToGeometry(const MeshLib::Mesh* mesh);
+    void convertPointsToStations(std::string const& geo_name);
     void openRecentFile();
     void about();
     void showAddPipelineFilterItemDialog(QModelIndex parentIndex);
@@ -123,7 +124,7 @@ private:
     QString getLastUsedDir();
 
     DataHolderLib::Project _project;
-    std::unique_ptr<MshModel> _meshModel;
+    std::unique_ptr<MeshModel> _meshModel;
     std::unique_ptr<ElementTreeModel> _elementModel;
     std::unique_ptr<ProcessModel> _processModel;
     std::unique_ptr<FemConditionModel> _conditionModel;

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,10 +12,9 @@
 
 #include "createPorosityModel.h"
 
-#include "BaseLib/Error.h"
 #include "BaseLib/ConfigTree.h"
-
-#include "ProcessLib/Utils/ProcessUtils.h"
+#include "BaseLib/Error.h"
+#include "ParameterLib/Utils.h"
 
 #include "Porosity.h"
 
@@ -23,15 +22,16 @@ namespace MaterialLib
 {
 namespace PorousMedium
 {
-std::unique_ptr<Porosity> createPorosityModel(BaseLib::ConfigTree const& config,
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters)
+std::unique_ptr<Porosity> createPorosityModel(
+    BaseLib::ConfigTree const& config,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters)
 {
     //! \ogs_file_param{material__porous_medium__porosity__type}
     auto const type = config.getConfigParameter<std::string>("type");
 
     if (type == "Constant")
     {
-        auto const& constant_porosity = ProcessLib::findParameter<double>(
+        auto const& constant_porosity = ParameterLib::findParameter<double>(
             config,
             //! \ogs_file_param_special{material__porous_medium__porosity__porosity_parameter}
             "porosity_parameter", parameters, 1);
@@ -44,5 +44,5 @@ std::unique_ptr<Porosity> createPorosityModel(BaseLib::ConfigTree const& config,
               type.data());
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

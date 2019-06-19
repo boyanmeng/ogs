@@ -5,7 +5,7 @@
  * \brief Filename manipulation routines.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -52,7 +52,9 @@ T swapEndianness(T const& v)
 
     a.v = v;
     for (unsigned short i = 0; i < sizeof(T); i++)
+    {
         b.c[i] = a.c[sizeof(T) - i - 1];
+    }
 
     return b.v;
 }
@@ -73,8 +75,9 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
 {
     std::ifstream in(filename.c_str());
     if (!in) {
-        ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
-        ERR("Could not open file \"%s\" for input.", filename.c_str());
+        ERR("readBinaryArray(): Error while reading from file '%s'.",
+            filename.c_str());
+        ERR("Could not open file '%s' for input.", filename.c_str());
         in.close();
         return std::vector<T>();
     }
@@ -83,12 +86,17 @@ std::vector<T> readBinaryArray(std::string const& filename, std::size_t const n)
     result.reserve(n);
 
     for (std::size_t p = 0; in && !in.eof() && p < n; ++p)
+    {
         result.push_back(BaseLib::readBinaryValue<T>(in));
+    }
 
     if (result.size() == n)
+    {
         return result;
+    }
 
-    ERR("readBinaryArray(): Error while reading from file \"%s\".", filename.c_str());
+    ERR("readBinaryArray(): Error while reading from file '%s'.",
+        filename.c_str());
     ERR("Read different number of values. Expected %d, got %d.", n, result.size());
 
     if (!in.eof())

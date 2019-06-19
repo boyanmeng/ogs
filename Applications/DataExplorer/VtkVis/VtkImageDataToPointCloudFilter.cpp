@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,16 +26,7 @@
 
 vtkStandardNewMacro(VtkImageDataToPointCloudFilter);
 
-VtkImageDataToPointCloudFilter::VtkImageDataToPointCloudFilter()
-    : Gamma(1.0),
-      PointScaleFactor(1.0),
-      MinHeight(0),
-      MaxHeight(1000),
-      MinNumberOfPointsPerCell(1),
-      MaxNumberOfPointsPerCell(20),
-      IsLinear(true)
-{
-}
+VtkImageDataToPointCloudFilter::VtkImageDataToPointCloudFilter() = default;
 
 void VtkImageDataToPointCloudFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -102,7 +93,7 @@ int VtkImageDataToPointCloudFilter::RequestData(
         }
         float const val(((float*)pixvals)[i * n_comp]);
         double const calc_gamma = (IsLinear) ? 1 : Gamma;
-        double const pnts_per_cell = interpolate(range[0], range[1], val, calc_gamma);
+        std::size_t const pnts_per_cell = interpolate(range[0], range[1], val, calc_gamma);
         density.push_back(static_cast<std::size_t>(
             std::floor(pnts_per_cell * GetPointScaleFactor())));
     }

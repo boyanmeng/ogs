@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -11,8 +11,8 @@
 
 #include <logog/include/logog.hpp>
 
-#include "MaterialLib/Fluid/FluidProperty.h"
 #include "MaterialLib/Fluid/FluidProperties/CreateFluidProperties.h"
+#include "MaterialLib/Fluid/FluidProperty.h"
 #include "MaterialLib/PorousMedium/Porosity/Porosity.h"
 #include "MaterialLib/PorousMedium/Storage/Storage.h"
 #include "MaterialLib/PorousMedium/UnsaturatedProperty/CapillaryPressure/CapillaryPressureSaturation.h"
@@ -22,8 +22,8 @@
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/PropertyVector.h"
-#include "ProcessLib/Parameter/Parameter.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
+#include "ParameterLib/Parameter.h"
+#include "ParameterLib/SpatialPosition.h"
 
 #include "RichardsFlowMaterialProperties.h"
 
@@ -35,7 +35,7 @@ std::unique_ptr<RichardsFlowMaterialProperties>
 createRichardsFlowMaterialProperties(
     BaseLib::ConfigTree const& config,
     MeshLib::PropertyVector<int> const* const material_ids,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters)
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters)
 {
     DBUG("Reading material properties of Richards flow process.");
 
@@ -46,7 +46,6 @@ createRichardsFlowMaterialProperties(
 
     // Get porous properties
     std::vector<int> mat_ids;
-    std::vector<int> mat_krel_ids;
     std::vector<std::unique_ptr<MaterialLib::PorousMedium::Permeability>>
         intrinsic_permeability_models;
     std::vector<std::unique_ptr<MaterialLib::PorousMedium::Porosity>>
@@ -114,5 +113,5 @@ createRichardsFlowMaterialProperties(
             std::move(relative_permeability_models)}};
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace RichardsFlow
+}  // namespace ProcessLib

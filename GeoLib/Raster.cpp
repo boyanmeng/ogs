@@ -5,7 +5,7 @@
  * @brief Implementation of the GeoLib::Raster class.
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -53,41 +53,6 @@ void Raster::refineRaster(std::size_t scaling)
 Raster::~Raster()
 {
     delete [] _raster_data;
-}
-
-Raster* Raster::getRasterFromSurface(Surface const& sfc, double cell_size, double no_data_val)
-{
-    MathLib::Point3d const& ll(sfc.getAABB().getMinPoint());
-    MathLib::Point3d const& ur(sfc.getAABB().getMaxPoint());
-
-    const std::size_t n_cols = static_cast<std::size_t>(std::abs(ur[0]-ll[0]) / cell_size)+1;
-    const std::size_t n_rows = static_cast<std::size_t>(std::abs(ur[1]-ll[1]) / cell_size)+1;
-    const std::size_t n_triangles(sfc.getNumberOfTriangles());
-    auto* z_vals(new double[n_cols * n_rows]);
-    std::size_t k(0);
-
-    for (std::size_t r(0); r < n_cols; r++) {
-        for (std::size_t c(0); c < n_rows; c++) {
-            GeoLib::Point const test_pnt = { ll[0] + r*cell_size, ll[1] + c*cell_size, 0};
-            for (k=0; k<n_triangles; k++) {
-                if (sfc[k]->containsPoint2D(test_pnt)) {
-                    GeoLib::Triangle const * const tri (sfc[k]);
-                    // compute coefficients c0, c1, c2 for the plane f(x,y) = c0 x + c1 y + c2
-                    double coeff[3] = {0.0, 0.0, 0.0};
-                    GeoLib::getPlaneCoefficients(*tri, coeff);
-                    z_vals[r*n_rows+c] = coeff[0] * test_pnt[0] + coeff[1] * test_pnt[1] + coeff[2];
-                    break;
-                }
-            }
-            if (k==n_triangles) {
-                z_vals[r*n_rows+c] = no_data_val;
-            }
-        }
-    }
-
-    RasterHeader header = { std::size_t(n_cols),  std::size_t(n_rows), 1,
-        MathLib::Point3d(ll), cell_size, static_cast<double>(-9999) };
-    return new Raster(header, z_vals, z_vals+n_cols*n_rows);
 }
 
 double Raster::getValueAtPoint(const MathLib::Point3d &pnt) const
@@ -142,15 +107,18 @@ double Raster::interpolateValueAtPoint(MathLib::Point3d const& pnt) const
     {
         // check if neighbour pixel is still on the raster, otherwise substitute
         // a no data value. This also allows the cast to unsigned type.
-        if ( (xIdx + x_nb[j]) < 0 ||
-             (yIdx + y_nb[j]) < 0 ||
-             (xIdx + x_nb[j]) > (_header.n_cols-1) ||
-             (yIdx + y_nb[j]) > (_header.n_rows-1) )
+        if ((xIdx + x_nb[j]) < 0 || (yIdx + y_nb[j]) < 0 ||
+            (xIdx + x_nb[j]) > (_header.n_cols - 1) ||
+            (yIdx + y_nb[j]) > (_header.n_rows - 1))
+        {
             pix_val[j] = _header.no_data;
+        }
         else
-            pix_val[j] = _raster_data[
-                static_cast<std::size_t>(yIdx + y_nb[j]) * _header.n_cols +
-                static_cast<std::size_t>(xIdx + x_nb[j])];
+        {
+            pix_val[j] = _raster_data[static_cast<std::size_t>(yIdx + y_nb[j]) *
+                                          _header.n_cols +
+                                      static_cast<std::size_t>(xIdx + x_nb[j])];
+        }
 
         // remove no data values
         if (std::fabs(pix_val[j] - _header.no_data) < std::numeric_limits<double>::epsilon())
@@ -163,8 +131,10 @@ double Raster::interpolateValueAtPoint(MathLib::Point3d const& pnt) const
     // adjust weights if necessary
     if (no_data_count > 0)
     {
-        if (no_data_count == 4) // if there is absolutely no data just use the default value
+        if (no_data_count == 4)
+        {  // if there is absolutely no data just use the default value
             return _header.no_data;
+        }
 
         const double norm = 1.0 / (weight[0]+weight[1]+weight[2]+weight[3]);
         std::for_each(weight.begin(), weight.end(), [&norm](double &val){val*=norm;});

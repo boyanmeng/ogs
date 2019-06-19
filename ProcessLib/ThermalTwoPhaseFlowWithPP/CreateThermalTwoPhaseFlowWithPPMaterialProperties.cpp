@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,8 +25,8 @@
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "MeshLib/Mesh.h"
 #include "MeshLib/PropertyVector.h"
-#include "ProcessLib/Parameter/Parameter.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
+#include "ParameterLib/Parameter.h"
+#include "ParameterLib/SpatialPosition.h"
 
 #include "ThermalTwoPhaseFlowWithPPMaterialProperties.h"
 
@@ -38,7 +38,7 @@ std::unique_ptr<ThermalTwoPhaseFlowWithPPMaterialProperties>
 createThermalTwoPhaseFlowWithPPMaterialProperties(
     BaseLib::ConfigTree const& config,
     MeshLib::PropertyVector<int> const& material_ids,
-    std::vector<std::unique_ptr<ProcessLib::ParameterBase>> const& parameters)
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters)
 {
     DBUG(
         "Reading material properties of nonisothermal two-phase flow process.");
@@ -102,5 +102,5 @@ createThermalTwoPhaseFlowWithPPMaterialProperties(
         std::move(vapor_property));
 }
 
-}  // end namespace
-}  // end namespace
+}  // namespace ThermalTwoPhaseFlowWithPP
+}  // namespace ProcessLib

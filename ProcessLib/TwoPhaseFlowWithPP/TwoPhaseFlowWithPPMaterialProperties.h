@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -46,7 +46,7 @@ public:
     using ArrayType = MaterialLib::Fluid::FluidProperty::ArrayType;
 
     TwoPhaseFlowWithPPMaterialProperties(
-        boost::optional<MeshLib::PropertyVector<int> const&> const material_ids,
+        MeshLib::PropertyVector<int> const* const material_ids,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>
             liquid_density,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>
@@ -73,26 +73,25 @@ public:
     Eigen::MatrixXd const& getPermeability(
         const int material_id,
         const double t,
-        const ProcessLib::SpatialPosition& pos,
+        const ParameterLib::SpatialPosition& pos,
         const int dim) const;
 
     double getPorosity(const int material_id, const double t,
-                       const ProcessLib::SpatialPosition& pos, const double p,
+                       const ParameterLib::SpatialPosition& pos, const double p,
                        const double T, const double porosity_variable) const;
 
-    double getNonwetRelativePermeability(const double t,
-                                         const ProcessLib::SpatialPosition& pos,
-                                         const double p, const double T,
-                                         const double saturation) const;
+    double getNonwetRelativePermeability(
+        const double t, const ParameterLib::SpatialPosition& pos,
+        const double p, const double T, const double saturation) const;
     double getWetRelativePermeability(const double t,
-                                      const ProcessLib::SpatialPosition& pos,
+                                      const ParameterLib::SpatialPosition& pos,
                                       const double p, const double T,
                                       const double saturation) const;
     double getSaturation(const int material_id, const double t,
-                         const ProcessLib::SpatialPosition& pos, const double p,
-                         const double T, const double pc) const;
+                         const ParameterLib::SpatialPosition& pos,
+                         const double p, const double T, const double pc) const;
     double getSaturationDerivative(const int material_id, const double t,
-                                   const ProcessLib::SpatialPosition& pos,
+                                   const ParameterLib::SpatialPosition& pos,
                                    const double p, const double T,
                                    const double saturation) const;
     double getLiquidDensity(const double p, const double T) const;
@@ -110,7 +109,7 @@ protected:
     /** Use two phase models for different material zones.
     *  Material IDs must be given as mesh element properties.
     */
-    boost::optional<MeshLib::PropertyVector<int> const&> const _material_ids;
+    MeshLib::PropertyVector<int> const* const _material_ids;
 
     std::vector<std::unique_ptr<MaterialLib::PorousMedium::Permeability>>
         _intrinsic_permeability_models;
@@ -126,5 +125,5 @@ protected:
         _relative_permeability_models;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace TwoPhaseFlowWithPP
+}  // namespace ProcessLib

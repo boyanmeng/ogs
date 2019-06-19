@@ -117,8 +117,9 @@ foreach(mesh_size 1e5 1e6)
 endforeach()
 
 AddTest(
-    NAME LARGE_GroundWaterFlowProcess_square_1x1_1e5
+    NAME GroundWaterFlowProcess_square_1x1_1e5
     PATH Elliptic/square_1x1_GroundWaterFlow
+    RUNTIME 2
     EXECUTABLE ogs
     EXECUTABLE_ARGS square_1e5.prj
     TESTER vtkdiff
@@ -131,6 +132,7 @@ AddTest(
 AddTest(
     NAME LARGE_GroundWaterFlowProcess_square_1x1_1e6
     PATH Elliptic/square_1x1_GroundWaterFlow
+    RUNTIME 36
     EXECUTABLE ogs
     EXECUTABLE_ARGS square_1e6.prj
     TESTER vtkdiff
@@ -264,7 +266,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    cube_1x1x1_hex_1e3_complete_surface.vtu cube_1x1x1_hex_1e3_complete_surface_left_right_dirichlet_surfaceflux_t_1.000000.vtu surfaceflux_left_right_dirichlet_reference surfaceflux 1e-15 1e-15
+    cube_1x1x1_hex_1e3_complete_surface_left_right_dirichlet_specific_flux_t_1.000000.vtu cube_1x1x1_hex_1e3_complete_surface_left_right_dirichlet_specific_flux_t_1.000000.vtu specific_flux specific_flux 5e-15 5e-15
 )
 AddTest(
     NAME GroundWaterFlowProcess_cube_1x1x1_1e3_neumann_calculatesurfaceflux
@@ -274,7 +276,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    cube_1x1x1_hex_1e3_complete_surface.vtu cube_1x1x1_hex_1e3_complete_surface_neumann_surfaceflux_t_1.000000.vtu surfaceflux_neumann_reference surfaceflux 1e-15 1e-15
+    cube_1x1x1_hex_1e3_complete_surface_neumann_specific_flux_t_1.000000.vtu cube_1x1x1_hex_1e3_complete_surface_neumann_specific_flux_t_1.000000.vtu specific_flux specific_flux 2e-14 2e-14
 )
 AddTest(
     NAME GroundWaterFlowProcess_cube_1x1x1_2e3_prism_surfaceflux_left_right
@@ -284,7 +286,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    cube_1x1x1_prism_2e3_complete_surface.vtu cube_1x1x1_prism_2e3_complete_surface_left_right_dirichlet_surfaceflux_t_1.000000.vtu surfaceflux_left_right_reference surfaceflux_left_right 1e-15 1e-15
+    cube_1x1x1_prism_2e3_complete_surface_left_right_dirichlet_specific_flux_t_1.000000.vtu cube_1x1x1_prism_2e3_complete_surface_left_right_dirichlet_specific_flux_t_1.000000.vtu specific_flux specific_flux 1e-14 1e-14
 )
 
 AddTest(
@@ -295,7 +297,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    cube_1x1x1_prism_2e3_complete_surface.vtu cube_1x1x1_prism_2e3_complete_surface_front_back_dirichlet_surfaceflux_t_1.000000.vtu surfaceflux_front_back_reference surfaceflux_front_back 1e-15 1e-15
+    cube_1x1x1_prism_2e3_complete_surface_front_back_dirichlet_specific_flux_t_1.000000.vtu cube_1x1x1_prism_2e3_complete_surface_front_back_dirichlet_specific_flux_t_1.000000.vtu specific_flux specific_flux  1e-14 1e-14
 )
 
 AddTest(
@@ -306,7 +308,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    cube_1x1x1_prism_2e3_complete_surface.vtu cube_1x1x1_prism_2e3_complete_surface_top_bottom_dirichlet_surfaceflux_t_1.000000.vtu surfaceflux_top_bottom_reference surfaceflux_top_bottom 1e-15 1e-15
+    cube_1x1x1_prism_2e3_complete_surface_top_bottom_dirichlet_specific_flux_t_1.000000.vtu cube_1x1x1_prism_2e3_complete_surface_top_bottom_dirichlet_specific_flux_t_1.000000.vtu specific_flux specific_flux 1e-14 1e-14
 )
 
 AddTest(
@@ -317,7 +319,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    wedge_1x1x1_1e3_prism_complete_surface.vtu wedge_1x1x1_1e3_prism_complete_surface_surfaceflux_t_1.000000.vtu surfaceflux_reference surfaceflux 1e-15 1e-15
+    wedge_1x1x1_1e3_prism_complete_surface_specific_flux_t_1.000000.vtu wedge_1x1x1_1e3_prism_complete_surface_specific_flux_t_1.000000.vtu specific_flux specific_flux 2e-14 0
 )
 
 # SQUARE 1x1 GROUNDWATER FLOW TEST -- AXIALLY SYMMETRIC
@@ -572,7 +574,7 @@ AddTest(
     TESTER vtkdiff
     REQUIREMENTS NOT OGS_USE_MPI
     DIFF_DATA
-    expected_neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu pressure pressure 1e-14 0
+    expected_neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu pressure pressure 2e-14 0
     expected_neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu neumann_nonuniform_pcs_0_ts_1_t_1.000000.vtu darcy_velocity darcy_velocity 1e-12 0
 )
 
@@ -755,3 +757,7 @@ AddTest(
     DIFF_DATA
     square_1x1_quad_1e5.vtu square_1e5_volumetricsourceterm_pcs_0_ts_1_t_1.000000.vtu analytical_solution pressure 0.75e-4 1e-16
 )
+
+if (NOT OGS_USE_MPI)
+    OgsTest(PROJECTFILE "Elliptic/cube_1x1x1_GroundWaterFlow/cube_1e4_anisotropic.prj")
+endif() # OGS_USE_MPI

@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkCompositeGeoObjectFilter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -88,7 +88,8 @@ void VtkCompositeGeoObjectFilter::init()
 
 void VtkCompositeGeoObjectFilter::SetIndex(std::size_t idx)
 {
-    _threshold->ThresholdBetween(idx, idx);
+    double const d_idx = static_cast<double>(idx);
+    _threshold->ThresholdBetween(d_idx, d_idx);
 }
 
 

@@ -5,7 +5,7 @@
  * \brief  Definition of the TetGenInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -209,9 +209,9 @@ private:
                               std::string const& matId) const;
 
     /// the value is true if the indexing is zero based, else false
-    bool _zero_based_idx;
+    bool _zero_based_idx{false};
 
     /// true if boundary markers are set, false otherwise
-    bool _boundary_markers;
+    bool _boundary_markers{false};
 };
-}
+}  // namespace FileIO

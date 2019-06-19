@@ -1,7 +1,8 @@
 #!/usr/bin/env groovy
-@Library('jenkins-pipeline@1.0.12') _
+@Library('jenkins-pipeline@1.0.22') _
 
 def stage_required = [build: false, data: false, full: false, docker: false]
+def build_shared = 'ON'
 
 pipeline {
   agent none
@@ -9,7 +10,17 @@ pipeline {
     ansiColor('xterm')
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
-    timeout(time: 3, unit: 'HOURS')
+    timeout(time: 6, unit: 'HOURS')
+  }
+  parameters {
+    booleanParam(name: 'docker_conan', defaultValue: true)
+    booleanParam(name: 'docker_conan_debug', defaultValue: true)
+    booleanParam(name: 'docker_conan_gui', defaultValue: true)
+    booleanParam(name: 'eve_serial', defaultValue: true)
+    booleanParam(name: 'eve_parallel', defaultValue: true)
+    booleanParam(name: 'win', defaultValue: true)
+    booleanParam(name: 'mac', defaultValue: true)
+    booleanParam(name: 'clang_analyzer', defaultValue: true)
   }
   stages {
      // *************************** Git Check **********************************
@@ -17,22 +28,28 @@ pipeline {
       agent { label "master"}
       steps {
         sh "git config core.whitespace -blank-at-eof"
-        sh "git diff --check `git merge-base origin/master HEAD` HEAD -- . ':!*.md' ':!*.pandoc'"
+        sh "git diff --check `git merge-base origin/master HEAD` HEAD -- . ':!*.md' ':!*.pandoc' ':!*.asc' ':!*.dat'"
         dir('scripts/jenkins') { stash(name: 'known_hosts', includes: 'known_hosts') }
+        ciSkip action: 'check' // Check for [ci skip] or [web] commit message.
 
         // ********* Check changesets for conditional stage execution **********
         script {
-          if (currentBuild.number == 1) {
-            stage_required.full = true
-            return true
-          }
-          def causes = currentBuild.rawBuild.getCauses()
+          def causes = currentBuild.getBuildCauses()
           for(cause in causes) {
             if (cause.class.toString().contains("UserIdCause")) {
               echo "Doing full build because job was started by user."
               stage_required.full = true
+              env.CI_SKIP = "false"
               return true
             }
+          }
+
+          if (env.JOB_NAME == 'ufz/ogs/master') {
+            build_shared = 'OFF'
+          }
+          if (currentBuild.number == 1 || buildingTag()) {
+            stage_required.full = true
+            return true
           }
           def changeLogSets = currentBuild.changeSets
           for (int i = 0; i < changeLogSets.size(); i++) {
@@ -62,8 +79,13 @@ pipeline {
               }
             }
           }
+          if(!(stage_required.build || stage_required.full)) {
+            currentBuild.result='NOT_BUILT'
+          }
         }
       }
+      // Mark build as NOT_BUILT when [ci skip] commit message was found
+      post { always { ciSkip action: 'postProcess' } }
     }
     stage('Build') {
       parallel {
@@ -71,87 +93,155 @@ pipeline {
         stage('Docker-Conan') {
           when {
             beforeAgent true
-            expression { return stage_required.build || stage_required.full }
+            expression { return params.docker_conan && (stage_required.build || stage_required.full) }
           }
           agent {
             dockerfile {
               filename 'Dockerfile.gcc.full'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /home/jenkins/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
               additionalBuildArgs '--pull'
             }
           }
+          environment {
+            OMP_NUM_THREADS = '1'
+          }
           steps {
             script {
-              sh 'conan user'
+              sh 'git submodule sync'
               configure {
                 cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=${build_shared} " +
                   '-DOGS_CPU_ARCHITECTURE=generic ' +
-                  '-DDOCS_GENERATE_LOGFILE=ON ' + // redirects to build/DoxygenWarnings.log
-                  '-DOGS_USE_PYTHON=ON '
+                  '-DOGS_BUILD_UTILS=ON ' +
+                  '-DOGS_USE_CVODE=ON '
               }
-              build { }
+              build {
+                target="package"
+                log="build1.log"
+              }
+              configure { // CLI + Python
+                cmakeOptions = '-DOGS_USE_PYTHON=ON '
+                keepDir = true
+              }
+              build {
+                target="package"
+                log="build2.log"
+              }
               build { target="tests" }
               build { target="ctest" }
-              build { target="doc" }
-              // TODO: .*DOT_GRAPH_MAX_NODES.
-              //       .*potential recursive class relation.*
-              recordIssues tools: [[pattern: 'build/DoxygenWarnings.log',
-                tool: [$class: 'Doxygen']]],
-                unstableTotalAll: 24
-              dir('build/docs') { stash(name: 'doxygen') }
-              publishHTML(target: [allowMissing: false, alwaysLinkToLastBuild: true,
-                  keepAll: true, reportDir: 'build/docs', reportFiles: 'index.html',
-                  reportName: 'Doxygen'])
-              configure {
-                cmakeOptions =
-                  '-DOGS_CPU_ARCHITECTURE=generic ' +
-                  '-DOGS_USE_PYTHON=ON ' +
-                  '-DOGS_USE_PCH=OFF ' +     // see #1992
-                  '-DOGS_BUILD_GUI=ON ' +
-                  '-DOGS_BUILD_UTILS=ON ' +
-                  '-DOGS_BUILD_TESTS=OFF '
-              }
-              build { log="build.log" }
               build { target="doc" }
             }
           }
           post {
             always {
-              publishReports { }
+              xunit([
+                // Testing/-folder is a CTest convention
+                CTest(pattern: 'build/Testing/**/*.xml'),
+                GoogleTest(pattern: 'build/Tests/testrunner.xml')
+              ])
               recordIssues enabledForFailure: true, filters: [
-                excludeFile('.*qrc_icons\\.cpp.*'), excludeFile('.*QVTKWidget.*')],
-                tools: [[pattern: 'build/build.log', name: 'GCC',
-                  tool: [$class: 'GnuMakeGcc']]],
-                unstableTotalAll: 19
+                excludeFile('.*qrc_icons\\.cpp.*'), excludeFile('.*QVTKWidget.*'),
+                excludeMessage('.*tmpnam.*')],
+                tools: [gcc4(name: 'GCC', pattern: 'build/build*.log')],
+                unstableTotalAll: 1
+              recordIssues enabledForFailure: true, filters: [
+                  excludeFile('-'), excludeFile('.*Functional\\.h'),
+                  excludeFile('.*gmock-.*\\.h'), excludeFile('.*gtest-.*\\.h')
+                ],
+                // Doxygen is handled by gcc4 parser as well
+                tools: [gcc4(name: 'Doxygen', id: 'doxygen',
+                             pattern: 'build/DoxygenWarnings.log')],
+                failedTotalAll: 1
             }
             success {
-              dir('build/docs') { stash(name: 'doxygen') }
+              publishHTML(target: [allowMissing: false, alwaysLinkToLastBuild: true,
+                  keepAll: true, reportDir: 'build/docs', reportFiles: 'index.html',
+                  reportName: 'Doxygen'])
               archiveArtifacts 'build/*.tar.gz,build/conaninfo.txt'
+              dir('build/docs') { stash(name: 'doxygen') }
             }
+          }
+        }
+        // *********************** Docker-Conan-GUI *****************************
+        stage('Docker-Conan-GUI') {
+          when {
+            beforeAgent true
+            expression { return params.docker_conan_gui && (stage_required.build || stage_required.full) }
+          }
+          agent {
+            dockerfile {
+              filename 'Dockerfile.gcc.gui'
+              dir 'scripts/docker'
+              label 'docker'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
+              additionalBuildArgs '--pull'
+            }
+          }
+          steps {
+            script {
+              sh 'git submodule sync'
+              sh "conan remove --system-reqs '*'"
+              configure {
+                cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=${build_shared} " +
+                  '-DOGS_CPU_ARCHITECTURE=generic ' +
+                  '-DOGS_USE_PCH=OFF ' +     // see #1992
+                  '-DOGS_BUILD_GUI=ON ' +
+                  '-DOGS_BUILD_UTILS=ON ' +
+                  '-DOGS_BUILD_TESTS=OFF '
+              }
+              build {
+                target="package"
+                log="build1.log"
+              }
+              configure { // CLI + GUI + Python
+                cmakeOptions = '-DOGS_USE_PYTHON=ON '
+                keepDir = true
+              }
+              build {
+                target="package"
+                log="build2.log"
+              }
+              build { target="cppcheck" }
+            }
+          }
+          post {
+            always {
+              recordIssues enabledForFailure: true, filters: [
+                excludeFile('.*qrc_icons\\.cpp.*'),
+                excludeMessage('.*tmpnam.*')],
+                tools: [gcc4(name: 'GCC-GUI', id: 'gcc4-gui',
+                             pattern: 'build/build*.log')],
+                unstableTotalAll: 1
+              recordIssues enabledForFailure: true,
+                tools: [cppCheck(pattern: 'build/cppcheck.log')]
+            }
+            success { archiveArtifacts 'build/*.tar.gz,build/conaninfo.txt' }
           }
         }
         // ********************* Docker-Conan-Debug ****************************
         stage('Docker-Conan-Debug') {
           when {
             beforeAgent true
-            expression { return stage_required.build || stage_required.full }
+            expression { return params.docker_conan_debug && (stage_required.build || stage_required.full) }
           }
           agent {
             dockerfile {
-              filename 'Dockerfile.gcc.minimal'
+              filename 'Dockerfile.gcc.full'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /home/jenkins/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
               additionalBuildArgs '--pull'
             }
           }
           steps {
             script {
-              sh 'conan user'
+              sh 'git submodule sync'
               configure {
                 cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=${build_shared} " +
                   '-DOGS_CPU_ARCHITECTURE=generic '
                 config = 'Debug'
               }
@@ -160,120 +250,149 @@ pipeline {
             }
           }
           post {
-            always { publishReports { } }
-          }
-        }
-        // ************************** envinf1 **********************************
-        stage('Envinf1 (serial)') {
-          when {
-            beforeAgent true
-            expression { return stage_required.build || stage_required.full }
-          }
-          agent { label "envinf1"}
-          steps {
-            script {
-              configure {
-                cmakeOptions =
-                  '-DOGS_BUILD_UTILS=ON ' +
-                  '-DBUILD_SHARED_LIBS=ON '
-                env = 'envinf1/cli.sh'
-              }
-              build {
-                env = 'envinf1/cli.sh'
-                cmd_args = '-l 30'
-              }
-              build {
-                env = 'envinf1/cli.sh'
-                target = 'tests'
-              }
-              build {
-                env = 'envinf1/cli.sh'
-                target = 'ctest'
-              }
+            always {
+              xunit([GoogleTest(pattern: 'build/Tests/testrunner.xml')])
             }
           }
-          post {
-            always { publishReports { } }
-          }
         }
-        stage('Envinf1 (parallel)') {
+        // **************************** eve ************************************
+        stage('Frontend2 (serial)') {
           when {
             beforeAgent true
-            expression { return stage_required.build || stage_required.full }
+            expression { return params.eve_serial && (stage_required.build || stage_required.full) }
           }
-          agent { label "envinf1"}
+          agent { label "frontend2"}
+          environment {
+            OMP_NUM_THREADS = '1'
+          }
           steps {
             script {
+              sh 'git submodule sync'
               configure {
                 cmakeOptions =
                   '-DOGS_BUILD_UTILS=ON ' +
                   '-DBUILD_SHARED_LIBS=ON ' +
-                  '-DOGS_USE_PETSC=ON '
-                env = 'envinf1/petsc.sh'
+                  '-DOGS_USE_CONAN=OFF '
+                env = 'eve/cli.sh'
               }
               build {
-                env = 'envinf1/petsc.sh'
+                env = 'eve/cli.sh'
                 cmd_args = '-l 30'
               }
               build {
-                env = 'envinf1/petsc.sh'
+                env = 'eve/cli.sh'
                 target = 'tests'
               }
               build {
-                env = 'envinf1/petsc.sh'
+                env = 'eve/cli.sh'
                 target = 'ctest'
               }
             }
           }
           post {
-            always { publishReports { } }
+            always {
+              xunit([
+                CTest(pattern: 'build/Testing/**/*.xml'),
+                GoogleTest(pattern: 'build/Tests/testrunner.xml')
+              ])
+            }
+          }
+        }
+        stage('Frontend2 (parallel)') {
+          when {
+            beforeAgent true
+            expression { return params.eve_parallel && (stage_required.build || stage_required.full) }
+          }
+          agent { label "frontend2"}
+          environment {
+            OMP_NUM_THREADS = '1'
+          }
+          steps {
+            script {
+              configure {
+                sh 'git submodule sync'
+                cmakeOptions =
+                  '-DBUILD_SHARED_LIBS=ON ' +
+                  '-DOGS_USE_PETSC=ON ' +
+                  '-DOGS_USE_CONAN=OFF '
+                env = 'eve/petsc.sh'
+              }
+              build {
+                env = 'eve/petsc.sh'
+                cmd_args = '-l 30'
+              }
+              build {
+                env = 'eve/petsc.sh'
+                target = 'tests'
+              }
+              build {
+                env = 'eve/petsc.sh'
+                target = 'ctest'
+              }
+            }
+          }
+          post {
+            always {
+              xunit([
+                CTest(pattern: 'build/Testing/**/*.xml'),
+                GoogleTest(pattern: 'build/Tests/testrunner.xml')
+              ])
+            }
           }
         }
         // ************************** Windows **********************************
         stage('Win') {
           when {
             beforeAgent true
-            expression { return stage_required.build || stage_required.full }
+            expression { return params.win && (stage_required.build || stage_required.full) }
           }
           agent {label 'win && conan' }
           environment {
             MSVC_NUMBER = '15'
             MSVC_VERSION = '2017'
+            OMP_NUM_THREADS = '1'
           }
           steps {
             script {
-              // CLI
+              def num_threads = env.NUM_THREADS
+              bat 'git submodule sync'
               bat 'conan remove --locks'
-              configure {
+              configure { // CLI + GUI
                 cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=OFF " +
                   '-DOGS_DOWNLOAD_ADDITIONAL_CONTENT=ON ' +
-                  '-DOGS_USE_PYTHON=ON '
-              }
-              build { }
-              build { target="tests" }
-              build { target="ctest" }
-              // GUI
-              configure {
-                cmakeOptions =
-                  '-DOGS_DOWNLOAD_ADDITIONAL_CONTENT=ON ' +
-                  '-DOGS_USE_PYTHON=ON ' +
                   '-DOGS_BUILD_GUI=ON ' +
                   '-DOGS_BUILD_UTILS=ON ' +
-                  '-DOGS_BUILD_TESTS=OFF ' +
                   '-DOGS_BUILD_SWMM=ON '
               }
-              build { log="build.log" }
+              build {
+                target="package"
+                log="build1.log"
+                cmd_args="-l ${num_threads}"
+              }
+              configure { // CLI + GUI + Python
+                cmakeOptions = '-DOGS_USE_PYTHON=ON '
+                keepDir = true
+              }
+              build {
+                target="package"
+                log="build2.log"
+              }
+              build { target="tests" }
+              build { target="ctest" }
             }
           }
           post {
             always {
-              publishReports { }
+              xunit([
+                CTest(pattern: 'build/Testing/**/*.xml'),
+                GoogleTest(pattern: 'build/Tests/testrunner.xml')
+              ])
               recordIssues enabledForFailure: true, filters: [
                 excludeFile('.*\\.conan.*'), excludeFile('.*ThirdParty.*'),
                 excludeFile('.*thread.hpp')],
-                tools: [[pattern: 'build/build.log', name: 'MSVC',
-                  tool: [$class: 'MsBuild']]],
-                unstableTotalAll: 4
+                tools: [msBuild(name: 'MSVC', pattern: 'build/build*.log')],
+                qualityGates: [[threshold: 10, type: 'TOTAL', unstable: true]]
             }
             success {
               archiveArtifacts 'build/*.zip,build/conaninfo.txt'
@@ -284,13 +403,18 @@ pipeline {
         stage('Mac') {
           when {
             beforeAgent true
-            expression { return stage_required.build || stage_required.full }
+            expression { return params.mac && (stage_required.build || stage_required.full) }
           }
           agent { label "mac"}
+          environment {
+            OMP_NUM_THREADS = '1'
+          }
           steps {
             script {
+              sh 'git submodule sync'
               configure {
                 cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=${build_shared} " +
                   '-DOGS_CPU_ARCHITECTURE=core2 ' +
                   '-DOGS_DOWNLOAD_ADDITIONAL_CONTENT=ON ' +
                   '-DOGS_BUILD_GUI=ON ' +
@@ -298,30 +422,64 @@ pipeline {
                   '-DCMAKE_OSX_DEPLOYMENT_TARGET="10.13" '
               }
               build {
+                target="package"
                 log = "build.log"
-                cmd_args = '-j $(( `sysctl -n hw.ncpu` - 2 ))'
               }
-              build {
-                target = 'tests'
-                cmd_args = '-j $(( `sysctl -n hw.ncpu` - 2 ))'
-              }
-              build {
-                target = 'ctest'
-                cmd_args = '-j $(( `sysctl -n hw.ncpu` - 2 ))'
-              }
+              build { target = 'tests' }
+              build { target = 'ctest' }
             }
           }
           post {
             always {
-              publishReports { }
+              xunit([
+                CTest(pattern: 'build/Testing/**/*.xml'),
+                GoogleTest(pattern: 'build/Tests/testrunner.xml')
+              ])
               recordIssues enabledForFailure: true, filters: [
-                excludeFile('.*qrc_icons\\.cpp.*'), excludeFile('.*QVTKWidget.*')],
-                tools: [[pattern: 'build/build.log', name: 'Clang (macOS)',
-                   id: 'clang-mac', tool: [$class: 'Clang']]],
-                unstableTotalAll: 3
+                excludeFile('.*qrc_icons\\.cpp.*'), excludeMessage('.*QVTKWidget.*'),
+                excludeMessage('.*tmpnam.*')],
+                tools: [clang(name: 'Clang (macOS)', pattern: 'build/build.log',
+                  id: 'clang-mac')], unstableTotalAll: 1
             }
             success {
               archiveArtifacts 'build/*.tar.gz,build/*.dmg,build/conaninfo.txt'
+            }
+          }
+        }
+        // ************************* Clang-Analyzer *********************************
+        stage('Clang-Analyzer') {
+          when {
+            beforeAgent true
+            expression { return params.clang_analyzer && (stage_required.build || stage_required.full) }
+          }
+          agent {
+            dockerfile {
+              filename 'Dockerfile.clang.full'
+              dir 'scripts/docker'
+              label 'docker'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
+              additionalBuildArgs '--pull'
+            }
+          }
+          steps {
+            script {
+              sh 'git submodule sync'
+              sh 'find $CONAN_USER_HOME -name "system_reqs.txt" -exec rm {} \\;'
+              configure {
+                cmakeOptions =
+                  "-DBUILD_SHARED_LIBS=${build_shared} " +
+                  '-DBUILD_TESTING=OFF ' +
+                  '-DCMAKE_CXX_CLANG_TIDY=clang-tidy-7 '
+              }
+              build { log = 'build.log' }
+            }
+          }
+          post {
+            always {
+              recordIssues enabledForFailure: true, filters: [
+                excludeFile('.*\\.conan.*')],
+                tools: [clangTidy(name: 'Clang-Tidy', pattern: 'build/build.log')],
+                qualityGates: [[threshold: 513, type: 'TOTAL', unstable: true]]
             }
           }
         }
@@ -330,6 +488,37 @@ pipeline {
     stage('Master') {
       when { environment name: 'JOB_NAME', value: 'ufz/ogs/master' }
       parallel {
+        // ************************* Tests-Large *******************************
+        stage('Tests-Large') {
+          when {
+            beforeAgent true
+            expression { return stage_required.build || stage_required.full }
+          }
+          agent {
+            dockerfile {
+              filename 'Dockerfile.gcc.full'
+              dir 'scripts/docker'
+              label 'envinf11w || envinf56'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
+              additionalBuildArgs '--pull'
+            }
+          }
+          environment {
+            OMP_NUM_THREADS = '1'
+          }
+          steps {
+            script {
+              configure { }
+              build { target = 'ctest-large' }
+            }
+          }
+          post {
+            always {
+              xunit([CTest(pattern: 'build/Testing/**/*.xml')])
+              dir('build') { deleteDir() }
+            }
+          }
+        }
         // ********************* Push Docker Images ****************************
         stage('Push Docker Images') {
           when {
@@ -341,17 +530,21 @@ pipeline {
             script {
               dir('scripts/docker') {
                 def gccImage = docker.build("ogs6/gcc:latest", "-f Dockerfile.gcc.full .")
+                def gccGuiImage = docker.build("ogs6/gcc:gui", "-f Dockerfile.gcc.gui .")
                 def clangImage = docker.build("ogs6/clang:latest", "-f Dockerfile.clang.full .")
-                docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                  gccImage.push()
-                  clangImage.push()
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials',
+                  passwordVariable: 'pw', usernameVariable: 'docker_user')]) {
+                    sh 'echo $pw | docker login -u $docker_user --password-stdin'
+                    gccImage.push()
+                    gccGuiImage.push()
+                    clangImage.push()
                 }
               }
             }
           }
         }
-        // ************************* Analyzers *********************************
-        stage('Analyzers') {
+        // ************************* Check headers *********************************
+        stage('Check headers') {
           when {
             beforeAgent true
             expression { return stage_required.build || stage_required.full }
@@ -361,27 +554,24 @@ pipeline {
               filename 'Dockerfile.clang.full'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /datadrive/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
               additionalBuildArgs '--pull'
             }
           }
           steps {
             script {
-              sh 'conan user'
+              sh 'git submodule sync'
               sh 'find $CONAN_USER_HOME -name "system_reqs.txt" -exec rm {} \\;'
-              configure {
-                cmakeOptions =
-                  '"-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=include-what-you-use;-Xiwyu;--mapping_file=../scripts/jenkins/iwyu-mappings.imp" ' +
-                  '-DCMAKE_LINK_WHAT_YOU_USE=ON ' +
-                  '"-DCMAKE_CXX_CPPCHECK=cppcheck;--std=c++11;--language=c++;--suppress=syntaxError;--suppress=preprocessorErrorDirective:*/ThirdParty/*;--suppress=preprocessorErrorDirective:*conan*/package/*" ' +
-                  '-DCMAKE_CXX_CLANG_TIDY=clang-tidy-3.9 '
-                config = 'Release'
-              }
               try {
-                build { target = 'check-header' }
-                build { target = 'all' }
+                configure {
+                  cmakeOptions = '-DOGS_CHECK_HEADER_COMPILATION=ON'
+                  dir = 'build-check-header'
+                }
               }
-              catch (Exception e) { }
+              catch(err) {
+                echo "check-header failed!"
+                sh 'cat build-check-header/CMakeFiles/CMakeError.log'
+              }
             }
           }
         }
@@ -401,13 +591,13 @@ pipeline {
             }
           }
         }
-        // *********************** Deploy envinf1 ******************************
-        stage('Deploy envinf1') {
+        // ************************* Deploy eve ********************************
+        stage('Deploy eve') {
           when {
             beforeAgent true
             expression { return stage_required.build || stage_required.full }
           }
-          agent { label "envinf1"}
+          agent { label "frontend2"}
           steps {
             script {
               sh 'rm -rf /global/apps/ogs/head/standard'
@@ -418,38 +608,37 @@ pipeline {
                   '-DCMAKE_INSTALL_PREFIX=/global/apps/ogs/head/standard ' +
                   '-DOGS_MODULEFILE=/global/apps/modulefiles/ogs/head/standard ' +
                   '-DOGS_CPU_ARCHITECTURE=core-avx-i '
-                env = 'envinf1/cli.sh'
+                env = 'eve/cli.sh'
               }
               build {
-                env = 'envinf1/cli.sh'
+                env = 'eve/cli.sh'
                 target = 'install'
-                cmd_args = '-l 30'
+
               }
             }
           }
         }
         // ******************** Deploy envinf1 PETSc ***************************
-        stage('Deploy envinf1 PETSc') {
+        stage('Deploy eve PETSc') {
           when {
             beforeAgent true
             expression { return stage_required.build || stage_required.full }
           }
-          agent { label "envinf1"}
+          agent { label "frontend2"}
           steps {
             script {
               sh 'rm -rf /global/apps/ogs/head/petsc'
               configure {
                 cmakeOptions =
                   '-DOGS_USE_PETSC=ON ' +
-                  '-DOGS_BUILD_UTILS=ON ' +
                   '-DBUILD_SHARED_LIBS=ON ' +
                   '-DCMAKE_INSTALL_PREFIX=/global/apps/ogs/head/petsc ' +
                   '-DOGS_MODULEFILE=/global/apps/modulefiles/ogs/head/petsc ' +
                   '-DOGS_CPU_ARCHITECTURE=core-avx-i '
-                env = 'envinf1/petsc.sh'
+                env = 'eve/petsc.sh'
               }
               build {
-                env = 'envinf1/petsc.sh'
+                env = 'eve/petsc.sh'
                 target = 'install'
                 cmd_args = '-l 30'
               }
@@ -464,10 +653,10 @@ pipeline {
           }
           agent {
             dockerfile {
-              filename 'Dockerfile.clang.minimal'
+              filename 'Dockerfile.clang.full'
               dir 'scripts/docker'
               label 'docker'
-              args '-v /datadrive/cache:/home/jenkins/cache'
+              args '-v /home/jenkins/cache/ccache:/opt/ccache -v /home/jenkins/cache/conan/.conan:/opt/conan/.conan'
               additionalBuildArgs '--pull'
             }
           }
@@ -477,7 +666,7 @@ pipeline {
           }
           steps {
             script {
-              sh 'conan user'
+              sh 'git submodule sync'
               sh 'find $CONAN_USER_HOME -name "system_reqs.txt" -exec rm {} \\;'
               configure {
                 cmakeOptions =
@@ -496,13 +685,14 @@ pipeline {
               catch(err) { echo "Clang sanitizer for end-to-end tests failed!" }
             }
           }
-          post {
-            always {
-              recordIssues enabledForFailure : true,
-                filters: [includeCategory('clang-analyzer.*')],
-                tools: [[name:'Clang (StaticAnalyzer)', tool:[$class:'Clang']]]
-            }
-          }
+          // Currently disabled because of Java out ouf heap space errors
+          // post {
+            // always {
+              // recordIssues enabledForFailure : true,
+                // filters: [includeCategory('clang-analyzer.*')],
+                // tools: [clang(name: 'Clang (StaticAnalyzer)')]
+            // }
+          // }
         }
         // ********************* Update ufz/ogs-data ***************************
         stage('Update ogs-data') {
@@ -533,17 +723,12 @@ pipeline {
         }
         // *************************** Post ************************************
         stage('Post') {
-          agent any
+          agent { label "master"}
+          when { buildingTag() }
           steps {
             script {
-              def helper = new ogs.helper()
-              checkout scm
-              def tag = helper.getTag()
-              if (tag != "") {
-                keepBuild()
-                currentBuild.displayName = tag
-                helper.notification(msg: "Marked build for ${tag}.", script: this)
-              }
+              currentBuild.keepLog(true)
+              currentBuild.displayName = tag
             }
           }
         }

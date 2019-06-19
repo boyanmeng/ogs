@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -32,7 +32,9 @@ TEST(MeshLib, ElementConstantsQuad4)
     ASSERT_EQ(4u, quad.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsQuad8)
@@ -59,7 +61,9 @@ TEST(MeshLib, ElementConstantsQuad8)
     ASSERT_EQ(4u, quad8.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsQuad9)
@@ -87,7 +91,9 @@ TEST(MeshLib, ElementConstantsQuad9)
     ASSERT_EQ(4u, quad9.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsHex8)
@@ -112,7 +118,9 @@ TEST(MeshLib, ElementConstantsHex8)
     ASSERT_EQ(8u, ele.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsHex20)
@@ -149,7 +157,9 @@ TEST(MeshLib, ElementConstantsHex20)
     ASSERT_EQ( 8u, ele.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsTet4)
@@ -170,7 +180,9 @@ TEST(MeshLib, ElementConstantsTet4)
     ASSERT_EQ(4u, ele.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 
 TEST(MeshLib, ElementConstantsTet10)
@@ -198,6 +210,8 @@ TEST(MeshLib, ElementConstantsTet10)
     ASSERT_EQ( 4u, ele.getNumberOfBaseNodes());
 
     for (auto n : nodes)
+    {
         delete n;
+    }
 }
 

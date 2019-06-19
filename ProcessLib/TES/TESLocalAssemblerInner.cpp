@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -31,5 +31,5 @@ static_assert(OGS_EIGEN_DYNAMIC_SHAPE_MATRICES_FLAG == 1,
 static_assert(OGS_EIGEN_DYNAMIC_SHAPE_MATRICES_FLAG == 0,
               "inconsistent use of macros");
 #endif
-}
-}
+}  // namespace TES
+}  // namespace ProcessLib

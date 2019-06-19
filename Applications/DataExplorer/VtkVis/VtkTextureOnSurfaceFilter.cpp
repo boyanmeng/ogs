@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkTextureOnSurfaceFilter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -35,10 +35,7 @@
 
 vtkStandardNewMacro(VtkTextureOnSurfaceFilter);
 
-VtkTextureOnSurfaceFilter::VtkTextureOnSurfaceFilter() : _origin(.0f,.0f), _scalingFactor(.0f)
-{
-}
-
+VtkTextureOnSurfaceFilter::VtkTextureOnSurfaceFilter() = default;
 VtkTextureOnSurfaceFilter::~VtkTextureOnSurfaceFilter() = default;
 
 void VtkTextureOnSurfaceFilter::PrintSelf( ostream& os, vtkIndent indent )

@@ -5,7 +5,7 @@
  * \brief  Implementation of the GEOModels class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -70,7 +70,8 @@ void GEOModels::updateGeometry(const std::string &geo_name)
         }
     }
     else
-        ERR("GEOModels::updateGeometry() - Geometry \"%s\" not found.", geo_name.c_str());
+        ERR("GEOModels::updateGeometry() - Geometry '%s' not found.",
+            geo_name.c_str());
 }
 
 void GEOModels::removeGeometry(std::string const& geo_name,
@@ -157,12 +158,9 @@ void GEOModels::renameGeometry(std::string const& old_name,
 }
 
 void GEOModels::connectPolylineSegments(
-    const std::string& geoName,
-    std::vector<std::size_t> const& indexlist,
-    double const proximity,
-    std::string const& ply_name,
-    bool const closePly,
-    bool const triangulatePly)
+    const std::string& geoName, std::vector<std::size_t> const& indexlist,
+    double const proximity, std::string const& ply_name, bool const closePly,
+    bool const triangulatePly, std::string const& gmsh_path)
 {
     GeoLib::PolylineVec* plyVec = _geo_objects.getPolylineVecObj(geoName);
 
@@ -195,7 +193,8 @@ void GEOModels::connectPolylineSegments(
                     INFO(
                         "Creating a surface by triangulation of the polyline "
                         "...");
-                    if (FileIO::createSurface(*new_line, _geo_objects, geoName))
+                    if (FileIO::createSurface(*new_line, _geo_objects, geoName,
+                                              gmsh_path))
                     {
                         INFO("\t done");
                     }

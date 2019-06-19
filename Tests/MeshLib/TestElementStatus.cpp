@@ -5,7 +5,7 @@
  * @brief Tests for ElementStatus class
  *
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -39,8 +39,11 @@ TEST(MeshLib, ElementStatus)
 
     for (unsigned i=0; i<elements_per_side; ++i)
     {
-        for (unsigned j=0; j<elements_per_side; ++j)
-            (*material_id_properties)[elements[i*elements_per_side + j]->getID()] = i;
+        for (unsigned j = 0; j < elements_per_side; ++j)
+        {
+            (*material_id_properties)[elements[i * elements_per_side + j]
+                                          ->getID()] = i;
+        }
     }
 
     {

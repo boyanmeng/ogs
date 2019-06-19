@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -12,6 +12,7 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/optional.hpp>
 #include <cassert>
 #include <typeindex>
 #include <typeinfo>
@@ -214,6 +215,45 @@ void uniquePushBack(Container& container,
 {
     if (std::find(container.begin(), container.end(), element) ==
         container.end())
+    {
         container.push_back(element);
+    }
+}
+
+template <typename Container>
+bool contains(Container const& container,
+              typename Container::value_type const& element)
+{
+    return std::find(container.begin(), container.end(), element) !=
+           container.end();
+}
+
+template <typename Container>
+boost::optional<typename Container::value_type> findFirstNotEqualElement(
+    Container const& container, typename Container::value_type const& element)
+{
+    auto const it =
+        std::find_if_not(container.begin(), container.end(),
+                         [&element](typename Container::value_type const& e) {
+                             return e == element;
+                         });
+    return it == container.end() ? boost::none : boost::make_optional(*it);
+}
+
+/// Returns the index of first element in container or, if the element is not
+/// found a std::size_t maximum value.
+///
+/// The maximum value of std::size_t is chosen, because such an index cannot
+/// exist in a container; the maximum index is std::size_t::max-1.
+template <typename Container>
+std::size_t findIndex(Container const& container,
+                      typename Container::value_type const& element)
+{
+    auto const it = std::find(container.begin(), container.end(), element);
+    if (it == container.end())
+    {
+        return std::numeric_limits<std::size_t>::max();
+    }
+    return std::distance(container.begin(), it);
 }
 }  // namespace BaseLib

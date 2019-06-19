@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -147,13 +147,13 @@ bool SwmmInterface::isSwmmInputFile(std::string const& inp_file_name)
 
     std::string line;
     bool header_found (false);
-    std::size_t pos_beg (0), pos_end (0);
+    std::size_t pos_end(0);
     while (!header_found)
     {
         if (!std::getline(in, line))
             return false;
 
-        pos_beg = line.find_first_not_of(' ', pos_end);
+        std::size_t const pos_beg = line.find_first_not_of(' ', pos_end);
         pos_end = line.find_first_of(" \n", pos_beg);
 
         // skip empty or comment lines at the beginning of the file
@@ -415,11 +415,13 @@ bool SwmmInterface::convertSwmmInputToGeometry(std::string const& inp_file_name,
     }
 
     auto name_id_map = std::make_unique<std::map<std::string, std::size_t>>();
-    std::size_t const n_names (pnt_names.size());
-    for (std::size_t i=0; i<n_names; ++i)
     {
-        if (!pnt_names[i].empty())
-            name_id_map->insert(std::make_pair(pnt_names[i], i));
+        std::size_t const n_names(pnt_names.size());
+        for (std::size_t i = 0; i < n_names; ++i)
+        {
+            if (!pnt_names[i].empty())
+                name_id_map->insert(std::make_pair(pnt_names[i], i));
+        }
     }
 
     // rewind stream and read links between junctions
@@ -467,9 +469,13 @@ bool SwmmInterface::convertSwmmInputToGeometry(std::string const& inp_file_name,
         }
         auto line_id_map =
             std::make_unique<std::map<std::string, std::size_t>>();
-        std::size_t const n_names (line_names.size());
-        for (std::size_t i=0; i<n_names; ++i)
-            line_id_map->insert(std::make_pair(line_names[i], i));
+        {
+            std::size_t const n_names(line_names.size());
+            for (std::size_t i = 0; i < n_names; ++i)
+            {
+                line_id_map->insert(std::make_pair(line_names[i], i));
+            }
+        }
         std::vector<std::size_t> const& pnt_id_map (geo_objects.getPointVecObj(geo_name)->getIDMap());
         for (GeoLib::Polyline* line : *lines)
         {
@@ -606,15 +612,16 @@ bool SwmmInterface::readSubcatchments(std::ifstream &in, std::map< std::string, 
         }
         if (sc.rain_gauge == std::numeric_limits<std::size_t>::max())
         {
-            ERR ("Rain gauge for subcatchment \"%s\" not found.", split_str[0].c_str());
+            ERR("Rain gauge for subcatchment '%s' not found.",
+                split_str[0].c_str());
             return false;
         }
 
-        sc.outlet =  std::numeric_limits<std::size_t>::max();
         auto const it = name_id_map.find(split_str[2]);
         if (it == name_id_map.end())
         {
-            ERR ("Outlet node for subcatchment \"%s\" not found.", split_str[0].c_str());
+            ERR("Outlet node for subcatchment '%s' not found.",
+                split_str[0].c_str());
             return false;
         }
         sc.outlet = it->second;
@@ -828,7 +835,7 @@ bool SwmmInterface::matchSubcatchmentsWithPolygons(std::vector<GeoLib::Polyline*
         }
         if (found == false)
         {
-            ERR ("No match in subcatcments for outline \"%s\".", names[i].c_str());
+            ERR("No match in subcatcments for outline '%s'.", names[i].c_str());
             return false;
         }
     }
@@ -980,7 +987,7 @@ bool SwmmInterface::addResultsToMesh(MeshLib::Mesh &mesh, SwmmObject const swmm_
         MeshLib::getOrCreateMeshProperty<double>(mesh, vec_name, item_type, 1);
     if (!prop)
     {
-        ERR("Error fetching array \"%s\".", vec_name.c_str());
+        ERR("Error fetching array '%s'.", vec_name.c_str());
         return false;
     }
     std::copy(data.cbegin(), data.cend(), prop->begin());
@@ -1042,8 +1049,8 @@ std::vector<double> SwmmInterface::getArrayAtTimeStep(SwmmObject obj_type, std::
         return data;
     }
 
-    INFO ("Fetching \"%s\"-data for time step %d...",
-        getArrayName(obj_type, var_idx, SWMM_Npolluts).c_str(), time_step);
+    INFO("Fetching '%s'-data for time step %d...",
+         getArrayName(obj_type, var_idx, SWMM_Npolluts).c_str(), time_step);
 
     for (std::size_t i=0; i<n_objects; ++i)
     {
@@ -1141,7 +1148,6 @@ std::string SwmmInterface::getArrayName(SwmmObject obj_type, std::size_t var_idx
 
 std::string SwmmInterface::getArrayName(SwmmObject obj_type, std::size_t var_idx, std::size_t n_pollutants) const
 {
-    std::size_t const n_vars (0);
     if (obj_type == SwmmObject::SUBCATCHMENT)
     {
         if (var_idx < n_obj_params[0])
@@ -1200,7 +1206,8 @@ bool SwmmInterface::addRainGaugeTimeSeriesLocations(std::ifstream &in)
 
     for (auto const& stn : _rain_gauges)
         if (stn.second.empty())
-            WARN ("No associated time series found for rain gauge \"%s\".", stn.first.getName().c_str());
+            WARN("No associated time series found for rain gauge '%s'.",
+                 stn.first.getName().c_str());
     return true;
 }
 

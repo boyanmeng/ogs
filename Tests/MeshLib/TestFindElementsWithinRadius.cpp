@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -83,7 +83,9 @@ std::vector<Node const*> findNodesWithinRadius(Mesh const& mesh,
         auto const* n = mesh.getNode(i);
         auto const distance_squared = MathLib::sqrDist(node, *n);
         if (distance_squared > radius * radius)
+        {
             continue;
+        }
 
         nodes.push_back(n);
     }

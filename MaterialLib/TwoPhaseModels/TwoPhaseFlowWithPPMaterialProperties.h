@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -82,21 +82,21 @@ public:
     Eigen::MatrixXd const& getPermeability(
         const int material_id,
         const double t,
-        const ProcessLib::SpatialPosition& pos,
+        const ParameterLib::SpatialPosition& pos,
         const int dim) const;
 
     double getPorosity(const int material_id, const double t,
-                       const ProcessLib::SpatialPosition& pos, const double p,
+                       const ParameterLib::SpatialPosition& pos, const double p,
                        const double T, const double porosity_variable) const;
     double getSaturation(const int material_id, const double t,
-                         const ProcessLib::SpatialPosition& pos, const double p,
-                         const double T, const double pc) const;
+                         const ParameterLib::SpatialPosition& pos,
+                         const double p, const double T, const double pc) const;
     double getCapillaryPressure(const int material_id, const double t,
-                                const ProcessLib::SpatialPosition& pos,
+                                const ParameterLib::SpatialPosition& pos,
                                 const double p, const double T,
                                 const double saturation) const;
     double getSaturationDerivative(const int material_id, const double t,
-                                   const ProcessLib::SpatialPosition& pos,
+                                   const ParameterLib::SpatialPosition& pos,
                                    const double p, const double T,
                                    const double saturation) const;
     double getLiquidDensity(const double p, const double T) const;
@@ -104,12 +104,11 @@ public:
     double getGasViscosity(const double p, const double T) const;
     double getLiquidViscosity(const double p, const double T) const;
     double getGasDensityDerivative(double const p, double const T) const;
-    double getNonwetRelativePermeability(const double t,
-                                         const ProcessLib::SpatialPosition& pos,
-                                         const double p, const double T,
-                                         const double saturation) const;
+    double getNonwetRelativePermeability(
+        const double t, const ParameterLib::SpatialPosition& pos,
+        const double p, const double T, const double saturation) const;
     double getWetRelativePermeability(const double t,
-                                      const ProcessLib::SpatialPosition& pos,
+                                      const ParameterLib::SpatialPosition& pos,
                                       const double p, const double T,
                                       const double saturation) const;
 
@@ -138,5 +137,5 @@ private:
         _relative_permeability_models;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace TwoPhaseFlowWithPP
+}  // namespace MaterialLib

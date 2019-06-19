@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -19,7 +19,6 @@
 #include "MathLib/LinAlg/MatrixVectorTraits.h"
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "ProcessLib/Deformation/GMatrix.h"
-#include "ProcessLib/Parameter/SpatialPosition.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 namespace ProcessLib
@@ -142,9 +141,12 @@ std::vector<double> const& getMaterialForces(
             eshelby_stress[4] -= sigma[2] * grad_u[4];
         }
         else
+        {
             OGS_FATAL(
-                "Material forces not implemented for displacement dimension "
+                "Material forces not implemented for displacement "
+                "dimension "
                 "other than 2 and 3.");
+        }
 
         auto const& w = _ip_data[ip].integration_weight;
         local_b += G.transpose() * eshelby_stress * w;

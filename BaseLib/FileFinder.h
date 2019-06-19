@@ -5,7 +5,7 @@
  * \brief  Definition of the FileFinder class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,7 +26,7 @@ namespace BaseLib
  * for a given filename if the corresponding file is found in any of these
  * directories.
  */
-class FileFinder
+class FileFinder final
 {
 public:
     /// Constructor having current directory (.) as the search-space
@@ -37,7 +37,7 @@ public:
      *
      * @param dirs   an initializer list of additional directory paths to the search-space
      */
-    FileFinder(std::initializer_list<std::string> dirs);
+    explicit FileFinder(std::initializer_list<std::string> dirs);
 
     /**
      * \brief Adds another directory to the search-space.

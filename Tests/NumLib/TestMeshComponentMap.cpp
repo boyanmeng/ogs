@@ -3,7 +3,7 @@
  * \date   2013-04-16
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -27,9 +27,8 @@ class NumLibMeshComponentMapTest : public ::testing::Test
         using MeshComponentMap = NumLib::MeshComponentMap;
 
     public:
-        NumLibMeshComponentMapTest() : mesh(nullptr), cmap(nullptr)
+        NumLibMeshComponentMapTest()
         {
-            mesh = MeshLib::MeshGenerator::generateLineMesh(1.0, mesh_size);
             MeshLib::MeshSubset nodesSubset{*mesh, mesh->getNodes()};
 
             // Add two components both based on the same nodesSubset.
@@ -40,17 +39,17 @@ class NumLibMeshComponentMapTest : public ::testing::Test
     ~NumLibMeshComponentMapTest() override
     {
         delete cmap;
-        delete mesh;
     }
 
     static std::size_t const mesh_size = 9;
-    MeshLib::Mesh const* mesh;
+    std::unique_ptr<MeshLib::Mesh> const mesh{
+        MeshLib::MeshGenerator::generateLineMesh(1.0, mesh_size)};
 
     //data component 0 and 1 are assigned to all nodes in the mesh
     static std::size_t const comp0_id = 0;
     static std::size_t const comp1_id = 1;
     std::vector<MeshLib::MeshSubset> components;
-    MeshComponentMap const* cmap;
+    MeshComponentMap const* cmap{nullptr};
 
     //
     // Functions used for checking.
@@ -267,8 +266,10 @@ TEST_F(NumLibMeshComponentMapTest, DISABLED_MulticomponentVariable)
         Location const l_boundary(boundary_mesh.getID(), MeshItemType::Node,
                                   id);
         for (auto const& c : selected_component_ids)
+        {
             EXPECT_EQ(cmap->getGlobalIndex(l_bulk, c),
                       cmap_subset.getGlobalIndex(l_boundary, c));
+        }
     }
 }
 
@@ -307,7 +308,9 @@ TEST_F(NumLibMeshComponentMapTest,
         Location const l_boundary(boundary_mesh.getID(), MeshItemType::Node,
                                   id);
         for (auto const& c : selected_component_ids)
+        {
             EXPECT_EQ(cmap->getGlobalIndex(l_bulk, c),
                       cmap_subset.getGlobalIndex(l_boundary, c));
+        }
     }
 }

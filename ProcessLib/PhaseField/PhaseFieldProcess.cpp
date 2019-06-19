@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -28,7 +28,7 @@ template <int DisplacementDim>
 PhaseFieldProcess<DisplacementDim>::PhaseFieldProcess(
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
-    std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+    std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
@@ -42,12 +42,14 @@ PhaseFieldProcess<DisplacementDim>::PhaseFieldProcess(
               use_monolithic_scheme),
       _process_data(std::move(process_data))
 {
-    // Disable nodal forces for monolithic scheme.
-    if (!_use_monolithic_scheme)
+    if (use_monolithic_scheme)
     {
-        _nodal_forces = MeshLib::getOrCreateMeshProperty<double>(
-            mesh, "NodalForces", MeshLib::MeshItemType::Node, DisplacementDim);
+        OGS_FATAL(
+            "Monolithic scheme is not implemented for the PhaseField process.");
     }
+
+    _nodal_forces = MeshLib::getOrCreateMeshProperty<double>(
+        mesh, "NodalForces", MeshLib::MeshItemType::Node, DisplacementDim);
 }
 
 template <int DisplacementDim>
@@ -61,9 +63,8 @@ MathLib::MatrixSpecifications
 PhaseFieldProcess<DisplacementDim>::getMatrixSpecifications(
     const int process_id) const
 {
-    // For the monolithic scheme or the M process (deformation) in the staggered
-    // scheme.
-    if (_use_monolithic_scheme || process_id == 0)
+    // For the M process (deformation) in the staggered scheme.
+    if (process_id == 0)
     {
         auto const& l = *_local_to_global_index_map;
         return {l.dofSizeWithoutGhosts(), l.dofSizeWithoutGhosts(),
@@ -80,9 +81,8 @@ template <int DisplacementDim>
 NumLib::LocalToGlobalIndexMap const&
 PhaseFieldProcess<DisplacementDim>::getDOFTable(const int process_id) const
 {
-    // If monolithic scheme is used or the equation of deformation is solved in
-    // the staggered scheme.
-    if (_use_monolithic_scheme || process_id == 0)
+    // For the M process (deformation) in the staggered scheme.
+    if (process_id == 0)
     {
         return *_local_to_global_index_map;
     }
@@ -110,44 +110,23 @@ void PhaseFieldProcess<DisplacementDim>::constructDofTable()
 
     assert(_local_to_global_index_map_single_component);
 
-    if (_use_monolithic_scheme)
-    {
-        const int process_id = 0;  // Only one process in the monolithic scheme.
-        std::vector<MeshLib::MeshSubset> all_mesh_subsets;
-        std::generate_n(
-            std::back_inserter(all_mesh_subsets),
-            getProcessVariables(process_id)[1].get().getNumberOfComponents() +
-                1,
-            [&]() { return *_mesh_subset_all_nodes; });
+    // For displacement equation.
+    const int process_id = 0;
+    std::vector<MeshLib::MeshSubset> all_mesh_subsets;
+    std::generate_n(
+        std::back_inserter(all_mesh_subsets),
+        getProcessVariables(process_id)[0].get().getNumberOfComponents(),
+        [&]() { return *_mesh_subset_all_nodes; });
 
-        std::vector<int> const vec_n_components{1, DisplacementDim};
-        _local_to_global_index_map =
-            std::make_unique<NumLib::LocalToGlobalIndexMap>(
-                std::move(all_mesh_subsets), vec_n_components,
-                NumLib::ComponentOrder::BY_LOCATION);
-        assert(_local_to_global_index_map);
-    }
-    else
-    {
-        // For displacement equation.
-        const int process_id = 0;
-        std::vector<MeshLib::MeshSubset> all_mesh_subsets;
-        std::generate_n(
-            std::back_inserter(all_mesh_subsets),
-            getProcessVariables(process_id)[0].get().getNumberOfComponents(),
-            [&]() { return *_mesh_subset_all_nodes; });
+    std::vector<int> const vec_n_components{DisplacementDim};
+    _local_to_global_index_map =
+        std::make_unique<NumLib::LocalToGlobalIndexMap>(
+            std::move(all_mesh_subsets), vec_n_components,
+            NumLib::ComponentOrder::BY_LOCATION);
 
-        std::vector<int> const vec_n_components{DisplacementDim};
-        _local_to_global_index_map =
-            std::make_unique<NumLib::LocalToGlobalIndexMap>(
-                std::move(all_mesh_subsets), vec_n_components,
-                NumLib::ComponentOrder::BY_LOCATION);
-
-        // For phase field equation.
-        _sparsity_pattern_with_single_component =
-            NumLib::computeSparsityPattern(
-                *_local_to_global_index_map_single_component, _mesh);
-    }
+    // For phase field equation.
+    _sparsity_pattern_with_single_component = NumLib::computeSparsityPattern(
+        *_local_to_global_index_map_single_component, _mesh);
 }
 
 template <int DisplacementDim>
@@ -179,14 +158,6 @@ void PhaseFieldProcess<DisplacementDim>::initializeConcreteProcess(
 template <int DisplacementDim>
 void PhaseFieldProcess<DisplacementDim>::initializeBoundaryConditions()
 {
-    if (_use_monolithic_scheme)
-    {
-        const int process_id_of_phasefieldmechanics = 0;
-        initializeProcessBoundaryConditionsAndSourceTerms(
-            *_local_to_global_index_map, process_id_of_phasefieldmechanics);
-        return;
-    }
-
     // Staggered scheme:
     // for the equations of deformation.
     const int mechanical_process_id = 0;
@@ -208,35 +179,30 @@ void PhaseFieldProcess<DisplacementDim>::assembleConcreteProcess(
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
         dof_tables;
 
-    // For the monolithic scheme
-    if (_use_monolithic_scheme)
+    // For the staggered scheme
+    if (_coupled_solutions->process_id == 1)
     {
-        DBUG("Assemble PhaseFieldProcess for the monolithic scheme.");
-        dof_tables.emplace_back(*_local_to_global_index_map);
+        DBUG(
+            "Assemble the equations of phase field in "
+            "PhaseFieldProcess for the staggered scheme.");
     }
     else
     {
-        // For the staggered scheme
-        if (_coupled_solutions->process_id == 1)
-        {
-            DBUG(
-                "Assemble the equations of phase field in "
-                "PhaseFieldProcess for the staggered scheme.");
-        }
-        else
-        {
-            DBUG(
-                "Assemble the equations of deformation in "
-                "PhaseFieldProcess for the staggered scheme.");
-        }
-        dof_tables.emplace_back(*_local_to_global_index_map_single_component);
-        dof_tables.emplace_back(*_local_to_global_index_map);
+        DBUG(
+            "Assemble the equations of deformation in "
+            "PhaseFieldProcess for the staggered scheme.");
     }
+    dof_tables.emplace_back(*_local_to_global_index_map_single_component);
+    dof_tables.emplace_back(*_local_to_global_index_map);
+
+    const int process_id = _coupled_solutions->process_id;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
     // Call global assembler for each local assembly item.
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assemble, _local_assemblers,
-        dof_tables, t, x, M, K, b, _coupled_solutions);
+        pv.getActiveElementIDs(), dof_tables, t, x, M, K, b,
+        _coupled_solutions);
 }
 
 template <int DisplacementDim>
@@ -248,38 +214,32 @@ void PhaseFieldProcess<DisplacementDim>::assembleWithJacobianConcreteProcess(
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
         dof_tables;
 
-    // For the monolithic scheme
-    if (_use_monolithic_scheme)
+    // For the staggered scheme
+    if (_coupled_solutions->process_id == 1)
     {
-        DBUG("AssembleJacobian PhaseFieldProcess for the monolithic scheme.");
-        dof_tables.emplace_back(*_local_to_global_index_map);
+        DBUG(
+            "Assemble the Jacobian equations of phase field in "
+            "PhaseFieldProcess for the staggered scheme.");
     }
     else
     {
-        // For the staggered scheme
-        if (_coupled_solutions->process_id == 1)
-        {
-            DBUG(
-                "Assemble the Jacobian equations of phase field in "
-                "PhaseFieldProcess for the staggered scheme.");
-        }
-        else
-        {
-            DBUG(
-                "Assemble the Jacobian equations of deformation in "
-                "PhaseFieldProcess for the staggered scheme.");
-        }
-        dof_tables.emplace_back(*_local_to_global_index_map);
-        dof_tables.emplace_back(*_local_to_global_index_map_single_component);
+        DBUG(
+            "Assemble the Jacobian equations of deformation in "
+            "PhaseFieldProcess for the staggered scheme.");
     }
+    dof_tables.emplace_back(*_local_to_global_index_map);
+    dof_tables.emplace_back(*_local_to_global_index_map_single_component);
+
+    const int process_id = _coupled_solutions->process_id;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
     // Call global assembler for each local assembly item.
-
-    GlobalExecutor::executeMemberDereferenced(
+    GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, dof_tables, t, x, xdot, dxdot_dx, dx_dx, M, K, b,
-        Jac, _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(), dof_tables, t,
+        x, xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 
-    if (!_use_monolithic_scheme && (_coupled_solutions->process_id == 0))
+    if (_coupled_solutions->process_id == 0)
     {
         b.copyValues(*_nodal_forces);
         std::transform(_nodal_forces->begin(), _nodal_forces->end(),
@@ -298,9 +258,11 @@ void PhaseFieldProcess<DisplacementDim>::preTimestepConcreteProcess(
     _process_data.t = t;
     _process_data.injected_volume = _process_data.t;
 
-    GlobalExecutor::executeMemberOnDereferenced(
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
+
+    GlobalExecutor::executeSelectedMemberOnDereferenced(
         &LocalAssemblerInterface::preTimestep, _local_assemblers,
-        getDOFTable(process_id), x, t, dt);
+        pv.getActiveElementIDs(), getDOFTable(process_id), x, t, dt);
 }
 
 template <int DisplacementDim>
@@ -322,11 +284,14 @@ void PhaseFieldProcess<DisplacementDim>::postTimestepConcreteProcess(
         dof_tables.emplace_back(*_local_to_global_index_map);
         dof_tables.emplace_back(*_local_to_global_index_map_single_component);
 
-        GlobalExecutor::executeMemberOnDereferenced(
+        ProcessLib::ProcessVariable const& pv
+            = getProcessVariables(process_id)[0];
+
+        GlobalExecutor::executeSelectedMemberOnDereferenced(
             &LocalAssemblerInterface::computeEnergy, _local_assemblers,
-            dof_tables, x, _process_data.t, _process_data.elastic_energy,
-            _process_data.surface_energy, _process_data.pressure_work,
-            _use_monolithic_scheme, _coupled_solutions);
+            pv.getActiveElementIDs(), dof_tables, x, _process_data.t,
+            _process_data.elastic_energy, _process_data.surface_energy,
+            _process_data.pressure_work, _coupled_solutions);
 
         INFO("Elastic energy: %g Surface energy: %g Pressure work: %g ",
              _process_data.elastic_energy, _process_data.surface_energy,
@@ -338,9 +303,6 @@ template <int DisplacementDim>
 void PhaseFieldProcess<DisplacementDim>::postNonLinearSolverConcreteProcess(
     GlobalVector const& x, const double t, const int process_id)
 {
-    if (_use_monolithic_scheme)
-        return;
-
     _process_data.crack_volume = 0.0;
 
     if (!isPhaseFieldProcess(process_id))
@@ -353,10 +315,12 @@ void PhaseFieldProcess<DisplacementDim>::postNonLinearSolverConcreteProcess(
 
         DBUG("PostNonLinearSolver crack volume computation.");
 
-        GlobalExecutor::executeMemberOnDereferenced(
+        ProcessLib::ProcessVariable const& pv
+            = getProcessVariables(process_id)[0];
+        GlobalExecutor::executeSelectedMemberOnDereferenced(
             &LocalAssemblerInterface::computeCrackIntegral, _local_assemblers,
-            dof_tables, x, t, _process_data.crack_volume,
-            _use_monolithic_scheme, _coupled_solutions);
+            pv.getActiveElementIDs(), dof_tables, x, t,
+            _process_data.crack_volume, _coupled_solutions);
 
         INFO("Integral of crack: %g", _process_data.crack_volume);
 
@@ -390,7 +354,7 @@ template <int DisplacementDim>
 bool PhaseFieldProcess<DisplacementDim>::isPhaseFieldProcess(
     int const process_id) const
 {
-    return !_use_monolithic_scheme && process_id == 1;
+    return process_id == 1;
 }
 
 template class PhaseFieldProcess<2>;

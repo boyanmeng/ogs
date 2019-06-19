@@ -5,7 +5,7 @@
  * \brief  Implementation of the SaveMeshDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,9 +16,8 @@
 
 #include <QDoubleValidator>
 
-
 SurfaceExtractionDialog::SurfaceExtractionDialog(QDialog* parent)
-    : QDialog(parent), _tolerance(90), _dir(0,0,-1)
+    : QDialog(parent)
 {
     setupUi(this);
     this->xNormalEdit->setValidator(new QDoubleValidator(-1, 1, 3, xNormalEdit));

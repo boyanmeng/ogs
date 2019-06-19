@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -17,9 +17,9 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 namespace ProcessLib
@@ -27,6 +27,34 @@ namespace ProcessLib
 namespace GroundwaterFlow
 {
 const unsigned NUM_NODAL_DOF = 1;
+
+template <int GlobalDim>
+Eigen::Matrix<double, GlobalDim, GlobalDim> hydraulicConductivity(
+    std::vector<double> const& values)
+{
+    auto const size{values.size()};
+    if (size == 1)  // This is a duplicate but preferred case for GlobalDim==1.
+    {
+        return Eigen::Matrix<double, GlobalDim, GlobalDim>::Identity() *
+               values[0];
+    }
+    if (size == GlobalDim)
+    {
+        return Eigen::Map<Eigen::Matrix<double, GlobalDim, 1> const>(
+                   values.data(), GlobalDim, 1)
+            .asDiagonal();
+    }
+    if (size == GlobalDim * GlobalDim)
+    {
+        return Eigen::Map<Eigen::Matrix<double, GlobalDim, GlobalDim> const>(
+            values.data(), GlobalDim, GlobalDim);
+    }
+
+    OGS_FATAL(
+        "Hydraulic conductivity parameter values size is neither one nor %d "
+        "nor %d squared, but %d.",
+        GlobalDim, GlobalDim, values.size());
+}
 
 class GroundwaterFlowLocalAssemblerInterface
     : public ProcessLib::LocalAssemblerInterface,
@@ -87,7 +115,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -95,7 +123,8 @@ public:
             pos.setIntegrationPoint(ip);
             auto const& sm = _shape_matrices[ip];
             auto const& wp = _integration_method.getWeightedPoint(ip);
-            auto const k = _process_data.hydraulic_conductivity(t, pos)[0];
+            auto const k = hydraulicConductivity<GlobalDim>(
+                _process_data.hydraulic_conductivity(t, pos));
 
             local_K.noalias() += sm.dNdx.transpose() * k * sm.dNdx * sm.detJ *
                                  sm.integralMeasure * wp.getWeight();
@@ -109,11 +138,8 @@ public:
                             std::vector<double> const& local_x) const override
     {
         // eval dNdx and invJ at p
-        using FemType =
-            NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
-
-        FemType fe(*static_cast<const typename ShapeFunction::MeshElement*>(
-            &_element));
+        auto const fe = NumLib::createIsoparametricFiniteElement<
+            ShapeFunction, ShapeMatricesType>(_element);
 
         typename ShapeMatricesType::ShapeMatrices shape_matrices(
             ShapeFunction::DIM, GlobalDim, ShapeFunction::NPOINTS);
@@ -124,7 +150,7 @@ public:
                                  GlobalDim, false);
 
         // fetch hydraulic conductivity
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
         auto const k = _process_data.hydraulic_conductivity(t, pos)[0];
 
@@ -166,7 +192,7 @@ public:
             Eigen::Matrix<double, GlobalDim, Eigen::Dynamic, Eigen::RowMajor>>(
             cache, GlobalDim, n_integration_points);
 
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
 
         for (unsigned i = 0; i < n_integration_points; ++i)

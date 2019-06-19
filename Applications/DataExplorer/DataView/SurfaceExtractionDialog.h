@@ -5,7 +5,7 @@
  * \brief  Definition of the SurfaceExtractionDialog class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -45,6 +45,6 @@ private slots:
     void reject() override { this->done(QDialog::Rejected); };
 
 private:
-    int _tolerance;
-    MathLib::Vector3 _dir;
+    int _tolerance{90};
+    MathLib::Vector3 _dir{0, 0, -1};
 };

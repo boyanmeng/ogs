@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -21,14 +21,13 @@ class MeshLibProperties : public ::testing::Test
 {
 public:
     MeshLibProperties()
-        : mesh(nullptr)
     {
         mesh = MeshLib::MeshGenerator::generateRegularHexMesh(1.0, mesh_size);
     }
 
     ~MeshLibProperties() override { delete mesh; }
     static std::size_t const mesh_size = 5;
-    MeshLib::Mesh * mesh;
+    MeshLib::Mesh* mesh{nullptr};
 };
 std::size_t const MeshLibProperties::mesh_size;
 
@@ -89,13 +88,17 @@ TEST_F(MeshLibProperties, PropertyVectorTestIntegrationPoint)
         std::size_t const size = offsets[i + 1] - offsets[i];
         ASSERT_EQ(n_integration_points, size);
         for (int ip = 0; ip < n_integration_points; ++ip)
+        {
             ASSERT_EQ(i + ip * 0.01, p[offsets[i] + ip]);
+        }
     }
     {  // Last element
         std::size_t const size = p.size() - offsets[i];
         ASSERT_EQ(n_integration_points, size);
         for (int ip = 0; ip < n_integration_points; ++ip)
+        {
             ASSERT_EQ(i + ip * 0.01, p[offsets[i] + ip]);
+        }
     }
 }
 

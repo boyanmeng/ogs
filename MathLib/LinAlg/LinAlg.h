@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -129,8 +129,8 @@ void matMultAdd(Matrix const& A, Vector const& v1, Vector const& v2, Vector& v3)
     v3 = v2 + A*v1;
 }
 
-}} // namespaces
-
+}  // namespace LinAlg
+}  // namespace MathLib
 
 // Global PETScMatrix/PETScVector //////////////////////////////////////////
 #ifdef USE_PETSC

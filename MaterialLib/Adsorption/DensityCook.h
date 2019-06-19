@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -54,4 +54,4 @@ inline double alphaTWaterDean(const double T_Ads)
     return aT_100 / (1. - aT_100 * (Tcel - 100.));
 }
 
-}
+}  // namespace Adsorption

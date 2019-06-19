@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,15 +9,15 @@
 
 #pragma once
 
-#include "NumLib/DOF/DOFTableUtil.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "GenericNaturalBoundaryConditionLocalAssembler.h"
+#include "NumLib/DOF/DOFTableUtil.h"
+#include "ParameterLib/Parameter.h"
 
 namespace ProcessLib
 {
 struct RobinBoundaryConditionData final {
-    Parameter<double> const& alpha;
-    Parameter<double> const& u_0;
+    ParameterLib::Parameter<double> const& alpha;
+    ParameterLib::Parameter<double> const& u_0;
 };
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -54,25 +54,22 @@ public:
         unsigned const n_integration_points =
             Base::_integration_method.getNumberOfPoints();
 
-        SpatialPosition pos;
-        pos.setElementID(id);
+        typename Base::NodalVectorType const alpha =
+            _data.alpha.getNodalValuesOnElement(Base::_element, t);
+        typename Base::NodalVectorType const u_0 =
+            _data.u_0.getNodalValuesOnElement(Base::_element, t);
 
         for (unsigned ip = 0; ip < n_integration_points; ++ip)
         {
-            pos.setIntegrationPoint(ip);
-            auto const& sm = Base::_shape_matrices[ip];
-            auto const& wp = Base::_integration_method.getWeightedPoint(ip);
-
-            double const alpha = _data.alpha(t, pos)[0];
-            double const u_0 = _data.u_0(t, pos)[0];
+            auto const& ip_data = Base::_ns_and_weights[ip];
+            auto const& N = ip_data.N;
+            auto const& w = ip_data.weight;
 
             // flux = alpha * ( u_0 - u )
             // adding a alpha term to the diagonal of the stiffness matrix
             // and a alpha * u_0 term to the rhs vector
-            _local_K.diagonal().noalias() +=
-                sm.N * alpha * sm.detJ * wp.getWeight() * sm.integralMeasure;
-            _local_rhs.noalias() += sm.N * alpha * u_0 * sm.detJ *
-                                    wp.getWeight() * sm.integralMeasure;
+            _local_K.diagonal().noalias() += N * alpha.dot(N) * w;
+            _local_rhs.noalias() += N * alpha.dot(N) * u_0.dot(N) * w;
         }
 
         auto const indices = NumLib::getIndices(id, dof_table_boundary);
@@ -91,4 +88,4 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
-}  // ProcessLib
+}  // namespace ProcessLib

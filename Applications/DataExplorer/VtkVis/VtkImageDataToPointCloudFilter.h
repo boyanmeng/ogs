@@ -1,7 +1,7 @@
 /**
  * \file
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -61,7 +61,7 @@ public:
 
 protected:
     VtkImageDataToPointCloudFilter();
-    ~VtkImageDataToPointCloudFilter() = default;
+    ~VtkImageDataToPointCloudFilter() override = default;
 
     /// Sets input port to vtkImageData.
     int FillInputPortInformation(int port, vtkInformation* info) override;
@@ -70,14 +70,13 @@ protected:
     int RequestData(vtkInformation* request, vtkInformationVector** inputVector,
                     vtkInformationVector* outputVector) override;
 
-    double Gamma;
-    double PointScaleFactor;
-    double MinHeight;
-    double MaxHeight;
-    vtkIdType MinNumberOfPointsPerCell;
-    vtkIdType MaxNumberOfPointsPerCell;
-    bool IsLinear;
-
+    double Gamma{1.0};
+    double PointScaleFactor{1.0};
+    double MinHeight{0};
+    double MaxHeight{1000};
+    vtkIdType MinNumberOfPointsPerCell{1};
+    vtkIdType MaxNumberOfPointsPerCell{20};
+    bool IsLinear{true};
 
 private:
     /// Creates the point objects based on the parameters set by the user

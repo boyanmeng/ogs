@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -65,7 +65,7 @@ HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     auto& solid_material = MaterialLib::Solids::selectSolidConstitutiveRelation(
         _process_data.solid_materials, _process_data.material_ids, e.getID());
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(e.getID());
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
@@ -83,10 +83,12 @@ HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         ip_data.dNdx_u = sm_u.dNdx;
         ip_data.H_u.setZero(GlobalDim, displacement_size);
         for (int i = 0; i < GlobalDim; ++i)
+        {
             ip_data.H_u
                 .template block<1, displacement_size / GlobalDim>(
                     i, i * displacement_size / GlobalDim)
                 .noalias() = ip_data.N_u;
+        }
 
         ip_data.N_p = sm_p.N;
         ip_data.dNdx_p = sm_p.dNdx;
@@ -192,7 +194,7 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     double const& dt = _process_data.dt;
     auto const& gravity_vec = _process_data.specific_body_force;
 
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     unsigned const n_integration_points = _ip_data.size();
@@ -243,7 +245,9 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
             *state, _process_data.reference_temperature);
 
         if (!solution)
+        {
             OGS_FATAL("Computation of local constitutive relation failed.");
+        }
 
         MathLib::KelvinVector::KelvinMatrixType<GlobalDim> C;
         std::tie(sigma_eff, state, C) = std::move(*solution);
@@ -308,7 +312,9 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     auto p = const_cast<Eigen::VectorXd&>(local_x).segment(pressure_index,
                                                            pressure_size);
     if (_process_data.deactivate_matrix_in_flow)
+    {
         setPressureOfInactiveNodes(t, p);
+    }
     auto u = local_x.segment(displacement_index, displacement_size);
 
     computeSecondaryVariableConcreteWithBlockVectors(t, p, u);
@@ -324,7 +330,7 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& u)
 {
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
 
     unsigned const n_integration_points = _ip_data.size();
@@ -361,7 +367,9 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
             *state, _process_data.reference_temperature);
 
         if (!solution)
+        {
             OGS_FATAL("Computation of local constitutive relation failed.");
+        }
 
         MathLib::KelvinVector::KelvinMatrixType<GlobalDim> C;
         std::tie(sigma_eff, state, C) = std::move(*solution);
@@ -419,8 +427,10 @@ void HydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     }
 
     for (unsigned i = 0; i < 3; i++)
+    {
         (*_process_data.mesh_prop_velocity)[element_id * 3 + i] =
             ele_velocity[i];
+    }
 
     NumLib::interpolateToHigherOrderNodes<
         ShapeFunctionPressure, typename ShapeFunctionDisplacement::MeshElement,
@@ -436,13 +446,15 @@ void HydroMechanicsLocalAssemblerMatrix<
                                            Eigen::Ref<Eigen::VectorXd>
                                                p)
 {
-    SpatialPosition x_position;
+    ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
     for (unsigned i = 0; i < pressure_size; i++)
     {
         // only inactive nodes
         if (_process_data.p_element_status->isActiveNode(_element.getNode(i)))
+        {
             continue;
+        }
         x_position.setNodeID(_element.getNodeIndex(i));
         auto const p0 = (*_process_data.p0)(t, x_position)[0];
         p[i] = p0;
@@ -459,7 +471,9 @@ void HydroMechanicsLocalAssemblerMatrix<
     {
         // only inactive nodes
         if (_process_data.p_element_status->isActiveNode(_element.getNode(i)))
+        {
             continue;
+        }
         p_dot[i] = 0;
     }
 }

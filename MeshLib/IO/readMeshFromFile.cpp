@@ -5,7 +5,7 @@
  * \brief  Implementation of readMeshFromFile function.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -76,7 +76,9 @@ MeshLib::Mesh* readMeshFromFileSerial(const std::string &file_name)
     }
 
     if (BaseLib::hasFileExtension("vtu", file_name))
+    {
         return MeshLib::IO::VtuInterface::readVTUFile(file_name);
+    }
 
     ERR("readMeshFromFile(): Unknown mesh file format in file %s.", file_name.c_str());
     return nullptr;

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -13,8 +13,6 @@
 #include "NumLib/ODESolver/TimeDiscretization.h"
 #include "NumLib/ODESolver/Types.h"
 #include "NumLib/TimeStepping/Algorithms/TimeStepAlgorithm.h"
-
-#include "ProcessLib/Output/ProcessOutput.h"
 
 #include "CoupledSolutionsForStaggeredScheme.h"
 
@@ -32,16 +30,14 @@ struct ProcessData
                 NumLib::NonlinearSolver<NLTag>& nonlinear_solver,
                 std::unique_ptr<NumLib::ConvergenceCriterion>&& conv_crit_,
                 std::unique_ptr<NumLib::TimeDiscretization>&& time_disc_,
-                Process& process_,
-                ProcessOutput&& process_output_)
+                Process& process_)
         : timestepper(std::move(timestepper_)),
           nonlinear_solver_tag(NLTag),
           nonlinear_solver(nonlinear_solver),
-          nonlinear_solver_converged(true),
+          nonlinear_solver_status{true, 0},
           conv_crit(std::move(conv_crit_)),
           time_disc(std::move(time_disc_)),
-          process(process_),
-          process_output(std::move(process_output_))
+          process(process_)
     {
     }
 
@@ -49,13 +45,12 @@ struct ProcessData
         : timestepper(std::move(pd.timestepper)),
           nonlinear_solver_tag(pd.nonlinear_solver_tag),
           nonlinear_solver(pd.nonlinear_solver),
-          nonlinear_solver_converged(pd.nonlinear_solver_converged),
+          nonlinear_solver_status(pd.nonlinear_solver_status),
           conv_crit(std::move(pd.conv_crit)),
           time_disc(std::move(pd.time_disc)),
           tdisc_ode_sys(std::move(pd.tdisc_ode_sys)),
           mat_strg(pd.mat_strg),
-          process(pd.process),
-          process_output(std::move(pd.process_output))
+          process(pd.process)
     {
         pd.mat_strg = nullptr;
     }
@@ -71,7 +66,7 @@ struct ProcessData
     //! other members of this struct to their concrety types.
     NumLib::NonlinearSolverTag const nonlinear_solver_tag;
     NumLib::NonlinearSolverBase& nonlinear_solver;
-    bool nonlinear_solver_converged;
+    NumLib::NonlinearSolverStatus nonlinear_solver_status;
     std::unique_ptr<NumLib::ConvergenceCriterion> conv_crit;
 
     std::unique_ptr<NumLib::TimeDiscretization> time_disc;
@@ -85,6 +80,5 @@ struct ProcessData
     int process_id = 0;
 
     Process& process;
-    ProcessOutput process_output;
 };
 }  // namespace ProcessLib

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -15,9 +15,9 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "TwoPhaseFlowWithPPMaterialProperties.h"
@@ -189,7 +189,7 @@ private:
     static const int cap_pressure_size = ShapeFunction::NPOINTS;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace TwoPhaseFlowWithPP
+}  // namespace ProcessLib
 
 #include "TwoPhaseFlowWithPPLocalAssembler-impl.h"

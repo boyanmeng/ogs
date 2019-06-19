@@ -1,94 +1,18 @@
+From 6.1.0 onwards the changelog is part of the web site under `web/content/releases`. Please follow the links.
+
+# Unreleased
+
+[Please see the wiki-page](https://github.com/ufz/ogs/wiki/Release-notes-6.2.1)
+
+----
+
+# 6.2.0
+
+[Changelog for OpenGeoSys 6.2.0](https://github.com/ufz/ogs/blob/master/web/content/releases/6.2.0.md)
+
 # 6.1.0
 
-The changes since the prerelease 6.1.0-rc1 contain few bug fixes and
-improvements of the CI.
-
-### Features:
-
-#### New processes:
-- ComponentTransport https://github.com/ufz/ogs/pull/1758
-- PhaseField https://github.com/ufz/ogs/pull/1813 and https://github.com/ufz/ogs/pull/1895
-- RichardsComponentTransport https://github.com/ufz/ogs/pull/1929
-- ThermoMechanics https://github.com/ufz/ogs/pull/1800
-- TwoPhaseFlow p-rho https://github.com/ufz/ogs/pull/1613
-
-#### Other process' changes:
-- New equation assembly approach for the staggered scheme. With that,  the
-  coupling assembly computations are  changed from  performing assembly across
-  the different Process classes for a coupling to a single Process class for
-  coupled processes, which was assumed only for the monolithic before. With the
-  changes, the original Process class that for monolithic scheme originally can
-  now handle both of the monolithic and staggered schemes.  So far,  HT classes
-  get the staggered scheme based on this new framework of  assembly.
-  https://github.com/ufz/ogs/pull/1970
-- Heterogeneous liquid flow properties  (https://github.com/ufz/ogs/pull/1979,
-  https://github.com/ufz/ogs/pull/2017)
-- New boundary conditions added: Nonuniform Dirichlet
-  (https://github.com/ufz/ogs/pull/1952) and Neumann
-  (https://github.com/ufz/ogs/pull/1891), and normal traction
-  (https://github.com/ufz/ogs/pull/1896)
-- Framework for time stepping and a first application of adaptive time stepping,
-  EvolutionaryPIDcontroller, and automatic time step control
-  (https://github.com/ufz/ogs/pull/1803).
-- Nodal source terms (https://github.com/ufz/ogs/pull/1977)
-- Fix deformation processes to work correctly with PETSc parallelization
-  (https://github.com/ufz/ogs/pull/1838).
-- Fix the access to local data of PETScVector (https://github.com/ufz/ogs/pull/1797).
-- Add damping factor to global Newton. https://github.com/ufz/ogs/pull/2004
-- Extend extrapolator to vectorial quantities and replace the component-wise
-  output of Darcy velocity and the stress/strain in mechanical processes with
-  single vectorial output.
-
-#### Material model changes
-- Separate FractureModels in LIE https://github.com/ufz/ogs/pull/1971
-- Add material forces as published in
-  http://www.sciencedirect.com/science/article/pii/S0093641317303865
-  https://github.com/ufz/ogs/pull/1936
-
-#### Testing and documentation:
-- Insitu visualization with ParaView Catalyst. See
-  [presentation](https://github.com/ufz/ogs/files/867280/Insitu-Department.pdf).
-  #1744, #1732. As a consequence VTK 7.1 is now required.
-- Benchmark docs are now part of the code (in `web/content`) and can contain
-  [interactive 3D
-  visualizations](https://dev.opengeosys.org/docs/benchmarks/elliptic/groundwater-flow-neumann/#results-and-evaluation)
-  via [vtk.js](https://kitware.github.io/vtk-js/). #1706, #1714, #1723, #1729.
-- Migrated handling of test data files from *git-submodule* to *git-lfs*, see
-  [docs](https://docs.opengeosys.org/docs/devguide/testing/test-data). #1964,
-  #1982, #1984, #2010, #2012.  Now  [git-lfs](https://git-lfs.github.com/) is
-  required. Check the
-  [installation](https://docs.opengeosys.org/docs/devguide/getting-started/prerequisites)
-  instructions.
-
-### Infrastructure:
-- Fully moved to Conan for automatic third-party library handling. Can be
-  enabled with `OGS_USE_CONAN=ON`, see
-  [docs](https://docs.opengeosys.org/docs/devguide/advanced/conan-package-manager).
-  #1907
-- Conan version 1.0 is now required.
-- Dropped travis CI environment and added few new tests on Jenkins because of
-  simpler maintenance.
-
-#### CMake options changes:
-- `OGS_EIGEN_DYNAMIC_SHAPE_MATRICES` defaults to OFF on Release
-  config, ON otherwise. Can be overridden by explicitly setting the option. #1673
-- New `OGS_EIGEN_INITIALIZE_MATRICES_BY_NAN` defaults to ON for easier spotting
-  of non-initialized matrices. When OFF, the Eigen's default initialization to 0
-  is skipped resulting in slightly faster execution.
-  https://github.com/ufz/ogs/pull/1917
-- Set default Eigen's cmake flag disabling vectorization since this lead to
-  several problems in different environments.
-  https://github.com/ufz/ogs/pull/1919 and the issue linked there
-  https://github.com/ufz/ogs/issues/1881
-
-#### Other
-- PETSc config is tested on Jenkins (envinf1)
-- OGS binaries are provided as eve / envinf1 modules. See
-  [docs](https://docs.opengeosys.org/docs/quickstart/basics/envinf1) for
-  details. #1753
-- Migrated Data Explorer to Qt5. #1622, #1625
-- Windows builds are tested on MSVC 2017 on own hardware and on MS
-
+[Changelog for OpenGeoSys 6.1.0](https://github.com/ufz/ogs/blob/master/web/content/releases/6.1.0.md)
 
 # 6.0.8
 
@@ -100,57 +24,57 @@ fluids pressure, density, permeability, and viscosity were added.
 
 ### Features:
 
- - Implementation of hydro-mechanics (HM) with LIE. #1537-#1541
- - Implementation of small deformation (M) with LIE. #1452
- - Fracture constitutive models. #1434
- - Hydro-Mechanics process. #1508
+ - Implementation of hydro-mechanics (HM) with LIE. [#1537](https://github.com/ufz/ogs/pull/1537)-[#1541](https://github.com/ufz/ogs/pull/1541)
+ - Implementation of small deformation (M) with LIE. [#1452](https://github.com/ufz/ogs/pull/1452)
+ - Fracture constitutive models. [#1434](https://github.com/ufz/ogs/pull/1434)
+ - Hydro-Mechanics process. [#1508](https://github.com/ufz/ogs/pull/1508)
  - First version of monolithic hydro-thermal process implementation with
-   Boussinesq approximation using constant viscosity. #1534
- - Two phase flow process with pp model implementation. #1530
- - Richards flow process implementation. #1473
- - Liquid process. #1468
- - Classes for relative permeability models. #1531
- - Classes for capillary models. #1517, #1578
- - Ehlers single-surface yield function constitutive relation model. #1556
- - Support scaling, GMRES, and Pardiso in Eigen linear solvers. #1509 #1510
- - Piecewise linear Monotonic curve and a generic curve parser. #1529
- - Support searching boundary nodes in MeshLib::NodeSearch. #1459
- - Support specifying the shape function order in process variables. #1503
- - Command line option --unbuffered-std-out to deactivate buffer for standard output. #1514
- - CMake option OGS_FATAL_ABORT for debugging. #1432
- - Set the default OGS_LOG_LEVEL to debug in release builds. #1522
- - Add integration order in input files. #1464
- - Migrated Data Explorer to Qt5. #1622, #1625
+   Boussinesq approximation using constant viscosity. [#1534](https://github.com/ufz/ogs/pull/1534)
+ - Two phase flow process with pp model implementation. [#1530](https://github.com/ufz/ogs/pull/1530)
+ - Richards flow process implementation. [#1473](https://github.com/ufz/ogs/pull/1473)
+ - Liquid process. [#1468](https://github.com/ufz/ogs/pull/1468)
+ - Classes for relative permeability models. [#1531](https://github.com/ufz/ogs/pull/1531)
+ - Classes for capillary models. [#1517](https://github.com/ufz/ogs/pull/1517), [#1578](https://github.com/ufz/ogs/pull/1578)
+ - Ehlers single-surface yield function constitutive relation model. [#1556](https://github.com/ufz/ogs/pull/1556)
+ - Support scaling, GMRES, and Pardiso in Eigen linear solvers. [#1509](https://github.com/ufz/ogs/pull/1509) [#1510](https://github.com/ufz/ogs/pull/1510)
+ - Piecewise linear Monotonic curve and a generic curve parser. [#1529](https://github.com/ufz/ogs/pull/1529)
+ - Support searching boundary nodes in MeshLib::NodeSearch. [#1459](https://github.com/ufz/ogs/pull/1459)
+ - Support specifying the shape function order in process variables. [#1503](https://github.com/ufz/ogs/pull/1503)
+ - Command line option --unbuffered-std-out to deactivate buffer for standard output. [#1514](https://github.com/ufz/ogs/pull/1514)
+ - CMake option OGS_FATAL_ABORT for debugging. [#1432](https://github.com/ufz/ogs/pull/1432)
+ - Set the default OGS_LOG_LEVEL to debug in release builds. [#1522](https://github.com/ufz/ogs/pull/1522)
+ - Add integration order in input files. [#1464](https://github.com/ufz/ogs/pull/1464)
+ - Migrated Data Explorer to Qt5. [#1622](https://github.com/ufz/ogs/pull/1622), [#1625](https://github.com/ufz/ogs/pull/1625)
  - Benchmarks can be run on specific configurations only by using the new parameter
-   `REQUIREMENTS` in `AddTest()` (in CMake). #1610
+   `REQUIREMENTS` in `AddTest()` (in CMake). [#1610](https://github.com/ufz/ogs/pull/1610)
 
 ### Utilities
 New utilities:
- - createQuadraticMesh #1500
- - convertToLinearMesh #1554
- - postLIE #1555
+ - createQuadraticMesh [#1500](https://github.com/ufz/ogs/pull/1500)
+ - convertToLinearMesh [#1554](https://github.com/ufz/ogs/pull/1554)
+ - postLIE [#1555](https://github.com/ufz/ogs/pull/1555)
 
 New features:
- - extend NodeReordering to correct ordering of nonlinear nodes #1519
+ - extend NodeReordering to correct ordering of nonlinear nodes [#1519](https://github.com/ufz/ogs/pull/1519)
 
 
 ### Infrastructure:
 
- - Ctest now works on Windows too by removing time-wrappers. #1480
- - Moved to public Jenkins instance at jenkins.opengeosys.org. #1505
+ - Ctest now works on Windows too by removing time-wrappers. [#1480](https://github.com/ufz/ogs/pull/1480)
+ - Moved to public Jenkins instance at jenkins.opengeosys.org. [#1505](https://github.com/ufz/ogs/pull/1505)
  - Doxygen warnings parser in Jenkins will mark a build as unstable
-   if there are Doxygen warnings. #1585
+   if there are Doxygen warnings. [#1585](https://github.com/ufz/ogs/pull/1585)
  - Benchmarking on Jenkins now saves the standard output into a file for each
-   test. #1528
+   test. [#1528](https://github.com/ufz/ogs/pull/1528)
 
 ### Fixes:
- - Fix LocalToGlobalIndexMap with mutliple variables and with multiple componets. #1433 #1440
- - Fix PropertyVector<T*> for multi-component case. #1441
- - Fix checking IDs of nonlinear nodes. #1495
- - Fix incorrect use of getNumberOfBaseNodes(). #1515
- - Fix computing sparsity pattern for mixed shape function order cases. #1548
- - Fix that iterations and residuals were not printed when Eigen linear solver fails. #1499
- - Fix all of the Doxygen warnings in the code. #1569 #1573
+ - Fix LocalToGlobalIndexMap with mutliple variables and with multiple componets. [#1433](https://github.com/ufz/ogs/pull/1433) [#1440](https://github.com/ufz/ogs/pull/1440)
+ - Fix PropertyVector<T*> for multi-component case. [#1441](https://github.com/ufz/ogs/pull/1441)
+ - Fix checking IDs of nonlinear nodes. [#1495](https://github.com/ufz/ogs/pull/1495)
+ - Fix incorrect use of getNumberOfBaseNodes(). [#1515](https://github.com/ufz/ogs/pull/1515)
+ - Fix computing sparsity pattern for mixed shape function order cases. [#1548](https://github.com/ufz/ogs/pull/1548)
+ - Fix that iterations and residuals were not printed when Eigen linear solver fails. [#1499](https://github.com/ufz/ogs/pull/1499)
+ - Fix all of the Doxygen warnings in the code. [#1569](https://github.com/ufz/ogs/pull/1569) [#1573](https://github.com/ufz/ogs/pull/1573)
  - Fix all of the input file/keyword documentation and its generation.
 
 
@@ -165,145 +89,145 @@ Also, during implementation of the Robin boundary conditions, the base classes
 for boundary conditions were generalized.
 
  - Add small deformation process with linear elastic material model. The
-   implementation is based on the Kelvin mapping. #1340
- - Added B-Matrices and Kelvin mapping tools for deformation processes. #1359
- - Heat conduction process implementation. #1328
+   implementation is based on the Kelvin mapping. [#1340](https://github.com/ufz/ogs/pull/1340)
+ - Added B-Matrices and Kelvin mapping tools for deformation processes. [#1359](https://github.com/ufz/ogs/pull/1359)
+ - Heat conduction process implementation. [#1328](https://github.com/ufz/ogs/pull/1328)
  - Finalize support for multicomponent boundary conditions adding configuration
-   parser. #1343
- - Added uniform Robin boundary condition. #1336
- - Added a generic natural boundary condition class. #1337
- - Added Robin boundary condition. #1336
+   parser. [#1343](https://github.com/ufz/ogs/pull/1343)
+ - Added uniform Robin boundary condition. [#1336](https://github.com/ufz/ogs/pull/1336)
+ - Added a generic natural boundary condition class. [#1337](https://github.com/ufz/ogs/pull/1337)
+ - Added Robin boundary condition. [#1336](https://github.com/ufz/ogs/pull/1336)
  - Reworked the Parameter class. It now serves as a basis for BCs and ICs.
-   #1357, #1356
- - Added time-dependent Dirichlet BCs. #1380
- - Add calculation of surface flux, tests for groundwater flow. #1429
- - Implemented numerical Jacobian assembly for Newton-Raphson solver. #1352
+   [#1357](https://github.com/ufz/ogs/pull/1357), [#1356](https://github.com/ufz/ogs/pull/1356)
+ - Added time-dependent Dirichlet BCs. [#1380](https://github.com/ufz/ogs/pull/1380)
+ - Add calculation of surface flux, tests for groundwater flow. [#1429](https://github.com/ufz/ogs/pull/1429)
+ - Implemented numerical Jacobian assembly for Newton-Raphson solver. [#1352](https://github.com/ufz/ogs/pull/1352)
  - Added the new parameter type "Group" which can be used for setting material
-   ID dependent values. #1426
+   ID dependent values. [#1426](https://github.com/ufz/ogs/pull/1426)
  - Added fluid property class and several fluid density and viscosity models
-   based on it. #1398, #1435
+   based on it. [#1398](https://github.com/ufz/ogs/pull/1398), [#1435](https://github.com/ufz/ogs/pull/1435)
  - Enabled solving of axially symmetric problems on 2D meshes for all currently
-   implemented processes. #1443
- - Added time measurement for assembly and solvers. #1322
+   implemented processes. [#1443](https://github.com/ufz/ogs/pull/1443)
+ - Added time measurement for assembly and solvers. [#1322](https://github.com/ufz/ogs/pull/1322)
  - Added named functions, out of which expressions can be built up at run-time
    from the prj file, which can be used to output additional nodal quantities.
-   #1314, #1315
+   [#1314](https://github.com/ufz/ogs/pull/1314), [#1315](https://github.com/ufz/ogs/pull/1315)
  - Added component-wise norms, and flexible convergence criteria for nonlinear
-   solvers. #1349, #1342
- - Restructured the time loop. #1364
+   solvers. [#1349](https://github.com/ufz/ogs/pull/1349), [#1342](https://github.com/ufz/ogs/pull/1342)
+ - Restructured the time loop. [#1364](https://github.com/ufz/ogs/pull/1364)
 
 ### Utilities
 New utilities:
  - createNeumannBc: The tool integrates the given element property and writes
    the computed data as a PropertyVector with the name `node_aggregated_gwn`
    into the mesh. The tool also outputs an OGS-5 direct source term (Neumann
-   boundary condition) data file. #1346
- - scaleProperty for simple rescaling of mesh properties. #1347
- - convertGEO for geometric file conversion, e.g. gli to glm. #1360
+   boundary condition) data file. [#1346](https://github.com/ufz/ogs/pull/1346)
+ - scaleProperty for simple rescaling of mesh properties. [#1347](https://github.com/ufz/ogs/pull/1347)
+ - convertGEO for geometric file conversion, e.g. gli to glm. [#1360](https://github.com/ufz/ogs/pull/1360)
  - swapNodeCoordinateAxes to swap node coordinate values, e.g. XY to XZ plane.
-   #1361
+   [#1361](https://github.com/ufz/ogs/pull/1361)
 New feature:
- - Support tetrahedra types in generateStructuredMesh. #1353
+ - Support tetrahedra types in generateStructuredMesh. [#1353](https://github.com/ufz/ogs/pull/1353)
 
 ### Infrastructure:
  - Migrated all important Jenkins jobs to script-based
    [Jenkins Pipeline](https://jenkins.io/doc/pipeline/)
    functionality.  For an introduction see
    [docs.opengeosys.org - Continuous Integration](https://docs.opengeosys.org/docs/devguide/development-workflows/continuous-integration).
-   #1392, #1396, #1404, #1411, #1424, #1428, #1436
+   [#1392](https://github.com/ufz/ogs/pull/1392), [#1396](https://github.com/ufz/ogs/pull/1396), [#1404](https://github.com/ufz/ogs/pull/1404), [#1411](https://github.com/ufz/ogs/pull/1411), [#1424](https://github.com/ufz/ogs/pull/1424), [#1428](https://github.com/ufz/ogs/pull/1428), [#1436](https://github.com/ufz/ogs/pull/1436)
  - Moved CMake logic for packaging executable dependencies (such as shared libs)
    to the install and package targets instead of running after each executable
-   gets build. #1458
+   gets build. [#1458](https://github.com/ufz/ogs/pull/1458)
  - Increase minimum clang compiler version to 3.5 in course of updating travis
-   build enviroment to Ubuntu LTS 14.04. #1448
+   build enviroment to Ubuntu LTS 14.04. [#1448](https://github.com/ufz/ogs/pull/1448)
  - Added a script that generates crosslinked Doxygen pages out of ctest input
-   files #1348
+   files [#1348](https://github.com/ufz/ogs/pull/1348)
 
 ### Fixes:
  - Fix an issue that a shape vector was defined as a column vector. Corrected to
-   a row vector . #1288
+   a row vector . [#1288](https://github.com/ufz/ogs/pull/1288)
  - Fix usage of `boost::optional<T const&>`, which has changed in version 1.61.
-   #1385
- - Fix Grid (enlarge bounding box to fit all points). #1369
- - Fix mapping of geometries to mesh surfaces. #1327. #1368
- - Fix transmitting raster data to element properties. #1347
- - Fixed missing XSD files in packages. #1410
- - Fix a shape vector to a row vector. #1288
- - Fix FEFLOW import. #1397
- - Fix NodeReordering to check ordering of each element. #1425
- - Fix builds linking shared VTK library. #1431
- - Fix global Newton iteration counter. #1341
+   [#1385](https://github.com/ufz/ogs/pull/1385)
+ - Fix Grid (enlarge bounding box to fit all points). [#1369](https://github.com/ufz/ogs/pull/1369)
+ - Fix mapping of geometries to mesh surfaces. [#1327](https://github.com/ufz/ogs/pull/1327). [#1368](https://github.com/ufz/ogs/pull/1368)
+ - Fix transmitting raster data to element properties. [#1347](https://github.com/ufz/ogs/pull/1347)
+ - Fixed missing XSD files in packages. [#1410](https://github.com/ufz/ogs/pull/1410)
+ - Fix a shape vector to a row vector. [#1288](https://github.com/ufz/ogs/pull/1288)
+ - Fix FEFLOW import. [#1397](https://github.com/ufz/ogs/pull/1397)
+ - Fix NodeReordering to check ordering of each element. [#1425](https://github.com/ufz/ogs/pull/1425)
+ - Fix builds linking shared VTK library. [#1431](https://github.com/ufz/ogs/pull/1431)
+ - Fix global Newton iteration counter. [#1341](https://github.com/ufz/ogs/pull/1341)
  - Correct few loops over mesh nodes, which should run over the mesh subsets.
-   #1437
- - Fix shape function computation for 2D elements lying in the x-y-plane #1318
- - Fix AddTest, s.t. ctest now really checks results. #1325
- - Made Eigen preconditioner configurable. #1367
+   [#1437](https://github.com/ufz/ogs/pull/1437)
+ - Fix shape function computation for 2D elements lying in the x-y-plane [#1318](https://github.com/ufz/ogs/pull/1318)
+ - Fix AddTest, s.t. ctest now really checks results. [#1325](https://github.com/ufz/ogs/pull/1325)
+ - Made Eigen preconditioner configurable. [#1367](https://github.com/ufz/ogs/pull/1367)
 
 # 6.0.6
 
 ### Features:
  - Add external ode-solver interface with [Sundials CVODE
-   library](http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/cvode). #1109
+   library](http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/cvode). [#1109](https://github.com/ufz/ogs/pull/1109)
  - Add piecewise linear curves parser to the project files. The curves are
    specified by two vectors, the coordinates and values. They can be used for
    example to map temporal dependencies (time-dependent boundary conditions) or
    as approximations of coefficient dependencies (e.g. pressure-saturation
-   curves). #1149
+   curves). [#1149](https://github.com/ufz/ogs/pull/1149)
  - Extend the LocalAssemblerInterface by adding default implementations of
    pre/postTimestep and assembleJacobian functions. The current time and time
-   step size are passed in the preTimestep call to the particular processes. #1214
+   step size are passed in the preTimestep call to the particular processes. [#1214](https://github.com/ufz/ogs/pull/1214)
  - Add support multi-variable/multi-component in the DOF table interface and
-   extend the initial conditions to multi-components. #1224
+   extend the initial conditions to multi-components. [#1224](https://github.com/ufz/ogs/pull/1224)
  - Major rework of the general process interface. That also affects the
    interface of concrete processes and local assemblers.
-   least squares optimization. #1145
- - Added functionality for the output of secondary variables. #1171
+   least squares optimization. [#1145](https://github.com/ufz/ogs/pull/1145)
+ - Added functionality for the output of secondary variables. [#1171](https://github.com/ufz/ogs/pull/1171)
  - Added material properties for zeolite adsorption and Calcium oxide/hydroxide
-   reactions. #1178
+   reactions. [#1178](https://github.com/ufz/ogs/pull/1178)
  - Transferred the TES process, a monolithically coupled THC model for simulating
-   thermochemical energy storag devices, from OGS5. #1181
+   thermochemical energy storag devices, from OGS5. [#1181](https://github.com/ufz/ogs/pull/1181)
  - Introduced a general scheme for documenting OGS6 input file settings. #978
- - Added copy constructor for the class Surface, minor improvements in GeoLib. #1237
- - Added classes GeoLib::LineSegment and GeoLib::Polyline::SegmentIterator. #1139
- - GMSHInterface can handle stations as constraints. #1212
- - Added functionality to duplicate geometric data. #1229
- - Station names can be modified in Data Explorer #1273
+ - Added copy constructor for the class Surface, minor improvements in GeoLib. [#1237](https://github.com/ufz/ogs/pull/1237)
+ - Added classes GeoLib::LineSegment and GeoLib::Polyline::SegmentIterator. [#1139](https://github.com/ufz/ogs/pull/1139)
+ - GMSHInterface can handle stations as constraints. [#1212](https://github.com/ufz/ogs/pull/1212)
+ - Added functionality to duplicate geometric data. [#1229](https://github.com/ufz/ogs/pull/1229)
+ - Station names can be modified in Data Explorer [#1273](https://github.com/ufz/ogs/pull/1273)
 
 ### Infrastructure
  - Fix circular dependencies on library level. This allows for dynamic linking
    which is faster than static and can be used in debug builds, where the
    compilation time is more important than the runtime.
-   - Enable shared linking of ogs libraries. #1133
-   - Break FileIO on ApplicationsLib dependency. #1138
-   - Remove MeshLib on FileIO dependency. #1143, #1153
-   - Cleanup some of AssemblerLib dependencies. #1166
-   - Split AssemblerLib and move to MathLib and NumLib #1208
-   - Move InsituLib to MeshLib #1208
-   - Remove MathLib depends on NumLib #1208
-   - Remove dependency of FileIO on Data Explorer #1302
- - Introduced Conan package manager for automatic fetching of build dependencies, #1141
+   - Enable shared linking of ogs libraries. [#1133](https://github.com/ufz/ogs/pull/1133)
+   - Break FileIO on ApplicationsLib dependency. [#1138](https://github.com/ufz/ogs/pull/1138)
+   - Remove MeshLib on FileIO dependency. [#1143](https://github.com/ufz/ogs/pull/1143), [#1153](https://github.com/ufz/ogs/pull/1153)
+   - Cleanup some of AssemblerLib dependencies. [#1166](https://github.com/ufz/ogs/pull/1166)
+   - Split AssemblerLib and move to MathLib and NumLib [#1208](https://github.com/ufz/ogs/pull/1208)
+   - Move InsituLib to MeshLib [#1208](https://github.com/ufz/ogs/pull/1208)
+   - Remove MathLib depends on NumLib [#1208](https://github.com/ufz/ogs/pull/1208)
+   - Remove dependency of FileIO on Data Explorer [#1302](https://github.com/ufz/ogs/pull/1302)
+ - Introduced Conan package manager for automatic fetching of build dependencies, [#1141](https://github.com/ufz/ogs/pull/1141)
  - Inconsistent formatting of tabs and spaces was finally resolved: now all
-   formatting, indentation and alignment, are done with four spaces. #1201
+   formatting, indentation and alignment, are done with four spaces. [#1201](https://github.com/ufz/ogs/pull/1201)
  - Windows 32-bit builds are disallowed because they are not supported.
-   Can be forced by setting OGS_32_BIT=ON. #1230
- - Simplified FindEigen.cmake, #1209
- - git diff --check is run in its own Travis job, #1207
+   Can be forced by setting OGS_32_BIT=ON. [#1230](https://github.com/ufz/ogs/pull/1230)
+ - Simplified FindEigen.cmake, [#1209](https://github.com/ufz/ogs/pull/1209)
+ - git diff --check is run in its own Travis job, [#1207](https://github.com/ufz/ogs/pull/1207)
 
- - Moved some IO implementations from FileIO to BaseLib/IO, GeoLib/IO, MeshLib/IO, #1182, #1235
- - Eigen is not optional anymore #1218
- - Removed OGS_USE_EIGENLIS CMake option. Use OGS_USE_LIS instead #1251
+ - Moved some IO implementations from FileIO to BaseLib/IO, GeoLib/IO, MeshLib/IO, [#1182](https://github.com/ufz/ogs/pull/1182), [#1235](https://github.com/ufz/ogs/pull/1235)
+ - Eigen is not optional anymore [#1218](https://github.com/ufz/ogs/pull/1218)
+ - Removed OGS_USE_EIGENLIS CMake option. Use OGS_USE_LIS instead [#1251](https://github.com/ufz/ogs/pull/1251)
 
 ### Fixes:
- - Fix linking of Metis in MathLib. #1147
- - Fix memory leaks in GMSHInterface. #1212
- - Fix build with Lis #1267
- - Fixing several small issues with NetCDF import #1169
+ - Fix linking of Metis in MathLib. [#1147](https://github.com/ufz/ogs/pull/1147)
+ - Fix memory leaks in GMSHInterface. [#1212](https://github.com/ufz/ogs/pull/1212)
+ - Fix build with Lis [#1267](https://github.com/ufz/ogs/pull/1267)
+ - Fixing several small issues with NetCDF import [#1169](https://github.com/ufz/ogs/pull/1169)
  - Restructure Applications related modules
-    - Move DataHolderLib and FileIO under Applications #1279
- - Remove calling std::abort within libraries. Exeptions are thrown instead. #1245
- - Fix finding Boost with BOOST_ROOT CMake argument #1287
- - Fix linking of Sundials CVODE library #1197
- - Fixed issue where geometry names would be missing after merging geometries #1295
+    - Move DataHolderLib and FileIO under Applications [#1279](https://github.com/ufz/ogs/pull/1279)
+ - Remove calling std::abort within libraries. Exeptions are thrown instead. [#1245](https://github.com/ufz/ogs/pull/1245)
+ - Fix finding Boost with BOOST_ROOT CMake argument [#1287](https://github.com/ufz/ogs/pull/1287)
+ - Fix linking of Sundials CVODE library [#1197](https://github.com/ufz/ogs/pull/1197)
+ - Fixed issue where geometry names would be missing after merging geometries [#1295](https://github.com/ufz/ogs/pull/1295)
 
 # 6.0.5
 
@@ -314,7 +238,7 @@ New feature:
    implementation. #951, #982
  - Separate Dirichlet boundary condition class implementation. #963
  - Split process output and post timestep. #998
- - Added pre- and postTimestep and -Iteration hooks to processes. #1094, #1100, #1101
+ - Added pre- and postTimestep and -Iteration hooks to processes. [#1094](https://github.com/ufz/ogs/pull/1094), [#1100](https://github.com/ufz/ogs/pull/1100), [#1101](https://github.com/ufz/ogs/pull/1101)
  - New configuration tree parser
    - Checks configuration parameters more strictly, automatically prints error/warning messages.
    - Requires Boost >= 1.56 because of boost::optional with move semantics.
@@ -328,8 +252,8 @@ New feature:
    allocated shape matrices.
  - Added several cmake options for selecting which element types, dimensions and
    orders to be built. Selecting only few element types speeds up compilation
-   significantly. #1092
- - Command line argument `-l` for OGS cli and testrunner to specify verbosity of logging. #1056
+   significantly. [#1092](https://github.com/ufz/ogs/pull/1092)
+ - Command line argument `-l` for OGS cli and testrunner to specify verbosity of logging. [#1056](https://github.com/ufz/ogs/pull/1056)
  - Added possibility to specify after which timesteps there shiuld be output.
  - Added possibility to specify timesteps of different size for use with
    transient processes.
@@ -352,8 +276,8 @@ New feature:
 
 - Minimum Boost version: 1.56.0. #943
 - Boost requirement is now header-only. #940
-- Optional support for VTK 7. #1083
-- Test data is now a git submodule. #1000
+- Optional support for VTK 7. [#1083](https://github.com/ufz/ogs/pull/1083)
+- Test data is now a git submodule. [#1000](https://github.com/ufz/ogs/pull/1000)
 - In-code defined Jenkins jobs. #970
 - Use [clang's address and undefined behaviour sanitizers](https://svn.ufz.de:8443/job/OGS-6/job/Docker/job/clang-sanitizer/) on Jenkins now. #958
 

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -14,7 +14,6 @@
 
 #include "MeshLib/MeshSearch/NodeSearch.h"
 #include "ProcessLib/Utils/CreateLocalAssemblers.h"
-#include "ProcessLib/Utils/ProcessUtils.h"
 #include "PythonBoundaryConditionLocalAssembler.h"
 
 namespace
@@ -87,7 +86,7 @@ void PythonBoundaryCondition::getEssentialBCValues(
 
     auto const& bulk_node_ids_map =
         *_bc_data.boundary_mesh.getProperties().getPropertyVector<std::size_t>(
-            "bulk_node_ids");
+            "bulk_node_ids", MeshLib::MeshItemType::Node, 1);
 
     bc_values.ids.clear();
     bc_values.values.clear();

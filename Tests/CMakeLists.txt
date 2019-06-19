@@ -16,6 +16,7 @@ APPEND_SOURCE_FILES(TEST_SOURCES MathLib)
 APPEND_SOURCE_FILES(TEST_SOURCES MeshLib)
 APPEND_SOURCE_FILES(TEST_SOURCES MeshGeoToolsLib)
 APPEND_SOURCE_FILES(TEST_SOURCES NumLib)
+APPEND_SOURCE_FILES(TEST_SOURCES ParameterLib)
 APPEND_SOURCE_FILES(TEST_SOURCES ProcessLib)
 
 if(Qt5XmlPatterns_FOUND)
@@ -39,11 +40,12 @@ set_target_properties(testrunner PROPERTIES FOLDER Testing)
 
 target_link_libraries(testrunner
     ApplicationsFileIO
-    GTest
+    gtest
     MeshGeoToolsLib
     MaterialLib
     MeshLib
     NumLib
+    ParameterLib
     ProcessLib
     Threads::Threads
     ${VTK_LIBRARIES}
@@ -58,7 +60,7 @@ if(OGS_USE_PETSC)
 endif()
 
 if(OGS_USE_MPI)
-    target_link_libraries(testrunner ${MPI_CXX_LIBRARIES})
+    target_link_libraries(testrunner MPI::MPI_CXX)
 endif()
 
 if(OGS_BUILD_SWMM)
@@ -84,7 +86,7 @@ if(OGS_USE_PCH)
 endif()
 
 # Add make-target tests which runs the testrunner
-if(IS_CI)
+if(IS_CI AND NOT OGS_COVERAGE)
     set(TESTRUNNER_ADDITIONAL_ARGUMENTS ${TESTRUNNER_ADDITIONAL_ARGUMENTS}
         --gtest_shuffle --gtest_repeat=3)
 endif()
@@ -96,13 +98,16 @@ add_custom_target(tests-cleanup ${CMAKE_COMMAND} -E remove -f testrunner.xml)
 set_target_properties(tests-cleanup PROPERTIES FOLDER Testing)
 
 if(OGS_USE_PETSC)
+    if("${HOSTNAME}" MATCHES "frontend.*")
+        set(MPIRUN_ARGS --mca btl_openib_allow_ib 1)
+    endif()
     set(TEST_FILTER_MPI --gtest_filter=-MPITest*)
     add_custom_target(tests
-        mpirun -np 1 $<TARGET_FILE:testrunner> ${TESTRUNNER_ADDITIONAL_ARGUMENTS} ${TEST_FILTER_MPI}
+        mpirun ${MPIRUN_ARGS} -np 1 $<TARGET_FILE:testrunner> ${TESTRUNNER_ADDITIONAL_ARGUMENTS} ${TEST_FILTER_MPI}
         DEPENDS testrunner tests-cleanup
     )
     add_custom_target(tests_mpi
-        mpirun -np 3 $<TARGET_FILE:testrunner> --gtest_filter=MPITest*
+        mpirun ${MPIRUN_ARGS} -np 3 $<TARGET_FILE:testrunner> --gtest_filter=MPITest*
         DEPENDS testrunner
     )
     set_target_properties(tests_mpi PROPERTIES FOLDER Testing)

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -92,10 +92,8 @@ public:
     {
         using ShapeMatricesType =
             ShapeMatrixPolicyType<ShapeFunction, GlobalDim>;
-        using FemType =
-            NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
-        FemType fe(*static_cast<const typename ShapeFunction::MeshElement*>(
-            &_element));
+        auto const fe = NumLib::createIsoparametricFiniteElement<
+            ShapeFunction, ShapeMatricesType>(_element);
 
         unsigned const num_integration_points =
             _integration_method.getNumberOfPoints();

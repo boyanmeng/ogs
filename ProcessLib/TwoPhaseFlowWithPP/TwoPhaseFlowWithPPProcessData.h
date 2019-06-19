@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,7 +23,7 @@ struct TwoPhaseFlowWithPPProcessData
         Eigen::VectorXd const specific_body_force_,
         bool const has_gravity_,
         bool const has_mass_lumping_,
-        Parameter<double> const& temperature_,
+        ParameterLib::Parameter<double> const& temperature_,
         std::unique_ptr<TwoPhaseFlowWithPPMaterialProperties>&& material_)
         : specific_body_force(specific_body_force_),
           has_gravity(has_gravity_),
@@ -62,7 +62,7 @@ struct TwoPhaseFlowWithPPProcessData
 
     //! Enables lumping of the mass matrix.
     bool const has_mass_lumping;
-    Parameter<double> const& temperature;
+    ParameterLib::Parameter<double> const& temperature;
     std::unique_ptr<TwoPhaseFlowWithPPMaterialProperties> material;
 };
 

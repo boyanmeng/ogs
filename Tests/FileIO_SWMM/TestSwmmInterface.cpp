@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -68,9 +68,11 @@ TEST(FileIO, TestSwmmInterface)
 
     std::array<unsigned, 7> types (MeshLib::MeshInformation::getNumberOfElementTypes(mesh));
     ASSERT_EQ(n_elems, types[0]); // all elems are lines
-    std::pair<int, int> bounds (MeshLib::MeshInformation::getValueBounds<int>(mesh, "MaterialIDs"));
-    ASSERT_EQ(0, bounds.first);
-    ASSERT_EQ(0, bounds.second);
+    auto const bounds =
+        MeshLib::MeshInformation::getValueBounds<int>(mesh, "MaterialIDs");
+    ASSERT_TRUE(boost::none != bounds);
+    ASSERT_EQ(0, bounds->first);
+    ASSERT_EQ(0, bounds->second);
 
     ASSERT_NEAR(186.06,  mesh.getMinEdgeLength(), 0.01);
     ASSERT_NEAR(3171.42, mesh.getMaxEdgeLength(), 0.01);

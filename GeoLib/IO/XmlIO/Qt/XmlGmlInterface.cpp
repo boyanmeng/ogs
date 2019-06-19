@@ -5,7 +5,7 @@
  * \brief  Implementation of the XmlGmlInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -197,11 +197,10 @@ void XmlGmlInterface::readPolylines(
     const std::vector<std::size_t>& pnt_id_map,
     std::map<std::string, std::size_t>* ply_names)
 {
-    std::size_t idx(0);
     QDomElement polyline = polylinesRoot.firstChildElement();
     while (!polyline.isNull())
     {
-        idx = polylines->size();
+        std::size_t const idx = polylines->size();
         polylines->push_back(new GeoLib::Polyline(points));
 
         if (polyline.hasAttribute("name")) {
@@ -214,8 +213,10 @@ void XmlGmlInterface::readPolylines(
             if (it == ply_names->end()) {
                 ply_names->insert(std::pair<std::string, std::size_t>(ply_name, idx));
             } else {
-                WARN("Polyline \"%s\" exists already. The polyline will be "
-                    "inserted without a name.", ply_name.c_str());
+                WARN(
+                    "Polyline '%s' exists already. Polyline %d will be "
+                    "inserted without a name.",
+                    ply_name.c_str(), idx);
             }
         }
 
@@ -230,8 +231,8 @@ void XmlGmlInterface::readPolylines(
                         polyline_name =
                             polyline.attribute("name").toStdString();
                     OGS_FATAL(
-                        "Polyline `%s' contains the point id `%d', but the "
-                        "id is not in the point list.",
+                        "Polyline `%s' contains the point id `%d' which is "
+                        "not in the point list.",
                         polyline_name.c_str(), pt_idx);
                 }
                 return search->second;
@@ -274,8 +275,8 @@ void XmlGmlInterface::readSurfaces(
                         surface_name =
                             surface.attribute("name").toStdString();
                     OGS_FATAL(
-                        "Surface `%s' contains the point id `%d', but the "
-                        "id is not in the point list.",
+                        "Surface `%s' contains the point id `%d', which is "
+                        "not in the point list.",
                         surface_name.c_str(), pt_idx);
                 }
                 return search->second;
@@ -305,8 +306,6 @@ bool XmlGmlInterface::write()
         return false;
     }
 
-    std::size_t nPoints = 0, nPolylines = 0, nSurfaces = 0;
-
     _out << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n"; // xml definition
     //_out << "<?xml-stylesheet type=\"text/xsl\" href=\"OpenGeoSysGLI.xsl\"?>\n\n"; // stylefile definition
 
@@ -333,7 +332,7 @@ bool XmlGmlInterface::write()
 
         if (!points->empty())
         {
-            nPoints = points->size();
+            auto const nPoints = points->size();
             for (std::size_t i = 0; i < nPoints; i++)
             {
                 QDomElement pointTag = doc.createElement("point");
@@ -361,14 +360,14 @@ bool XmlGmlInterface::write()
         }
         else
         {
-            ERR("XmlGmlInterface::write(): Point vector empty, abort writing geometry.");
-            return 0;
+            ERR("XmlGmlInterface::write(): Point vector is empty, abort writing geometry.");
+            return false;
         }
     }
     else
     {
-        ERR("XmlGmlInterface::write(): Did not found any point vector, abort writing geometry.");
-        return 0;
+        ERR("XmlGmlInterface::write(): No point vector found, abort writing geometry.");
+        return false;
     }
 
     // POLYLINES
@@ -383,7 +382,7 @@ bool XmlGmlInterface::write()
             {
                 QDomElement plyListTag = doc.createElement("polylines");
                 root.appendChild(plyListTag);
-                nPolylines = polylines->size();
+                auto const nPolylines = polylines->size();
                 for (std::size_t i = 0; i < nPolylines; i++)
                 {
                     QDomElement polylineTag = doc.createElement("polyline");
@@ -399,7 +398,7 @@ bool XmlGmlInterface::write()
 
                     plyListTag.appendChild(polylineTag);
 
-                    nPoints = (*polylines)[i]->getNumberOfPoints();
+                    auto const nPoints = (*polylines)[i]->getNumberOfPoints();
                     for (std::size_t j = 0; j < nPoints; j++)
                     {
                         QDomElement plyPointTag = doc.createElement("pnt");
@@ -410,11 +409,11 @@ bool XmlGmlInterface::write()
                 }
             }
             else
-                INFO("XmlGmlInterface::write(): Polyline vector empty, no polylines written to file.");
+                INFO("XmlGmlInterface::write(): Polyline vector is empty, no polylines written to file.");
         }
     }
     else
-        INFO("XmlGmlInterface::write(): Did not found any polyline vector, no polylines written to file.");
+        INFO("XmlGmlInterface::write(): Polyline vector is empty, no polylines written to file.");
 
 
     // SURFACES
@@ -429,7 +428,7 @@ bool XmlGmlInterface::write()
             {
                 QDomElement sfcListTag = doc.createElement("surfaces");
                 root.appendChild(sfcListTag);
-                nSurfaces = surfaces->size();
+                auto const nSurfaces = surfaces->size();
                 for (std::size_t i = 0; i < nSurfaces; i++)
                 {
                     QDomElement surfaceTag = doc.createElement("surface");
@@ -456,11 +455,11 @@ bool XmlGmlInterface::write()
                 }
             }
             else
-                INFO("XmlGmlInterface::write(): Surface vector empty, no surfaces written to file.");
+                INFO("XmlGmlInterface::write(): Surface vector is empty, no surfaces written to file.");
         }
     }
     else
-        INFO("XmlGmlInterface::write(): Did not found any surface vector, no surfaces written to file.");
+        INFO("XmlGmlInterface::write(): Surface vector is empty, no surfaces written to file.");
 
 
     //insertStyleFileDefinition(filename);

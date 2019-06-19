@@ -2,7 +2,7 @@
  * \file
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -64,9 +64,24 @@ struct FixedPowerFlowCurve
     double density;
 };
 
+struct PowerCurveConstantFlow
+{
+    FlowAndTemperature operator()(double const T_out, double const time) const
+    {
+        double const power = power_curve.getValue(time);
+        return {flow_rate, power / flow_rate / heat_capacity / density + T_out};
+    }
+    MathLib::PiecewiseLinearInterpolation const& power_curve;
+
+    double flow_rate;
+    double heat_capacity;
+    double density;
+};
+
 using FlowAndTemperatureControl = boost::variant<TemperatureCurveConstantFlow,
                                                  FixedPowerConstantFlow,
-                                                 FixedPowerFlowCurve>;
+                                                 FixedPowerFlowCurve,
+                                                 PowerCurveConstantFlow>;
 
 }  // namespace BHE
 }  // namespace HeatTransportBHE

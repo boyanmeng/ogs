@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,9 +32,11 @@ bool CellRule::testElementNodeOrder(const Element* e)
         const double s = MathLib::scalarProduct(FaceRule::getSurfaceNormal(face), cx);
         delete face;
         if (s >= 0)
+        {
             return false;
+        }
     }
     return true;
 }
 
-} /* namespace */
+}  // namespace MeshLib

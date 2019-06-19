@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtkImageDataToPolyDataFilter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,9 +26,8 @@
 #include <vtkSmartPointer.h>
 
 vtkStandardNewMacro(VtkImageDataToLinePolyDataFilter);
+VtkImageDataToLinePolyDataFilter::VtkImageDataToLinePolyDataFilter()
 
-VtkImageDataToLinePolyDataFilter::VtkImageDataToLinePolyDataFilter() :
-        ImageSpacing(0.0)
 {
     this->SetLengthScaleFactor(1.0);
 }
@@ -91,8 +90,9 @@ int VtkImageDataToLinePolyDataFilter::RequestData(vtkInformation*,
     // Compute scaling factor that max height is 0.1 * longest image dimension
     double range[2];
     inPD->GetArray(0)->GetRange(range);
-    float scalingFactor = (std::max(dimensions[0], dimensions[1]) * spacing[0] * 0.1)
-                          / std::max(range[0], range[1]);
+    double const scalingFactor =
+        (std::max(dimensions[0], dimensions[1]) * spacing[0] * 0.1) /
+        std::max(range[0], range[1]);
 
     double dir[3] = {0, 0, 1};
 
@@ -105,9 +105,9 @@ int VtkImageDataToLinePolyDataFilter::RequestData(vtkInformation*,
             continue;
 
         // Compute length of the new line (scalar * LengthScaleFactor)
-        float length = ((float*)inScalarPtr)[ptId * numScalarComponents]
-                       * scalingFactor * this->LengthScaleFactor;
-        //float length = (((unsigned char*)inScalarPtr)[ptId * numScalarComponents]* this->LengthScaleFactor > 50000) ? 50000 : ((unsigned char*)inScalarPtr)[ptId * numScalarComponents]* this->LengthScaleFactor;
+        double const length =
+            ((float*)inScalarPtr)[ptId * numScalarComponents] * scalingFactor *
+            this->LengthScaleFactor;
 
         // Skip this line if length is zero
         if (length < 0.00000001f)

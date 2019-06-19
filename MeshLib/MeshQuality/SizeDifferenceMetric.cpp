@@ -5,7 +5,7 @@
  * \brief  Implementation of the SizeDifferenceMetric class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -46,11 +46,15 @@ void SizeDifferenceMetric::calculateQuality()
         {
             MeshLib::Element const*const neighbor (elem.getNeighbor(i));
             if (neighbor == nullptr)
+            {
                 continue;
+            }
             double const vol_b (neighbor->getContent());
             double const ratio = (vol_a > vol_b) ? vol_b / vol_a : vol_a / vol_b;
             if (ratio < worst_ratio)
+            {
                 worst_ratio = ratio;
+            }
         }
         _element_quality_metric[k] = worst_ratio;
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -20,14 +20,15 @@
 
 namespace NumLib
 {
-bool EvolutionaryPIDcontroller::next(const double solution_error)
+bool EvolutionaryPIDcontroller::next(double const solution_error,
+                                     int const /*number_iterations*/)
 {
     const bool is_previous_step_accepted = _is_accepted;
 
     const double e_n = solution_error;
     const double zero_threshlod = std::numeric_limits<double>::epsilon();
     // step rejected.
-    if (e_n > _tol)  // e_n < TOL
+    if (e_n > _tol)
     {
         _is_accepted = false;
 
@@ -126,7 +127,9 @@ double EvolutionaryPIDcontroller::limitStepSize(
         // step size is then reduced by half.
         if (std::fabs(limited_h - _ts_current.dt()) <
             std::numeric_limits<double>::min())
+        {
             limited_h = std::max(_h_min, 0.5 * limited_h);
+        }
 
         // If the last time step was rejected and the new predicted time step
         // size is larger than the step size of the rejected step, the new step
@@ -135,7 +138,9 @@ double EvolutionaryPIDcontroller::limitStepSize(
         // solver. In such case, this algorithm may give a large time step size
         // by using the diverged solution.
         if (limited_h > _ts_current.dt())
+        {
             limited_h = std::max(_h_min, 0.5 * _ts_current.dt());
+        }
     }
     return limited_h;
 }
@@ -143,7 +148,9 @@ double EvolutionaryPIDcontroller::limitStepSize(
 double EvolutionaryPIDcontroller::checkSpecificTimeReached(const double h_new)
 {
     if (_fixed_output_times.empty())
+    {
         return h_new;
+    }
 
     const double specific_time = _fixed_output_times.back();
     if ((specific_time > _ts_current.current()) &&
@@ -166,4 +173,4 @@ void EvolutionaryPIDcontroller::addFixedOutputTimes(
     // Remove possible duplicated elements and sort in descending order.
     BaseLib::makeVectorUnique(_fixed_output_times, std::greater<double>());
 }
-}  // end of namespace NumLib
+}  // namespace NumLib

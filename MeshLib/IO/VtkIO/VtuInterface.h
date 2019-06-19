@@ -5,7 +5,7 @@
  * \brief  Implementation of the VtuInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -37,7 +37,9 @@ class VtuInterface final
 {
 public:
     /// Provide the mesh to write and set if compression should be used.
-    VtuInterface(const MeshLib::Mesh* mesh, int dataMode = vtkXMLWriter::Binary, bool compressed = false);
+    explicit VtuInterface(const MeshLib::Mesh* mesh,
+                          int dataMode = vtkXMLWriter::Appended,
+                          bool compressed = false);
 
     /// Read an unstructured grid from a VTU file
     /// \return The converted mesh or a nullptr if reading failed
@@ -61,6 +63,9 @@ private:
     int _data_mode;
     bool _use_compressor;
 };
+
+int writeVtu(MeshLib::Mesh const& mesh, std::string const& file_name,
+             int const data_mode = vtkXMLWriter::Appended);
 
 } // end namespace IO
 } // end namespace MeshLib

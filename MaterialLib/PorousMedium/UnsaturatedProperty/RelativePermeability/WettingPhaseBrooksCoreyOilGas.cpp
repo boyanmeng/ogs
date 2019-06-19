@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,5 +39,5 @@ double WettingPhaseBrooksCoreyOilGas::getdValue(const double saturation) const
     return ((3.0 + 2.0 / _m) * std::pow(Se, 2.0 + 2.0 / _m)) /
            (_saturation_max - _saturation_r);
 }
-}  // end namespace
-}  // end namespace
+}  // namespace PorousMedium
+}  // namespace MaterialLib

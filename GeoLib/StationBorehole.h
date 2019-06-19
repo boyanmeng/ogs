@@ -5,7 +5,7 @@
  * \brief  Definition of the StationBorehole class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -32,8 +32,11 @@ class StationBorehole : public Station
 {
 public:
     /** constructor initialises the borehole with the given coordinates */
-    StationBorehole(double x = 0.0, double y = 0.0, double z = 0.0, const std::string &name = "");
-    ~StationBorehole(void) override;
+    explicit StationBorehole(double x = 0.0,
+                             double y = 0.0,
+                             double z = 0.0,
+                             const std::string& name = "");
+    ~StationBorehole() override;
 
     /// Creates a StationBorehole-object from a string (assuming the string has the right format)
     static StationBorehole* createStation(const std::string &line);
@@ -48,21 +51,6 @@ public:
 
     /// Adds a stratigraphy to a borehole given a vector of points of length "n" and a vector of soil names of length "n-1".
     int addStratigraphy(const std::vector<Point*> &profile, const std::vector<std::string> &soil_names);
-
-    /// Reads the stratigraphy for a specified station from a file
-    static int addStratigraphy(const std::string &path, StationBorehole* borehole);
-
-    /**
-     * \brief Reads all stratigraphy information from a file in one go.
-     *
-     * Reads all stratigraphy information from a file in one go.
-     * Be very careful when using this method -- it is pretty fast but it checks nothing and just
-     * assumes that everything is in right order and will work out fine!
-     */
-    static int addStratigraphies(const std::string &path, std::vector<Point*>* boreholes);
-
-    /// Finds the given string in the vector of soil-names
-    int find(const std::string &str);
 
     // Returns the depth of the borehole
     double getDepth() const { return _depth; }
@@ -105,8 +93,8 @@ private:
 
     //long profile_type;
     //std::vector<long> _soilType;
-    double _depth; // depth of the borehole
-    int _date; // date when the borehole has been drilled
+    double _depth{0};  // depth of the borehole
+    int _date{0};      // date when the borehole has been drilled
 
     /// Contains the names for all the soil layers
     std::vector<std::string> _soilName;
@@ -117,4 +105,4 @@ private:
 
 bool isBorehole(GeoLib::Point const* pnt);
 
-} // namespace
+}  // namespace GeoLib

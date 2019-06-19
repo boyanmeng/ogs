@@ -5,7 +5,7 @@
  * \brief  Implementation of OGSFileConverter class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -29,8 +29,9 @@
 #include "MeshLib/IO/VtkIO/VtuInterface.h"
 #include "MeshLib/Mesh.h"
 
-OGSFileConverter::OGSFileConverter(QWidget* parent)
-    : QDialog(parent)
+OGSFileConverter::OGSFileConverter(std::string const& gmsh_path,
+                                   QWidget* parent)
+    : QDialog(parent), _gmsh_path(gmsh_path)
 {
     setupUi(this);
 }
@@ -97,8 +98,8 @@ void OGSFileConverter::convertGLI2GML(const QStringList &input, const QString &o
         std::string unique_name;
         std::vector<std::string> errors;
 
-        FileIO::Legacy::readGLIFileV4(input_string.toStdString(),
-                                          geo_objects, unique_name, errors);
+        FileIO::Legacy::readGLIFileV4(input_string.toStdString(), geo_objects,
+                                      unique_name, errors, _gmsh_path);
         if (errors.empty() ||
             (errors.size() == 1 &&
              errors[0] == "[readSurface] polyline for surface not found!"))
@@ -213,7 +214,10 @@ bool OGSFileConverter::fileExists(const std::string &file_name) const
     if (file)
     {
         QString const name = QString::fromStdString(BaseLib::extractBaseName(file_name));
-        return !OGSError::question("The file \'" + name + "\' already exists.\n Do you want to overwrite it?", "Warning");
+        return !OGSError::question(
+            "The file '" + name +
+                "' already exists.\n Do you want to overwrite it?",
+            "Warning");
     }
     return false;
 }

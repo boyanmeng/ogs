@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -77,7 +77,7 @@ void LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::assemble(
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element_id);
 
     auto p_nodal_values = Eigen::Map<const NodalVectorType>(
@@ -139,9 +139,9 @@ void LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::assemble(
         auto const retardation_factor =
             _process_data.retardation_factor(t, pos)[0];
 
-        auto const& solute_dispersivity_transverse =
+        auto const solute_dispersivity_transverse =
             _process_data.solute_dispersivity_transverse(t, pos)[0];
-        auto const& solute_dispersivity_longitudinal =
+        auto const solute_dispersivity_longitudinal =
             _process_data.solute_dispersivity_longitudinal(t, pos)[0];
 
         // Use the fluid density model to compute the density
@@ -151,14 +151,14 @@ void LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::assemble(
             p_int_pt;
         auto const density = _process_data.fluid_properties->getValue(
             MaterialLib::Fluid::FluidPropertyType::Density, vars);
-        auto const& decay_rate = _process_data.decay_rate(t, pos)[0];
-        auto const& molecular_diffusion_coefficient =
+        auto const decay_rate = _process_data.decay_rate(t, pos)[0];
+        auto const molecular_diffusion_coefficient =
             _process_data.molecular_diffusion_coefficient(t, pos)[0];
 
         auto const& K = _process_data.porous_media_properties
                             .getIntrinsicPermeability(t, pos)
                             .getValue(t, pos, 0.0, 0.0);
-        auto const& k_rel = _process_data.porous_media_properties
+        auto const k_rel = _process_data.porous_media_properties
                                 .getRelativePermeability(t, pos)
                                 .getValue(Sw);
         // Use the viscosity model to compute the viscosity
@@ -203,7 +203,9 @@ void LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::assemble(
                          ip_data.mass_operator;
 
         if (_process_data.has_gravity)
+        {
             Bp += w * density * dNdx.transpose() * K_times_k_rel_over_mu * b;
+        }
         /* with Oberbeck-Boussing assumption density difference only exists
          * in buoyancy effects */
     }
@@ -230,7 +232,7 @@ LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::
         Eigen::Matrix<double, GlobalDim, Eigen::Dynamic, Eigen::RowMajor>>(
         cache, GlobalDim, n_integration_points);
 
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element_id);
 
     MaterialLib::Fluid::FluidProperty::ArrayType vars;
@@ -262,7 +264,7 @@ LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::
                               .getCapillaryPressureSaturationModel(t, pos)
                               .getSaturation(pc_int_pt);
 
-        auto const& k_rel = _process_data.porous_media_properties
+        auto const k_rel = _process_data.porous_media_properties
                                 .getRelativePermeability(t, pos)
                                 .getValue(Sw);
 
@@ -306,7 +308,7 @@ LocalAssemblerData<ShapeFunction, IntegrationMethod, GlobalDim>::
                        NumLib::LocalToGlobalIndexMap const& dof_table,
                        std::vector<double>& cache) const
 {
-    SpatialPosition pos;
+    ParameterLib::SpatialPosition pos;
     pos.setElementID(_element_id);
 
     unsigned const n_integration_points =

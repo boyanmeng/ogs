@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -130,10 +130,12 @@ public:
         : _dof_table(dof_table)
     {
         if (shapefunction_order != 2)
+        {
             OGS_FATAL(
                 "The given shape function order %d is not supported.\nOnly "
                 "shape functions of order 2 are supported.",
                 shapefunction_order);
+        }
             // /// Quads and Hexahedra ///////////////////////////////////
 
 #if (OGS_ENABLED_ELEMENTS & ENABLED_ELEMENT_TYPE_QUAD) != 0 && \

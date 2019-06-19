@@ -2,7 +2,7 @@
  *  \brief Declaration of class for the pressure dependent viscosity model.
  *
  *  \copyright
- *   Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ *   Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *              Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -88,7 +88,7 @@ private:
  * */
 struct VogelsViscosityConstantsWater
 {
-    VogelsViscosityConstantsWater() {}
+    VogelsViscosityConstantsWater() = default;
     const double A = -3.7188;
     const double B = 578.919;
     const double C = -137.546;
@@ -96,7 +96,7 @@ struct VogelsViscosityConstantsWater
 
 struct VogelsViscosityConstantsCO2
 {
-    VogelsViscosityConstantsCO2() {}
+    VogelsViscosityConstantsCO2() = default;
     const double A = -24.0592;
     const double B = 28535.2;
     const double C = 1037.41;
@@ -104,11 +104,11 @@ struct VogelsViscosityConstantsCO2
 
 struct VogelsViscosityConstantsCH4
 {
-    VogelsViscosityConstantsCH4() {}
+    VogelsViscosityConstantsCH4() = default;
     const double A = -25.5947;
     const double B = 25392;
     const double C = 969.306;
 };
 
-}  // end namespace
-}  // end namespace
+}  // namespace Fluid
+}  // namespace MaterialLib

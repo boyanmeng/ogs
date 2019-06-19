@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -16,9 +16,9 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Parameter/Parameter.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 namespace ProcessLib
@@ -107,7 +107,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
@@ -138,7 +138,7 @@ public:
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
 
-        SpatialPosition pos;
+        ParameterLib::SpatialPosition pos;
         pos.setElementID(_element.getID());
         const auto local_x_vec =
             MathLib::toVector<NodalVectorType>(local_x, local_matrix_size);

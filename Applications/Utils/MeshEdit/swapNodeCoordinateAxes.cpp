@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/LICENSE.txt
@@ -28,10 +28,14 @@ static void swapNodeCoordinateAxes(MeshLib::Mesh &mesh, std::array<int, 3> const
     double new_coords[3] = {};
     for (MeshLib::Node* node : mesh.getNodes())
     {
-        for (int i=0; i<3; i++)
+        for (int i = 0; i < 3; i++)
+        {
             new_coords[i] = (*node)[new_axes_indices[i]];
-        for (int i=0; i<3; i++)
+        }
+        for (int i = 0; i < 3; i++)
+        {
             (*node)[i] = new_coords[i];
+        }
     }
 }
 
@@ -43,19 +47,29 @@ static bool parseNewOrder(std::string const& str_order, std::array<int, 3> &new_
         return false;
     }
 
-    for (std::size_t i=0; i<new_axes_indices.size(); i++)
+    for (std::size_t i = 0; i < new_axes_indices.size(); i++)
+    {
         new_axes_indices[i] = -1;
+    }
 
     for (int i=0; i<3; i++)
     {
         if (str_order[i] == 'x')
+        {
             new_axes_indices[i] = 0;
+        }
         else if (str_order[i] == 'y')
+        {
             new_axes_indices[i] = 1;
+        }
         else if (str_order[i] == 'z')
+        {
             new_axes_indices[i] = 2;
-        else {
-            ERR("Invalid argument for the new order. The  given argument contains a character other than \"x\", \"y\", \"z\".");
+        }
+        else
+        {
+            ERR("Invalid argument for the new order. The  given argument "
+                "contains a character other than 'x', 'y', 'z'.");
             return false;
         }
     }
@@ -81,30 +95,36 @@ int main(int argc, char *argv[])
     TCLAP::CmdLine cmd(
         "Swap node coordinate values.\n\n"
         "OpenGeoSys-6 software, version " +
-            BaseLib::BuildInfo::git_describe +
+            BaseLib::BuildInfo::ogs_version +
             ".\n"
-            "Copyright (c) 2012-2018, OpenGeoSys Community "
+            "Copyright (c) 2012-2019, OpenGeoSys Community "
             "(http://www.opengeosys.org)",
-        ' ', BaseLib::BuildInfo::git_describe);
+        ' ', BaseLib::BuildInfo::ogs_version);
     TCLAP::ValueArg<std::string> input_arg("i", "input-mesh-file","input mesh file",true,"","string");
     cmd.add( input_arg );
     TCLAP::ValueArg<std::string> output_arg("o", "output-mesh-file","output mesh file",true,"","string");
     cmd.add( output_arg );
-    TCLAP::ValueArg<std::string> new_order_arg("n", "new-order", "the new order of swapped coordinate values "
-                                                                 "(e.g. \"xzy\" for converting XYZ values to XZY values)",
-                                               true, "", "string");
+    TCLAP::ValueArg<std::string> new_order_arg(
+        "n", "new-order",
+        "the new order of swapped coordinate values "
+        "(e.g. 'xzy' for converting XYZ values to XZY values)",
+        true, "", "string");
     cmd.add( new_order_arg );
     cmd.parse( argc, argv );
 
     const std::string str_order = new_order_arg.getValue();
     std::array<int, 3> new_order = {{}};
     if (!parseNewOrder(str_order, new_order))
+    {
         return EXIT_FAILURE;
+    }
 
     std::unique_ptr<MeshLib::Mesh> mesh(
         MeshLib::IO::readMeshFromFile(input_arg.getValue()));
     if (!mesh)
+    {
         return EXIT_FAILURE;
+    }
 
     if (mesh->getDimension() == 3)
     {

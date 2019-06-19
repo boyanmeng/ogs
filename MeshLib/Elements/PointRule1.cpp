@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,7 +34,9 @@ bool PointRule1::isPntInElement(Node const* const* nodes,
 unsigned PointRule1::identifyFace(Node const* const* _nodes, Node* nodes[1])
 {
     if (nodes[0] == _nodes[0])
+    {
         return 0;
+    }
     return std::numeric_limits<unsigned>::max();
 }
 

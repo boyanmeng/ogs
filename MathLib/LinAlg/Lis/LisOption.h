@@ -5,7 +5,7 @@
  * \brief  Definition of the LisOption class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -37,9 +37,9 @@ namespace MathLib
  * currently (version 1.5.57) only sets the number of threads in
  * \c lis_initialize(). Refer to the Lis source code for details.
  */
-struct LisOption
+struct LisOption final
 {
-    LisOption(BaseLib::ConfigTree const* const options)
+    explicit LisOption(BaseLib::ConfigTree const* const options)
     {
         if (options) {
             ignoreOtherLinearSolvers(*options, "lis");
@@ -47,7 +47,7 @@ struct LisOption
             if (auto s = options->getConfigParameterOptional<std::string>("lis")) {
                 if (!s->empty()) {
                     _option_string += " " + *s;
-                    INFO("Lis options: \"%s\"", _option_string.c_str());
+                    INFO("Lis options: '%s'", _option_string.c_str());
                 }
             }
         }

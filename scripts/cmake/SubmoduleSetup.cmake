@@ -7,9 +7,13 @@ endif()
 set(REQUIRED_SUBMODULES
     ThirdParty/autocheck
     ThirdParty/cmake-modules
-    ThirdParty/vtkdiff
+    ThirdParty/exprtk
+    ThirdParty/googletest
+    ThirdParty/iphreeqc/src
+    ThirdParty/jedbrown-cmake-modules
     ThirdParty/tclap
     ThirdParty/tetgen
+    ThirdParty/vtkdiff
     ${OGS_ADDITIONAL_SUBMODULES_TO_CHECKOUT}
 )
 if(OGS_BUILD_UTILS)
@@ -40,22 +44,34 @@ foreach(SUBMODULE ${REQUIRED_SUBMODULES})
     string(REGEX MATCH "^\\-" UNINITIALIZED ${SUBMODULE_STATE})
     string(REGEX MATCH "^\\+" MISMATCH ${SUBMODULE_STATE})
 
-    set(RESULT "")
-    if(UNINITIALIZED)
-        message(STATUS "Initializing submodule ${SUBMODULE}")
+    if(IS_CI)
+        # Always set submodule to the given state
         execute_process(
-            COMMAND ${GIT_TOOL_PATH} submodule update --init --recursive ${DEPTH} ${SUBMODULE}
+            COMMAND ${GIT_TOOL_PATH} submodule update --init --force
+                --recursive ${DEPTH} ${SUBMODULE}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
             RESULT_VARIABLE RESULT
         )
+    else()
+        set(RESULT "")
+        if(UNINITIALIZED)
+            message(STATUS "Initializing submodule ${SUBMODULE}")
+            execute_process(
+                COMMAND ${GIT_TOOL_PATH} submodule update --init
+                    --recursive ${DEPTH} ${SUBMODULE}
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                RESULT_VARIABLE RESULT
+            )
 
-    elseif(MISMATCH)
-        message(STATUS "Updating submodule ${SUBMODULE}")
-        execute_process(
-            COMMAND ${GIT_TOOL_PATH} submodule update --recursive ${SUBMODULE}
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-            RESULT_VARIABLE RESULT
-        )
+        elseif(MISMATCH)
+            message(STATUS "Updating submodule ${SUBMODULE}")
+            execute_process(
+                COMMAND ${GIT_TOOL_PATH} submodule update
+                    --recursive ${SUBMODULE}
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                RESULT_VARIABLE RESULT
+            )
+        endif()
     endif()
 
     if((NOT ${RESULT} STREQUAL "") AND (NOT ${RESULT} STREQUAL "0"))

@@ -5,7 +5,7 @@
  * \brief  Implementation of the XmlNumInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -95,7 +95,7 @@ void XmlNumInterface::readIterationScheme(QDomElement const& iteration_root)
         if (iteration_node.nodeName().compare("MaxIterations") == 0)
             max_iterations = iteration_node.toElement().text().toInt();
         if (iteration_node.nodeName().compare("FixedStepSize") == 0)
-            fixed_step_size = iteration_node.toElement().text().toDouble();
+            fixed_step_size = iteration_node.toElement().text().toInt();
 
         iteration_node = iteration_node.nextSiblingElement();
     }

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -60,21 +60,22 @@ public:
     LiquidFlowProcess(
         MeshLib::Mesh& mesh,
         std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters,
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
         SecondaryVariableCollection&& secondary_variables,
         NumLib::NamedFunctionCaller&& named_function_caller,
-        MeshLib::PropertyVector<int> const& material_ids,
-        bool const has_material_ids,
+        MeshLib::PropertyVector<int> const* const material_ids,
         int const gravitational_axis_id,
         double const gravitational_acceleration,
         double const reference_temperature,
         BaseLib::ConfigTree const& config);
 
     void computeSecondaryVariableConcrete(double const t,
-                                          GlobalVector const& x) override;
+                                          GlobalVector const& x,
+                                          int const process_id) override;
 
     bool isLinear() const override { return true; }
     int getGravitationalAxisID() const { return _gravitational_axis_id; }
@@ -106,5 +107,5 @@ private:
         _local_assemblers;
 };
 
-}  // end of namespace
-}  // end of namespace
+}  // namespace LiquidFlow
+}  // namespace ProcessLib

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -17,7 +17,8 @@ namespace MaterialLib
 {
 namespace Fracture
 {
-
+namespace MohrCoulomb
+{
 namespace
 {
 
@@ -30,10 +31,9 @@ struct MaterialPropertyValues
     double c = 0.0;
 
     template <typename MaterialProperties>
-    MaterialPropertyValues(
-            MaterialProperties const& mp,
-            double const t,
-            ProcessLib::SpatialPosition const& x)
+    MaterialPropertyValues(MaterialProperties const& mp,
+                           double const t,
+                           ParameterLib::SpatialPosition const& x)
     {
         Kn = mp.normal_stiffness(t,x)[0];
         Ks = mp.shear_stiffness(t,x)[0];
@@ -43,12 +43,12 @@ struct MaterialPropertyValues
     }
 };
 
-} // no namespace
+}  // namespace
 
 template <int DisplacementDim>
 void MohrCoulomb<DisplacementDim>::computeConstitutiveRelation(
     double const t,
-    ProcessLib::SpatialPosition const& x,
+    ParameterLib::SpatialPosition const& x,
     double const aperture0,
     Eigen::Ref<Eigen::VectorXd const>
         sigma0,
@@ -78,7 +78,9 @@ void MohrCoulomb<DisplacementDim>::computeConstitutiveRelation(
     {  // Elastic tangent stiffness
         Ke = Eigen::MatrixXd::Zero(DisplacementDim, DisplacementDim);
         for (int i = 0; i < index_ns; i++)
+        {
             Ke(i, i) = mat.Ks;
+        }
 
         Ke(index_ns, index_ns) =
             mat.Kn *
@@ -89,7 +91,9 @@ void MohrCoulomb<DisplacementDim>::computeConstitutiveRelation(
     {  // Elastic tangent stiffness at w_prev
         Ke_prev = Eigen::MatrixXd::Zero(DisplacementDim, DisplacementDim);
         for (int i = 0; i < index_ns; i++)
+        {
             Ke_prev(i, i) = mat.Ks;
+        }
 
         Ke_prev(index_ns, index_ns) =
             mat.Kn * logPenaltyDerivative(
@@ -161,5 +165,6 @@ void MohrCoulomb<DisplacementDim>::computeConstitutiveRelation(
 template class MohrCoulomb<2>;
 template class MohrCoulomb<3>;
 
-}   // namespace Fracture
+}  // namespace MohrCoulomb
+}  // namespace Fracture
 }  // namespace MaterialLib

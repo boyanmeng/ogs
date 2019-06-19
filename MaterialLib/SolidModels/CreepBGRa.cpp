@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -34,7 +34,7 @@ boost::optional<std::tuple<typename CreepBGRa<DisplacementDim>::KelvinVector,
                                DisplacementDim>::MaterialStateVariables>,
                            typename CreepBGRa<DisplacementDim>::KelvinMatrix>>
 CreepBGRa<DisplacementDim>::integrateStress(
-    double const t, ProcessLib::SpatialPosition const& x, double const dt,
+    double const t, ParameterLib::SpatialPosition const& x, double const dt,
     KelvinVector const& eps_prev, KelvinVector const& eps,
     KelvinVector const& sigma_prev,
     typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
@@ -118,7 +118,9 @@ CreepBGRa<DisplacementDim>::integrateStress(
     auto const success_iterations = newton_solver.solve(jacobian);
 
     if (!success_iterations)
+    {
         return {};
+    }
 
     // If *success_iterations>0, tangentStiffness = J_(sigma)^{-1}C
     // where J_(sigma) is the Jacobian of the last local Newton-Raphson
@@ -132,7 +134,7 @@ CreepBGRa<DisplacementDim>::integrateStress(
 
 template <int DisplacementDim>
 double CreepBGRa<DisplacementDim>::getTemperatureRelatedCoefficient(
-    double const t, double const dt, ProcessLib::SpatialPosition const& x,
+    double const t, double const dt, ParameterLib::SpatialPosition const& x,
     double const T, double const deviatoric_stress_norm) const
 {
     const double A = _a(t, x)[0];

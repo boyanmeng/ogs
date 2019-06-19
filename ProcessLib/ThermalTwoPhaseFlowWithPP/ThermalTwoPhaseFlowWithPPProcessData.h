@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -24,10 +24,10 @@ struct ThermalTwoPhaseFlowWithPPProcessData
         Eigen::VectorXd const specific_body_force_,
         bool const has_gravity_,
         bool const has_mass_lumping_,
-        Parameter<double> const& diffusion_coeff_component_b_,
-        Parameter<double> const& diffusion_coeff_component_a_,
-        Parameter<double> const& density_solid_,
-        Parameter<double> const& latent_heat_evaporation_,
+        ParameterLib::Parameter<double> const& diffusion_coeff_component_b_,
+        ParameterLib::Parameter<double> const& diffusion_coeff_component_a_,
+        ParameterLib::Parameter<double> const& density_solid_,
+        ParameterLib::Parameter<double> const& latent_heat_evaporation_,
         std::unique_ptr<ThermalTwoPhaseFlowWithPPMaterialProperties>&&
             material_)
         : specific_body_force(specific_body_force_),
@@ -68,12 +68,12 @@ struct ThermalTwoPhaseFlowWithPPProcessData
 
     bool const has_gravity;
     bool const has_mass_lumping;
-    Parameter<double> const& diffusion_coeff_component_b;
-    Parameter<double> const& diffusion_coeff_component_a;
-    Parameter<double> const& density_solid;
-    Parameter<double> const& latent_heat_evaporation;
+    ParameterLib::Parameter<double> const& diffusion_coeff_component_b;
+    ParameterLib::Parameter<double> const& diffusion_coeff_component_a;
+    ParameterLib::Parameter<double> const& density_solid;
+    ParameterLib::Parameter<double> const& latent_heat_evaporation;
     std::unique_ptr<ThermalTwoPhaseFlowWithPPMaterialProperties> material;
 };
 
-}  // namespace TwoPhaseFlowWithPP
+}  // namespace ThermalTwoPhaseFlowWithPP
 }  // namespace ProcessLib

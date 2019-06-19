@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -31,7 +31,8 @@ public:
         MeshLib::Mesh& mesh,
         std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&&
             jacobian_assembler,
-        std::vector<std::unique_ptr<ParameterBase>> const& parameters,
+        std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
+            parameters,
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
@@ -45,7 +46,8 @@ public:
     //! @}
 
     void computeSecondaryVariableConcrete(double const t,
-                                          GlobalVector const& x) override;
+                                          GlobalVector const& x,
+                                          int const process_id) override;
 
 private:
     using LocalAssemblerInterface = SmallDeformationLocalAssemblerInterface;
@@ -83,9 +85,13 @@ private:
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_elements;
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> _vec_fracture_nodes;
+    std::vector<MeshLib::Node*> _vec_junction_nodes;
+    std::vector<std::vector<MeshLib::Element*>>
+        _vec_junction_fracture_matrix_elements;
 
     std::vector<std::unique_ptr<MeshLib::MeshSubset const>>
         _mesh_subset_fracture_nodes;
+    std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_junction_nodes;
     std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_matrix_nodes;
 };
 

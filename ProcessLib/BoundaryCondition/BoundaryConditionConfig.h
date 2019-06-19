@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -25,16 +25,11 @@ struct BoundaryConditionConfig final
     {
     }
 
-    BoundaryConditionConfig(BoundaryConditionConfig&& other)
-        : config(std::move(other.config)),
-          boundary_mesh(other.boundary_mesh),
-          component_id(other.component_id)
-    {
-    }
+    BoundaryConditionConfig(BoundaryConditionConfig&& other) = default;
 
     BaseLib::ConfigTree config;
     MeshLib::Mesh const& boundary_mesh;
     boost::optional<int> const component_id;
 };
 
-}  // ProcessLib
+}  // namespace ProcessLib

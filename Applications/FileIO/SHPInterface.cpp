@@ -5,7 +5,7 @@
  * \brief  Definition of the SHPInterface class.
  *
  * \copyright
- * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -39,7 +39,9 @@ bool SHPInterface::readSHPInfo(const std::string &filename, int &shapeType, int 
 {
     SHPHandle hSHP = SHPOpen(filename.c_str(), "rb");
     if (!hSHP)
+    {
         return false;
+    }
 
     double padfMinBound[4], padfMaxBound[4];
 
@@ -51,7 +53,9 @@ bool SHPInterface::readSHPInfo(const std::string &filename, int &shapeType, int 
     return true;
 }
 
-void SHPInterface::readSHPFile(const std::string &filename, OGSType choice, const std::string &listName)
+void SHPInterface::readSHPFile(const std::string& filename, OGSType choice,
+                               const std::string& listName,
+                               std::string const& gmsh_path)
 {
     int shapeType, numberOfElements;
     double padfMinBound[4], padfMaxBound[4];
@@ -60,15 +64,24 @@ void SHPInterface::readSHPFile(const std::string &filename, OGSType choice, cons
     SHPGetInfo(hSHP, &numberOfElements, &shapeType, padfMinBound, padfMaxBound);
 
     if (((shapeType - 1) % 10 == 0) && (choice == SHPInterface::OGSType::POINT))
+    {
         readPoints(hSHP, numberOfElements, listName);
-    if (((shapeType - 1) % 10 == 0) && (choice == SHPInterface::OGSType::STATION))
+    }
+    if (((shapeType - 1) % 10 == 0) &&
+        (choice == SHPInterface::OGSType::STATION))
+    {
         readStations(hSHP, numberOfElements, listName);
-    if (((shapeType - 3) % 10 == 0 || (shapeType - 5) % 10 == 0) && (choice
-                    == SHPInterface::OGSType::POLYLINE))
+    }
+    if (((shapeType - 3) % 10 == 0 || (shapeType - 5) % 10 == 0) &&
+        (choice == SHPInterface::OGSType::POLYLINE))
+    {
         readPolylines(hSHP, numberOfElements, listName);
-    if (((shapeType - 3) % 10 == 0 || (shapeType - 5) % 10 == 0) && (choice
-                    == SHPInterface::OGSType::POLYGON))
-        readPolygons(hSHP, numberOfElements, listName);
+    }
+    if (((shapeType - 3) % 10 == 0 || (shapeType - 5) % 10 == 0) &&
+        (choice == SHPInterface::OGSType::POLYGON))
+    {
+        readPolygons(hSHP, numberOfElements, listName, gmsh_path);
+    }
 }
 
 void SHPInterface::readPoints(const SHPHandle &hSHP, int numberOfElements, std::string listName)
@@ -115,7 +128,9 @@ void SHPInterface::readStations(const SHPHandle &hSHP, int numberOfElements, std
 void SHPInterface::readPolylines(const SHPHandle &hSHP, int numberOfElements, std::string listName)
 {
     if (numberOfElements <= 0)
+    {
         return;
+    }
     auto pnts = std::make_unique<std::vector<GeoLib::Point*>>();
     auto lines = std::make_unique<std::vector<GeoLib::Polyline*>>();
 
@@ -171,17 +186,18 @@ void SHPInterface::readPolylines(const SHPHandle &hSHP, int numberOfElements, st
     _geoObjects.addPolylineVec(std::move(lines), listName);
 }
 
-void SHPInterface::readPolygons(const SHPHandle &hSHP, int numberOfElements, const std::string &listName)
+void SHPInterface::readPolygons(const SHPHandle& hSHP, int numberOfElements,
+                                const std::string& listName,
+                                std::string const& gmsh_path)
 {
     readPolylines(hSHP, numberOfElements, listName);
 
     auto const polylines = _geoObjects.getPolylineVec(listName);
-    auto sfc_vec = std::make_unique<std::vector<GeoLib::Surface*>>();
 
     for (auto const* polyline : *polylines)
     {
         INFO("Creating a surface by triangulation of the polyline ...");
-        if (FileIO::createSurface(*polyline, _geoObjects, listName))
+        if (FileIO::createSurface(*polyline, _geoObjects, listName, gmsh_path))
         {
             INFO("\t done");
         }
@@ -196,87 +212,110 @@ void SHPInterface::readPolygons(const SHPHandle &hSHP, int numberOfElements, con
 
 bool SHPInterface::write2dMeshToSHP(const std::string &file_name, const MeshLib::Mesh &mesh)
 {
-    if (mesh.getDimension()!=2)
+    if (mesh.getDimension() != 2)
     {
-        ERR ("SHPInterface::write2dMeshToSHP(): Mesh to Shape conversion is only working for 2D Meshes.");
+        ERR("SHPInterface::write2dMeshToSHP(): Mesh to Shape conversion is "
+            "only working for 2D Meshes.");
         return false;
     }
 
-    unsigned nElements (mesh.getNumberOfElements());
-    if (nElements<1)
+    std::size_t const n_elements = mesh.getNumberOfElements();
+    if (n_elements < 1)
     {
-        ERR ("SHPInterface::write2dMeshToSHP(): Mesh contains no elements.");
+        ERR("SHPInterface::write2dMeshToSHP(): Mesh contains no elements.");
         return false;
     }
 
-    if (nElements>10E+7) // DBF-export requires a limit, 10 mio seems good for now
+    // DBF-export requires a limit of records because of the limits to the
+    // integer values. The exponent controls maximum number of elements and
+    // the maximum number of digits written in the DBF file.
+    std::size_t const max_exp = 8;
+    if (n_elements >= std::pow(10,max_exp))
     {
-        ERR ("SHPInterface::write2dMeshToSHP(): Mesh contains too many elements for currently implemented DBF-boundaries.");
+        ERR("SHPInterface::write2dMeshToSHP(): Mesh contains too many elements "
+            "for currently implemented DBF-boundaries.");
         return false;
     }
 
     SHPHandle hSHP = SHPCreate(file_name.c_str(), SHPT_POLYGON);
     DBFHandle hDBF = DBFCreate(file_name.c_str());
-    int elem_id_field = DBFAddField(hDBF, "Elem_ID", FTInteger, 7, 0); // allows integers of length "7", i.e. 10mio-1 elements
-    int mat_field = DBFAddField(hDBF, "Material", FTInteger, 7, 0);
-    int node0_field = DBFAddField(hDBF, "Node0", FTInteger, 7, 0);
-    int node1_field = DBFAddField(hDBF, "Node1", FTInteger, 7, 0);
-    int node2_field = DBFAddField(hDBF, "Node2", FTInteger, 7, 0);
+    int const elem_id_field = DBFAddField(hDBF, "Elem_ID", FTInteger, max_exp, 0);
 
-    unsigned polygon_id (0);
-    double* padfX;
-    double* padfY;
-    double* padfZ;
-    for (unsigned i=0; i<nElements; ++i)
+    // Writing mesh elements to shape file
+    std::size_t shp_record(0);
+    std::vector<MeshLib::Element*> const& elems = mesh.getElements();
+    for (MeshLib::Element const* const e : elems)
     {
-        const MeshLib::Element* e (mesh.getElement(i));
-
         // ignore all elements except triangles and quads
         if ((e->getGeomType() == MeshLib::MeshElemType::TRIANGLE) ||
             (e->getGeomType() == MeshLib::MeshElemType::QUAD))
         {
-            // write element ID and material group to DBF-file
-            DBFWriteIntegerAttribute(hDBF, polygon_id, elem_id_field, i);
-            if (mesh.getProperties().existsPropertyVector<int>("MaterialIDs"))
-            {
-                auto const* const materialIds =
-                    mesh.getProperties().getPropertyVector<int>("MaterialIDs");
-                DBFWriteIntegerAttribute(hDBF, polygon_id, mat_field, (*materialIds)[i]);
-            }
-            unsigned nNodes (e->getNumberOfBaseNodes());
-            padfX = new double[nNodes+1];
-            padfY = new double[nNodes+1];
-            padfZ = new double[nNodes+1];
-            for (unsigned j=0; j<nNodes; ++j)
-            {
-                padfX[j]=(*e->getNode(j))[0];
-                padfY[j]=(*e->getNode(j))[1];
-                padfZ[j]=(*e->getNode(j))[2];
-            }
-            // Last node == first node to close the polygon
-            padfX[nNodes]=(*e->getNode(0))[0];
-            padfY[nNodes]=(*e->getNode(0))[1];
-            padfZ[nNodes]=(*e->getNode(0))[2];
-            // write the first three node ids to the dbf-file (this also specifies a QUAD uniquely)
-            DBFWriteIntegerAttribute(hDBF, polygon_id, node0_field, e->getNode(0)->getID());
-            DBFWriteIntegerAttribute(hDBF, polygon_id, node1_field, e->getNode(1)->getID());
-            DBFWriteIntegerAttribute(hDBF, polygon_id, node2_field, e->getNode(2)->getID());
-
-            SHPObject* object =
-                SHPCreateObject(SHPT_POLYGON, polygon_id++, 0, nullptr, nullptr,
-                                ++nNodes, padfX, padfY, padfZ, nullptr);
+            SHPObject* object = createShapeObject(*e, shp_record);
             SHPWriteObject(hSHP, -1, object);
+            SHPDestroyObject(object);
 
-            // Note: cleaning up the coordinate arrays padfX, -Y, -Z results in a crash, I assume that shapelib removes them
-            delete object;
+            // write element ID to DBF-file
+            DBFWriteIntegerAttribute(hDBF, shp_record, elem_id_field, e->getID());
+            shp_record++;
         }
     }
-
     SHPClose(hSHP);
-    DBFClose(hDBF);
-    INFO ("Shape export of 2D mesh \"%s\" successful.", mesh.getName().c_str());
 
+    // Write scalar arrays to database file
+    MeshLib::Properties const& properties = mesh.getProperties();
+    std::vector<std::string> const& array_names =
+        properties.getPropertyVectorNames(MeshLib::MeshItemType::Cell);
+    int const n_recs = DBFGetRecordCount(hDBF);
+
+    for (std::string const& name : array_names)
+    {
+        if (properties.existsPropertyVector<int>(name))
+        {
+            std::vector<int> const& vec = *properties.getPropertyVector<int>(name);
+            int const field = DBFAddField(hDBF, name.c_str(), FTInteger, 16, 0);
+            for (int i = 0; i < n_recs; ++i)
+            {
+                std::size_t const elem_idx = DBFReadIntegerAttribute(hDBF, i, elem_id_field);
+                DBFWriteIntegerAttribute(hDBF, i, field, vec[elem_idx]);
+            }
+        }
+        else if (properties.existsPropertyVector<double>(name))
+        {
+            std::vector<double> const& vec = *properties.getPropertyVector<double>(name);
+            int const field = DBFAddField(hDBF, name.c_str(), FTDouble, 33, 16);
+            for (int i = 0; i < n_recs; ++i)
+            {
+                std::size_t const elem_idx = DBFReadIntegerAttribute(hDBF, i, elem_id_field);
+                DBFWriteDoubleAttribute(hDBF, i, field, vec[elem_idx]);
+            }
+        }
+    }
+    DBFClose(hDBF);
+    INFO("Shape export of 2D mesh '%s' finished.", mesh.getName().c_str());
     return true;
 }
 
+SHPObject* SHPInterface::createShapeObject(MeshLib::Element const& e,
+                                           std::size_t const shp_record)
+{
+    unsigned const nNodes(e.getNumberOfBaseNodes());
+    double* padfX = new double[nNodes + 1];
+    double* padfY = new double[nNodes + 1];
+    double* padfZ = new double[nNodes + 1];
+    for (unsigned j = 0; j < nNodes; ++j)
+    {
+        padfX[j] = (*e.getNode(j))[0];
+        padfY[j] = (*e.getNode(j))[1];
+        padfZ[j] = (*e.getNode(j))[2];
+    }
+    // Last node == first node to close the polygon
+    padfX[nNodes] = (*e.getNode(0))[0];
+    padfY[nNodes] = (*e.getNode(0))[1];
+    padfZ[nNodes] = (*e.getNode(0))[2];
+
+    // the generated shape object now handles the memory for padfX/Y/Z
+    return SHPCreateObject(SHPT_POLYGON, shp_record, 0, nullptr, nullptr,
+                           nNodes + 1, padfX, padfY, padfZ, nullptr);
 }
+
+}  // namespace FileIO
