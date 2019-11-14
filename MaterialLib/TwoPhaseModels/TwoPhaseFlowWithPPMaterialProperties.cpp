@@ -173,7 +173,7 @@ double TwoPhaseFlowWithPPMaterialProperties::getNonwetRelativePermeability(
     {
         return 0.0;
     }
-    return boost::math::pow<3>(1 - saturation);
+    return _relative_permeability_models[0]->getValue(saturation);
 }
 
 double TwoPhaseFlowWithPPMaterialProperties::getWetRelativePermeability(
@@ -188,7 +188,7 @@ double TwoPhaseFlowWithPPMaterialProperties::getWetRelativePermeability(
     {
         return 1.0;
     }
-    return boost::math::pow<3>(saturation);
+    return _relative_permeability_models[1]->getValue(saturation);
 }
 }  // namespace TwoPhaseFlowWithPP
 }  // namespace MaterialLib
