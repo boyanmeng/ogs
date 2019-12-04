@@ -54,26 +54,17 @@ public:
                             TwoPhaseFlowWithPPMaterialProperties>&&
             two_phase_material_model,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            specific_heat_capacity_solid,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_water,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_air,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_vapor,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            thermal_conductivity_dry_solid,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            thermal_conductivity_wet_solid,
         std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties>&&
             water_vapor_properties);
 
-    double getSpecificHeatCapacitySolid(const double p, const double T) const;
     double getSpecificHeatCapacityWater(const double p, const double T) const;
     double getSpecificHeatCapacityAir(const double p, const double T) const;
     double getSpecificHeatCapacityVapor(const double p, const double T) const;
-    double getThermalConductivityDrySolid(const double p, const double T) const;
-    double getThermalConductivityWetSolid(const double p, const double T) const;
     /// Calculates the unsaturated heat conductivity
     double calculateUnsatHeatConductivity(
         double const t,
@@ -127,17 +118,11 @@ private:
         _two_phase_material_model;
 
     std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
-        _specific_heat_capacity_solid;
-    std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
         _specific_heat_capacity_water;
     std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
         _specific_heat_capacity_air;
     std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
         _specific_heat_capacity_vapor;
-    std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
-        _thermal_conductivity_dry_solid;
-    std::unique_ptr<MaterialLib::Fluid::FluidProperty> const
-        _thermal_conductivity_wet_solid;
     std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties> const
         _water_vapor_properties;
 };

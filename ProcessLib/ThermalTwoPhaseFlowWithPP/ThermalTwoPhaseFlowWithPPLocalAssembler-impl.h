@@ -224,6 +224,12 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const density_nonwet = density_nonwet_gas + density_nonwet_vapor;
         double const density_wet = density_water;
         double const density_solid = _process_data.density_solid(t, pos)[0];
+        double const heat_capacity_solid =
+            _process_data.specific_heat_capacity_solid(t, pos)[0];
+        double const heat_conductivity_dry_solid =
+            _process_data.thermal_conductivity_dry_solid(t, pos)[0];
+        double const heat_conductivity_wet_solid =
+            _process_data.thermal_conductivity_wet_solid(t, pos)[0];
         // Derivative of nonwet phase density in terms of T
         double const d_density_nonwet_d_T =
             _process_data.material->calculatedDensityNonwetdT (
@@ -241,9 +247,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const heat_capacity_water =
             _process_data.material->getSpecificHeatCapacityWater(pg_int_pt,
                                                                  T_int_pt);
-        double const heat_capacity_solid =
-            _process_data.material->getSpecificHeatCapacitySolid(pg_int_pt,
-                                                                 T_int_pt);
+
         double const latent_heat_evaporation =
             _process_data.latent_heat_evaporation(t, pos)[0];
 
@@ -362,12 +366,6 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
                 heat_capacity_water * density_water * velocity_wet.transpose() *
                 _ip_data[ip].dNdx;
 
-        double const heat_conductivity_dry_solid =
-            _process_data.material->getThermalConductivityDrySolid(pg_int_pt,
-                                                                   T_int_pt);
-        double const heat_conductivity_wet_solid =
-            _process_data.material->getThermalConductivityWetSolid(pg_int_pt,
-                                                                   T_int_pt);
         double const heat_conductivity_unsaturated =
             _process_data.material->calculateUnsatHeatConductivity(
                 t, pos, Sw, heat_conductivity_dry_solid,

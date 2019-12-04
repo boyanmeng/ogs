@@ -28,6 +28,9 @@ struct ThermalTwoPhaseFlowWithPPProcessData
     ParameterLib::Parameter<double> const& diffusion_coeff_component_b;
     ParameterLib::Parameter<double> const& diffusion_coeff_component_a;
     ParameterLib::Parameter<double> const& density_solid;
+    ParameterLib::Parameter<double> const& specific_heat_capacity_solid;
+    ParameterLib::Parameter<double> const& thermal_conductivity_dry_solid;
+    ParameterLib::Parameter<double> const& thermal_conductivity_wet_solid;
     ParameterLib::Parameter<double> const& latent_heat_evaporation;
     std::unique_ptr<ThermalTwoPhaseFlowWithPPMaterialProperties> material;
 };

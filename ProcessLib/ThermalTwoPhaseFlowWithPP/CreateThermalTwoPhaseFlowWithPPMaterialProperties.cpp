@@ -51,12 +51,6 @@ createThermalTwoPhaseFlowWithPPMaterialProperties(
     auto const& fluid_config = std::get<1>(two_phase_model_tuple);
 
     // Get fluid properties
-    auto const& spec_heat_capacity_solid_conf =
-        //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__material_property__specific_heat_capacity_solid}
-        fluid_config.getConfigSubtree("specific_heat_capacity_solid");
-    auto specific_heat_capacity_solid =
-        MaterialLib::Fluid::createSpecificFluidHeatCapacityModel(
-            spec_heat_capacity_solid_conf);
     auto const& spec_heat_capacity_water_conf =
         //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__material_property__specific_heat_capacity_water}
         fluid_config.getConfigSubtree("specific_heat_capacity_water");
@@ -76,30 +70,14 @@ createThermalTwoPhaseFlowWithPPMaterialProperties(
         MaterialLib::Fluid::createSpecificFluidHeatCapacityModel(
             spec_heat_capacity_vapor_conf);
 
-    auto const& thermal_conductivity_dry_solid_conf =
-        //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__material_property__thermal_conductivity_dry_solid}
-        fluid_config.getConfigSubtree("thermal_conductivity_dry_solid");
-    auto thermal_conductivity_dry_solid =
-        MaterialLib::Fluid::createFluidThermalConductivityModel(
-            thermal_conductivity_dry_solid_conf);
-    auto const& thermal_conductivity_wet_solid_conf =
-        //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_THERMAL__material_property__thermal_conductivity_wet_solid}
-        fluid_config.getConfigSubtree("thermal_conductivity_wet_solid");
-    auto thermal_conductivity_wet_solid =
-        MaterialLib::Fluid::createFluidThermalConductivityModel(
-            thermal_conductivity_wet_solid_conf);
-
     std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties> vapor_property =
         std::make_unique<MaterialLib::Fluid::WaterVaporProperties>();
 
     return std::make_unique<ThermalTwoPhaseFlowWithPPMaterialProperties>(
         std::move(two_phase_material_model),
-        std::move(specific_heat_capacity_solid),
         std::move(specific_heat_capacity_water),
         std::move(specific_heat_capacity_air),
         std::move(specific_heat_capacity_vapor),
-        std::move(thermal_conductivity_dry_solid),
-        std::move(thermal_conductivity_wet_solid),
         std::move(vapor_property));
 }
 

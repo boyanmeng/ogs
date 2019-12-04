@@ -91,6 +91,16 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
         "density_solid", parameters, 1, &mesh);
     DBUG("Use '%s' as density_solid parameter.", density_solid.name.c_str());
 
+    auto& specific_heat_capacity_solid = ParameterLib::findParameter<double>(
+        config,
+        "specific_heat_capacity_solid", parameters, 1, &mesh);
+
+    auto& thermal_conductivity_dry_solid = ParameterLib::findParameter<double>(
+        config, "thermal_conductivity_dry_solid", parameters, 1, &mesh);
+
+    auto& thermal_conductivity_wet_solid = ParameterLib::findParameter<double>(
+        config, "thermal_conductivity_wet_solid", parameters, 1, &mesh);
+
     // Parameter for the latent heat of evaporation.
     auto& latent_heat_evaporation = ParameterLib::findParameter<double>(
         config,
@@ -130,6 +140,9 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowWithPPProcess(
                                                       diff_coeff_b,
                                                       diff_coeff_a,
                                                       density_solid,
+                                                      specific_heat_capacity_solid,
+                                                      thermal_conductivity_dry_solid,
+                                                      thermal_conductivity_wet_solid,
                                                       latent_heat_evaporation,
                                                       std::move(material)};
 

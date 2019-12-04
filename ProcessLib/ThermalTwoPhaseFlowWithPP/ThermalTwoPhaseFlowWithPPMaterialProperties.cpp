@@ -40,41 +40,20 @@ ThermalTwoPhaseFlowWithPPMaterialProperties::
                             TwoPhaseFlowWithPPMaterialProperties>&&
             two_phase_material_model,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            specific_heat_capacity_solid,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_water,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_air,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
             specific_heat_capacity_vapor,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            thermal_conductivity_dry_solid,
-        std::unique_ptr<MaterialLib::Fluid::FluidProperty>&&
-            thermal_conductivity_wet_solid,
         std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties>&&
             water_vapor_properties)
     : _two_phase_material_model(std::move(two_phase_material_model)),
-      _specific_heat_capacity_solid(std::move(specific_heat_capacity_solid)),
       _specific_heat_capacity_water(std::move(specific_heat_capacity_water)),
       _specific_heat_capacity_air(std::move(specific_heat_capacity_air)),
       _specific_heat_capacity_vapor(std::move(specific_heat_capacity_vapor)),
-      _thermal_conductivity_dry_solid(
-          std::move(thermal_conductivity_dry_solid)),
-      _thermal_conductivity_wet_solid(
-          std::move(thermal_conductivity_wet_solid)),
       _water_vapor_properties(std::move(water_vapor_properties))
 {
     DBUG("Create material properties for non-isothermal two-phase flow model.");
-}
-
-double
-ThermalTwoPhaseFlowWithPPMaterialProperties::getSpecificHeatCapacitySolid(
-    const double p, const double T) const
-{
-    ArrayType vars;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::T)] = T;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::p)] = p;
-    return _specific_heat_capacity_solid->getValue(vars);
 }
 
 double
@@ -104,26 +83,6 @@ ThermalTwoPhaseFlowWithPPMaterialProperties::getSpecificHeatCapacityVapor(
     vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::T)] = T;
     vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::p)] = p;
     return _specific_heat_capacity_vapor->getValue(vars);
-}
-
-double
-ThermalTwoPhaseFlowWithPPMaterialProperties::getThermalConductivityDrySolid(
-    const double p, const double T) const
-{
-    ArrayType vars;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::T)] = T;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::p)] = p;
-    return _thermal_conductivity_dry_solid->getValue(vars);
-}
-
-double
-ThermalTwoPhaseFlowWithPPMaterialProperties::getThermalConductivityWetSolid(
-    const double p, const double T) const
-{
-    ArrayType vars;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::T)] = T;
-    vars[static_cast<int>(MaterialLib::Fluid::PropertyVariableType::p)] = p;
-    return _thermal_conductivity_wet_solid->getValue(vars);
 }
 
 double
