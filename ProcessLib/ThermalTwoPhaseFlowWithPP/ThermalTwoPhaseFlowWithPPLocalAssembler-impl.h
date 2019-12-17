@@ -196,6 +196,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const x_gas_nonwet = p_gas_nonwet / pg_int_pt;
         // molar fraction of water vapor in nonwet phase
         double const x_vapor_nonwet = p_vapor_nonwet / pg_int_pt;
+        _x_vapor_nonwet[ip] = x_vapor_nonwet;
         // mass fraction of gas component in the nonwet phase
         double const X_gas_nonwet =
             x_gas_nonwet /

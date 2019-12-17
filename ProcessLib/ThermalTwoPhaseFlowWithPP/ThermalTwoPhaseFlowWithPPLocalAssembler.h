@@ -72,6 +72,12 @@ public:
         std::vector<GlobalVector*> const& x,
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
         std::vector<double>& cache) const = 0;
+
+    virtual std::vector<double> const& getIntPtVaporMolarFraction(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
 };
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -108,6 +114,8 @@ public:
           _saturation(
               std::vector<double>(_integration_method.getNumberOfPoints())),
           _pressure_wetting(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _x_vapor_nonwet(
               std::vector<double>(_integration_method.getNumberOfPoints()))
     {
         unsigned const n_integration_points =
@@ -167,6 +175,16 @@ public:
         return _pressure_wetting;
     }
 
+    std::vector<double> const& getIntPtVaporMolarFraction(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_x_vapor_nonwet.empty());
+        return _x_vapor_nonwet;
+    }
+
 private:
     MeshLib::Element const& _element;
 
@@ -182,6 +200,7 @@ private:
 
     std::vector<double> _saturation;
     std::vector<double> _pressure_wetting;
+    std::vector<double> _x_vapor_nonwet;
 
     static const int nonwet_pressure_matrix_index = 0;
     static const int cap_pressure_matrix_index = ShapeFunction::NPOINTS;
