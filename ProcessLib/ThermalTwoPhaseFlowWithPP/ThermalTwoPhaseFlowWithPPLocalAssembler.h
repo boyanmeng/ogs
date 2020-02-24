@@ -78,6 +78,24 @@ public:
         std::vector<GlobalVector*> const& x,
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
         std::vector<double>& cache) const = 0;
+
+    virtual std::vector<double> const& getIntPtRelPermNonwet(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+
+    virtual std::vector<double> const& getIntPtRelPermWet(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+
+    virtual std::vector<double> const& getIntPtEnthalpyNonwet(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
 };
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -116,6 +134,12 @@ public:
           _pressure_wetting(
               std::vector<double>(_integration_method.getNumberOfPoints())),
           _x_vapor_nonwet(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _k_rel_nonwet(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _k_rel_wet(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _enthalpy_nonwet(
               std::vector<double>(_integration_method.getNumberOfPoints()))
     {
         unsigned const n_integration_points =
@@ -185,6 +209,36 @@ public:
         return _x_vapor_nonwet;
     }
 
+    std::vector<double> const& getIntPtRelPermNonwet(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_k_rel_nonwet.empty());
+        return _k_rel_nonwet;
+    }
+
+    std::vector<double> const& getIntPtRelPermWet(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_k_rel_wet.empty());
+        return _k_rel_wet;
+    }
+
+    std::vector<double> const& getIntPtEnthalpyNonwet(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_enthalpy_nonwet.empty());
+        return _enthalpy_nonwet;
+    }
+
 private:
     MeshLib::Element const& _element;
 
@@ -201,6 +255,9 @@ private:
     std::vector<double> _saturation;
     std::vector<double> _pressure_wetting;
     std::vector<double> _x_vapor_nonwet;
+    std::vector<double> _k_rel_nonwet;
+    std::vector<double> _k_rel_wet;
+    std::vector<double> _enthalpy_nonwet;
 
     static const int nonwet_pressure_matrix_index = 0;
     static const int cap_pressure_matrix_index = ShapeFunction::NPOINTS;

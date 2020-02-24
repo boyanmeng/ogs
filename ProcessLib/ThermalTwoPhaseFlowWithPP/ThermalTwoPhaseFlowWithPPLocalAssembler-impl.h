@@ -267,6 +267,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const enthalpy_nonwet =
             enthalpy_nonwet_gas * X_gas_nonwet +
             enthalpy_nonwet_vapor * (1 - X_gas_nonwet);
+        _enthalpy_nonwet[ip] = enthalpy_nonwet;
         double const internal_energy_nonwet =
             enthalpy_nonwet - pg_int_pt / density_nonwet;
         double const internal_energy_wet = enthalpy_wet;
@@ -333,6 +334,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const k_rel_nonwet =
             two_phase_material_model.getNonwetRelativePermeability(
                 t, pos, _pressure_wetting[ip], T_int_pt, Sw);
+        _k_rel_nonwet[ip] = k_rel_nonwet;
         double const mu_nonwet = two_phase_material_model.getGasViscosity(
             _pressure_wetting[ip], T_int_pt);
         double const lambda_nonwet = k_rel_nonwet / mu_nonwet;
@@ -343,6 +345,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const k_rel_wet =
             two_phase_material_model.getWetRelativePermeability(
                 t, pos, pg_int_pt, T_int_pt, Sw);
+        _k_rel_wet[ip] = k_rel_wet;
         double const mu_wet =
             two_phase_material_model.getLiquidViscosity(pg_int_pt, T_int_pt);
         double const lambda_wet = k_rel_wet / mu_wet;

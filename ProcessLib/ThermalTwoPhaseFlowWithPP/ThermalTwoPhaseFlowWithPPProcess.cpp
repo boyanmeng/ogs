@@ -77,6 +77,24 @@ void ThermalTwoPhaseFlowWithPPProcess::initializeConcreteProcess(
         makeExtrapolator(1, getExtrapolator(), _local_assemblers,
                          &ThermalTwoPhaseFlowWithPPLocalAssemblerInterface::
                              getIntPtVaporMolarFraction));
+
+    _secondary_variables.addSecondaryVariable(
+        "k_rel_nonwet",
+        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
+                         &ThermalTwoPhaseFlowWithPPLocalAssemblerInterface::
+                             getIntPtRelPermNonwet));
+
+    _secondary_variables.addSecondaryVariable(
+        "k_rel_wet",
+        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
+                         &ThermalTwoPhaseFlowWithPPLocalAssemblerInterface::
+                             getIntPtRelPermWet));
+
+    _secondary_variables.addSecondaryVariable(
+        "enthalpy_nonwet",
+        makeExtrapolator(1, getExtrapolator(), _local_assemblers,
+                         &ThermalTwoPhaseFlowWithPPLocalAssemblerInterface::
+                             getIntPtEnthalpyNonwet));
 }
 
 void ThermalTwoPhaseFlowWithPPProcess::assembleConcreteProcess(
