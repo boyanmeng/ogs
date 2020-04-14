@@ -21,17 +21,17 @@
 #include "ProcessLib/LocalAssemblerTraits.h"
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
-#include "TwoPhaseFlowWithPrhoProcessData.h"
+#include "ThermalTwoPhaseFlowComponentialProcessData.h"
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
 template <typename NodalMatrixType>
 struct IntegrationPointData final
 {
     explicit IntegrationPointData(
-        TwoPhaseFlowWithPrhoMaterialProperties& material_property_)
+        ThermalTwoPhaseFlowComponentialMaterialProperties& material_property_)
         : mat_property(material_property_),
           sw(1.0),
           rho_m(0.0),
@@ -41,7 +41,7 @@ struct IntegrationPointData final
           drhom_drho(0.0)
     {
     }
-    TwoPhaseFlowWithPrhoMaterialProperties& mat_property;
+    ThermalTwoPhaseFlowComponentialMaterialProperties& mat_property;
     double sw;
     double rho_m;
     double dsw_dpg;
@@ -58,7 +58,7 @@ struct IntegrationPointData final
 };
 const unsigned NUM_NODAL_DOF = 2;
 
-class TwoPhaseFlowWithPrhoLocalAssemblerInterface
+class ThermalTwoPhaseFlowComponentialLocalAssemblerInterface
     : public ProcessLib::LocalAssemblerInterface,
       public NumLib::ExtrapolatableElement
 {
@@ -78,8 +78,8 @@ public:
 
 template <typename ShapeFunction, typename IntegrationMethod,
           unsigned GlobalDim>
-class TwoPhaseFlowWithPrhoLocalAssembler
-    : public TwoPhaseFlowWithPrhoLocalAssemblerInterface
+class ThermalTwoPhaseFlowComponentialLocalAssembler
+    : public ThermalTwoPhaseFlowComponentialLocalAssemblerInterface
 {
     using ShapeMatricesType = ShapeMatrixPolicyType<ShapeFunction, GlobalDim>;
     using ShapeMatrices = typename ShapeMatricesType::ShapeMatrices;
@@ -95,12 +95,12 @@ class TwoPhaseFlowWithPrhoLocalAssembler
     using LocalVectorType = typename LocalAssemblerTraits::LocalVector;
 
 public:
-    TwoPhaseFlowWithPrhoLocalAssembler(
+    ThermalTwoPhaseFlowComponentialLocalAssembler(
         MeshLib::Element const& element,
         std::size_t const /*local_matrix_size*/,
         bool const is_axially_symmetric,
         unsigned const integration_order,
-        TwoPhaseFlowWithPrhoProcessData const& process_data)
+        ThermalTwoPhaseFlowComponentialProcessData const& process_data)
         : _element(element),
           _integration_method(integration_order),
           _shape_matrices(initShapeMatrices<ShapeFunction, ShapeMatricesType,
@@ -176,7 +176,7 @@ private:
     std::vector<ShapeMatrices, Eigen::aligned_allocator<ShapeMatrices>>
         _shape_matrices;
 
-    TwoPhaseFlowWithPrhoProcessData const& _process_data;
+    ThermalTwoPhaseFlowComponentialProcessData const& _process_data;
     std::vector<IntegrationPointData<NodalMatrixType>,
                 Eigen::aligned_allocator<IntegrationPointData<NodalMatrixType>>>
         _ip_data;
@@ -193,7 +193,7 @@ private:
     static const int cap_pressure_size = ShapeFunction::NPOINTS;
 };
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib
 
-#include "TwoPhaseFlowWithPrhoLocalAssembler-impl.h"
+#include "ThermalTwoPhaseFlowComponentialLocalAssembler-impl.h"

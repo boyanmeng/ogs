@@ -11,7 +11,7 @@
 #pragma once
 
 #include "ProcessLib/Process.h"
-#include "TwoPhaseFlowWithPrhoLocalAssembler.h"
+#include "ThermalTwoPhaseFlowComponentialLocalAssembler.h"
 
 namespace MathLib
 {
@@ -28,16 +28,16 @@ class LocalToGlobalIndexMap;
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
 /**
  * \brief A class to simulate the two-phase flow process with P-rho model in
  * porous media
  */
-class TwoPhaseFlowWithPrhoProcess final : public Process
+class ThermalTwoPhaseFlowComponentialProcess final : public Process
 {
 public:
-    TwoPhaseFlowWithPrhoProcess(
+    ThermalTwoPhaseFlowComponentialProcess(
         std::string name,
         MeshLib::Mesh& mesh,
         std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
@@ -46,7 +46,7 @@ public:
         unsigned const integration_order,
         std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
             process_variables,
-        TwoPhaseFlowWithPrhoProcessData&& process_data,
+        ThermalTwoPhaseFlowComponentialProcessData&& process_data,
         SecondaryVariableCollection&& secondary_variables,
         BaseLib::ConfigTree const& config,
         std::map<std::string,
@@ -75,11 +75,11 @@ private:
                                     const double t, const double dt,
                                     const int process_id) override;
 
-    TwoPhaseFlowWithPrhoProcessData _process_data;
+    ThermalTwoPhaseFlowComponentialProcessData _process_data;
 
-    std::vector<std::unique_ptr<TwoPhaseFlowWithPrhoLocalAssemblerInterface>>
+    std::vector<std::unique_ptr<ThermalTwoPhaseFlowComponentialLocalAssemblerInterface>>
         _local_assemblers;
 };
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib
