@@ -7,21 +7,21 @@
  *              http://www.opengeosys.org/project/license
  *
  */
-#include "CreateTwoPhaseFlowWithPrhoProcess.h"
+#include "CreateThermalTwoPhaseFlowComponentialProcess.h"
 #include <cassert>
 #include "ParameterLib/Utils.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
-#include "ProcessLib/TwoPhaseFlowWithPrho/CreateTwoPhaseFlowPrhoMaterialProperties.h"
-#include "ProcessLib/TwoPhaseFlowWithPrho/TwoPhaseFlowWithPrhoMaterialProperties.h"
+#include "ProcessLib/ThermalTwoPhaseFlowComponential/CreateThermalTwoPhaseFlowComponentialMaterialProperties.h"
+#include "ProcessLib/ThermalTwoPhaseFlowComponential/ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
-#include "TwoPhaseFlowWithPrhoProcess.h"
-#include "TwoPhaseFlowWithPrhoProcessData.h"
+#include "ThermalTwoPhaseFlowComponentialProcess.h"
+#include "ThermalTwoPhaseFlowComponentialProcessData.h"
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
+std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
     std::string name,
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
@@ -31,20 +31,21 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
     BaseLib::ConfigTree const& config,
     std::map<std::string,
              std::unique_ptr<MathLib::PiecewiseLinearInterpolation>> const&
-        curves)
+        curves,
+    std::map<int, std::shared_ptr<MaterialPropertyLib::Medium>> const& media)
 {
     //! \ogs_file_param{prj__processes__process__type}
-    config.checkConfigParameter("type", "TWOPHASE_FLOW_PRHO");
+    config.checkConfigParameter("type", "THERMALTWOPHASEFLOW_COMPONENTIAL");
 
-    DBUG("Create TwoPhaseFlowProcess with Prho model.");
-    //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables}
+    DBUG("Create ThermalTwoPhaseFlowComponentialProcess model.");
+    //! \ogs_file_param{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables}
     auto const pv_config = config.getConfigSubtree("process_variables");
 
     auto per_process_variables = findProcessVariables(
         variables, pv_config,
-        {//! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables__liquid_pressure}
+        {//! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__liquid_pressure}
          "liquid_pressure",
-         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__process_variables__overall_mass_density}
+         //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_mass_density}
          "overall_mass_density"});
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
         process_variables;
@@ -55,7 +56,7 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
     ProcessLib::createSecondaryVariables(config, secondary_variables);
     // Specific body force
     std::vector<double> const b =
-        //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__specific_body_force}
+        //! \ogs_file_param{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__specific_body_force}
         config.getConfigParameter<std::vector<double>>("specific_body_force");
     assert(!b.empty() && b.size() < 4);
     Eigen::VectorXd specific_body_force(b.size());
@@ -65,23 +66,23 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
         std::copy_n(b.data(), b.size(), specific_body_force.data());
     }
 
-    //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__mass_lumping}
+    //! \ogs_file_param{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__mass_lumping}
     auto const mass_lumping = config.getConfigParameter<bool>("mass_lumping");
     // diffusion coeff
     auto& diff_coeff_b = ParameterLib::findParameter<double>(
         config,
-        //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__diffusion_coeff_component_b}
+        //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__diffusion_coeff_component_b}
         "diffusion_coeff_component_b", parameters, 1, &mesh);
     auto& diff_coeff_a = ParameterLib::findParameter<double>(
         config,
-        //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__diffusion_coeff_component_a}
+        //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__diffusion_coeff_component_a}
         "diffusion_coeff_component_a", parameters, 1, &mesh);
     auto& temperature = ParameterLib::findParameter<double>(
         config,
-        //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PRHO__temperature}
+        //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__temperature}
         "temperature", parameters, 1, &mesh);
 
-    //! \ogs_file_param{prj__processes__process__TWOPHASE_FLOW_PRHO__material_property}
+    //! \ogs_file_param{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__material_property}
     auto const& mat_config = config.getConfigSubtree("material_property");
 
     boost::optional<MeshLib::PropertyVector<int> const&> material_ids;
@@ -97,20 +98,20 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
         INFO("The twophase flow is in homogeneous porous media.");
     }
 
-    std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties> material =
-        createTwoPhaseFlowPrhoMaterialProperties(mat_config, material_ids,
+    std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties> material =
+        createThermalTwoPhaseFlowComponentialMaterialProperties(mat_config, material_ids,
                                                  parameters);
 
-    TwoPhaseFlowWithPrhoProcessData process_data{
+    ThermalTwoPhaseFlowComponentialProcessData process_data{
         specific_body_force, has_gravity, mass_lumping,       diff_coeff_b,
         diff_coeff_a,        temperature, std::move(material)};
 
-    return std::make_unique<TwoPhaseFlowWithPrhoProcess>(
+    return std::make_unique<ThermalTwoPhaseFlowComponentialProcess>(
         std::move(name), mesh, std::move(jacobian_assembler), parameters,
         integration_order, std::move(process_variables),
         std::move(process_data), std::move(secondary_variables), mat_config,
         curves);
 }
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

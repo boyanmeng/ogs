@@ -8,16 +8,16 @@
  *
  */
 
-#include "TwoPhaseFlowWithPrhoProcess.h"
+#include "ThermalTwoPhaseFlowComponentialProcess.h"
 
 #include "ProcessLib/Utils/CreateLocalAssemblers.h"
-#include "TwoPhaseFlowWithPrhoLocalAssembler.h"
+#include "ThermalTwoPhaseFlowComponentialLocalAssembler.h"
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-TwoPhaseFlowWithPrhoProcess::TwoPhaseFlowWithPrhoProcess(
+ThermalTwoPhaseFlowComponentialProcess::ThermalTwoPhaseFlowComponentialProcess(
     std::string name,
     MeshLib::Mesh& mesh,
     std::unique_ptr<AbstractJacobianAssembler>&& jacobian_assembler,
@@ -25,7 +25,7 @@ TwoPhaseFlowWithPrhoProcess::TwoPhaseFlowWithPrhoProcess(
     unsigned const integration_order,
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>&&
         process_variables,
-    TwoPhaseFlowWithPrhoProcessData&& process_data,
+    ThermalTwoPhaseFlowComponentialProcessData&& process_data,
     SecondaryVariableCollection&& secondary_variables,
     BaseLib::ConfigTree const& /*config*/,
     std::map<std::string,
@@ -36,17 +36,17 @@ TwoPhaseFlowWithPrhoProcess::TwoPhaseFlowWithPrhoProcess(
               std::move(secondary_variables)),
       _process_data(std::move(process_data))
 {
-    DBUG("Create TwoPhaseFlowProcess with Prho model.");
+    DBUG("Create ThermalTwoPhaseFlowComponentialProcess model.");
 }
 
-void TwoPhaseFlowWithPrhoProcess::initializeConcreteProcess(
+void ThermalTwoPhaseFlowComponentialProcess::initializeConcreteProcess(
     NumLib::LocalToGlobalIndexMap const& dof_table,
     MeshLib::Mesh const& mesh,
     unsigned const integration_order)
 {
     const int process_id = 0;
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
-    ProcessLib::createLocalAssemblers<TwoPhaseFlowWithPrhoLocalAssembler>(
+    ProcessLib::createLocalAssemblers<ThermalTwoPhaseFlowComponentialLocalAssembler>(
         mesh.getDimension(), mesh.getElements(), dof_table,
         pv.getShapeFunctionOrder(), _local_assemblers,
         mesh.isAxiallySymmetric(), integration_order, _process_data);
@@ -55,21 +55,21 @@ void TwoPhaseFlowWithPrhoProcess::initializeConcreteProcess(
         "saturation",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
-            &TwoPhaseFlowWithPrhoLocalAssemblerInterface::getIntPtSaturation));
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::getIntPtSaturation));
 
     _secondary_variables.addSecondaryVariable(
         "pressure_nonwetting",
         makeExtrapolator(1, getExtrapolator(), _local_assemblers,
-                         &TwoPhaseFlowWithPrhoLocalAssemblerInterface::
+                         &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
                              getIntPtNonWettingPressure));
 }
 
-void TwoPhaseFlowWithPrhoProcess::assembleConcreteProcess(
+void ThermalTwoPhaseFlowComponentialProcess::assembleConcreteProcess(
     const double t, double const dt, std::vector<GlobalVector*> const& x,
     std::vector<GlobalVector*> const& xdot, int const process_id,
     GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b)
 {
-    DBUG("Assemble TwoPhaseFlowWithPrhoProcess.");
+    DBUG("Assemble ThermalTwoPhaseFlowComponentialProcess.");
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
@@ -82,13 +82,13 @@ void TwoPhaseFlowWithPrhoProcess::assembleConcreteProcess(
         b, _coupled_solutions);
 }
 
-void TwoPhaseFlowWithPrhoProcess::assembleWithJacobianConcreteProcess(
+void ThermalTwoPhaseFlowComponentialProcess::assembleWithJacobianConcreteProcess(
     const double t, double const dt, std::vector<GlobalVector*> const& x,
     GlobalVector const& xdot, const double dxdot_dx, const double dx_dx,
     int const process_id, GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
     GlobalMatrix& Jac)
 {
-    DBUG("AssembleWithJacobian TwoPhaseFlowWithPrhoProcess.");
+    DBUG("AssembleWithJacobian ThermalTwoPhaseFlowComponentialProcess.");
 
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
        dof_table = {std::ref(*_local_to_global_index_map)};
@@ -100,11 +100,11 @@ void TwoPhaseFlowWithPrhoProcess::assembleWithJacobianConcreteProcess(
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, dt, x, xdot,
         dxdot_dx, dx_dx, process_id, M, K, b, Jac, _coupled_solutions);
 }
-void TwoPhaseFlowWithPrhoProcess::preTimestepConcreteProcess(
+void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(
     std::vector<GlobalVector*> const& x, double const t, double const dt,
     const int process_id)
 {
-    DBUG("PreTimestep TwoPhaseFlowWithPrhoProcess.");
+    DBUG("PreTimestep ThermalTwoPhaseFlowComponentialProcess.");
 
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
@@ -114,5 +114,5 @@ void TwoPhaseFlowWithPrhoProcess::preTimestepConcreteProcess(
         t, dt);
 }
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib
