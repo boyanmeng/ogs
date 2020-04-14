@@ -11,7 +11,7 @@
 #pragma once
 
 #include <memory>
-#include "ProcessLib/TwoPhaseFlowWithPrho/TwoPhaseFlowWithPrhoMaterialProperties.h"
+#include "ProcessLib/ThermalTwoPhaseFlowComponential/ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 namespace BaseLib
 {
 class ConfigTree;
@@ -19,15 +19,15 @@ class ConfigTree;
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties>
-createTwoPhaseFlowPrhoMaterialProperties(
+std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties>
+createThermalTwoPhaseFlowComponentialMaterialProperties(
     BaseLib::ConfigTree const& config,
     boost::optional<MeshLib::PropertyVector<int> const&>
         material_ids,
     std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
         parameters);
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

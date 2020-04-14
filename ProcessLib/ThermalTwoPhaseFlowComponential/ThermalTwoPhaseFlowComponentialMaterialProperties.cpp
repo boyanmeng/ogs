@@ -8,7 +8,7 @@
  *
  */
 
-#include "TwoPhaseFlowWithPrhoMaterialProperties.h"
+#include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 #include <utility>
 #include "BaseLib/Logging.h"
 #include "MaterialLib/Fluid/FluidProperty.h"
@@ -30,9 +30,9 @@ using MaterialLib::PhysicalConstant::IdealGasConstant;
 using MaterialLib::PhysicalConstant::HenryConstant::HenryConstantH2;
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-TwoPhaseFlowWithPrhoMaterialProperties::TwoPhaseFlowWithPrhoMaterialProperties(
+ThermalTwoPhaseFlowComponentialMaterialProperties::ThermalTwoPhaseFlowComponentialMaterialProperties(
     boost::optional<MeshLib::PropertyVector<int> const&> const material_ids,
     std::unique_ptr<MaterialLib::Fluid::FluidProperty>
         liquid_density,
@@ -68,7 +68,7 @@ TwoPhaseFlowWithPrhoMaterialProperties::TwoPhaseFlowWithPrhoMaterialProperties(
     DBUG("Create material properties for Two-Phase flow with P-RHO model.");
 }
 
-int TwoPhaseFlowWithPrhoMaterialProperties::getMaterialID(
+int ThermalTwoPhaseFlowComponentialMaterialProperties::getMaterialID(
     const std::size_t element_id)
 {
     if (!_material_ids)
@@ -80,7 +80,7 @@ int TwoPhaseFlowWithPrhoMaterialProperties::getMaterialID(
     return (*_material_ids)[element_id];
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getLiquidDensity(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getLiquidDensity(
     const double p, const double T) const
 {
     ArrayType vars;
@@ -89,7 +89,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getLiquidDensity(
     return _liquid_density->getValue(vars);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getGasDensity(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getGasDensity(
     const double p, const double T) const
 {
     ArrayType vars;
@@ -98,7 +98,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getGasDensity(
     return _gas_density->getValue(vars);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getLiquidViscosity(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getLiquidViscosity(
     const double p, const double T) const
 {
     ArrayType vars;
@@ -107,7 +107,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getLiquidViscosity(
     return _viscosity->getValue(vars);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getGasViscosity(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getGasViscosity(
     const double p, const double T) const
 {
     ArrayType vars;
@@ -116,7 +116,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getGasViscosity(
     return _gas_viscosity->getValue(vars);
 }
 
-Eigen::MatrixXd TwoPhaseFlowWithPrhoMaterialProperties::getPermeability(
+Eigen::MatrixXd ThermalTwoPhaseFlowComponentialMaterialProperties::getPermeability(
     const int material_id, const double t,
     const ParameterLib::SpatialPosition& pos, const int /*dim*/) const
 {
@@ -124,7 +124,7 @@ Eigen::MatrixXd TwoPhaseFlowWithPrhoMaterialProperties::getPermeability(
                                                                  0.0);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getPorosity(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getPorosity(
     const int material_id, const double t,
     const ParameterLib::SpatialPosition& pos, const double /*p*/,
     const double T, const double porosity_variable) const
@@ -133,21 +133,21 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getPorosity(
                                                    T);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getNonwetRelativePermeability(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getNonwetRelativePermeability(
     const double /*t*/, const ParameterLib::SpatialPosition& /*pos*/,
     const double /*p*/, const double /*T*/, const double saturation) const
 {
     return _relative_permeability_models[0]->getValue(saturation);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getWetRelativePermeability(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getWetRelativePermeability(
     const double /*t*/, const ParameterLib::SpatialPosition& /*pos*/,
     const double /*p*/, const double /*T*/, const double saturation) const
 {
     return _relative_permeability_models[1]->getValue(saturation);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getCapillaryPressure(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getCapillaryPressure(
     const int material_id, const double /*t*/,
     const ParameterLib::SpatialPosition& /*pos*/, const double /*p*/,
     const double /*T*/, const double saturation) const
@@ -156,7 +156,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getCapillaryPressure(
         saturation);
 }
 
-double TwoPhaseFlowWithPrhoMaterialProperties::getCapillaryPressureDerivative(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::getCapillaryPressureDerivative(
     const int material_id, const double /*t*/,
     const ParameterLib::SpatialPosition& /*pos*/, const double /*p*/,
     const double /*T*/, const double saturation) const
@@ -164,7 +164,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::getCapillaryPressureDerivative(
     return _capillary_pressure_models[material_id]->getdPcdS(saturation);
 }
 
-bool TwoPhaseFlowWithPrhoMaterialProperties::computeConstitutiveRelation(
+bool ThermalTwoPhaseFlowComponentialMaterialProperties::computeConstitutiveRelation(
     double const t,
     ParameterLib::SpatialPosition const& x,
     int const material_id,
@@ -227,7 +227,7 @@ bool TwoPhaseFlowWithPrhoMaterialProperties::computeConstitutiveRelation(
     dxm_dX = calculatedXmdX(pg, Sw, X_m, dsw_dX, material_id);
     return true;
 }
-void TwoPhaseFlowWithPrhoMaterialProperties::calculateResidual(
+void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResidual(
     const int material_id, double const pl, double const X, double const T,
     double Sw, double rho_h2_wet, ResidualVector& res)
 {
@@ -240,7 +240,7 @@ void TwoPhaseFlowWithPrhoMaterialProperties::calculateResidual(
     res(1) = calculateSaturation(pl, X, Sw, rho_h2_wet, rho_h2_nonwet, T);
 }
 
-void TwoPhaseFlowWithPrhoMaterialProperties::calculateJacobian(
+void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateJacobian(
     const int material_id, double const /*t*/,
     ParameterLib::SpatialPosition const& /*x*/, double const pl,
     double const /*X*/, double const T, JacobianMatrix& Jac, double Sw,
@@ -271,7 +271,7 @@ void TwoPhaseFlowWithPrhoMaterialProperties::calculateJacobian(
 /** Complementary condition 1
 * for calculating molar fraction of light component in the liquid phase
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculateEquilibiumRhoWetLight(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateEquilibiumRhoWetLight(
     double const pg, double const Sw, double const rho_wet_h2) const
 {
     double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
@@ -281,7 +281,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculateEquilibiumRhoWetLight(
 /** Complementary condition 2
 * for calculating the saturation
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculateSaturation(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateSaturation(
     double /*PL*/, double X, double Sw, double rho_wet_h2, double rho_nonwet_h2,
     double /*T*/) const
 {
@@ -291,7 +291,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculateSaturation(
 /**
 * Calculate the derivatives using the analytical way
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculatedSwdP(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedSwdP(
     double pl, double S, double rho_wet_h2, double const T,
     int current_material_id) const
 {
@@ -317,7 +317,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculatedSwdP(
 /**
 * Calculate the derivatives using the analytical way
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculatedSwdX(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedSwdX(
     double const pl, const double /*X*/, const double S,
     const double rho_wet_h2, double const T, int current_material_id) const
 {
@@ -343,7 +343,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculatedSwdX(
 /**
 * Calculate the derivatives using the analytical way
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculatedXmdX(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedXmdX(
     double pl, double Sw, double rho_wet_h2, double dSwdX,
     int current_material_id) const
 {
@@ -363,7 +363,7 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculatedXmdX(
 /**
 * Calculate the derivatives using the analytical way
 */
-double TwoPhaseFlowWithPrhoMaterialProperties::calculatedXmdP(
+double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedXmdP(
     double pl, double Sw, double rho_wet_h2, double dSwdP,
     int current_material_id) const
 {
@@ -380,5 +380,5 @@ double TwoPhaseFlowWithPrhoMaterialProperties::calculatedXmdP(
     }
     return HenryConstantH2 * H2 * (1 + dPC_dSw * dSwdP);
 }
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

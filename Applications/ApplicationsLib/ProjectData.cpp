@@ -96,6 +96,9 @@
 #ifdef OGS_BUILD_PROCESS_TES
 #include "ProcessLib/TES/CreateTESProcess.h"
 #endif
+#ifdef OGS_BUILD_PROCESS_THERMALTWOPHASEFLOWCOMPONENTIAL
+#include "ProcessLib/ThermalTwoPhaseFlowComponential/CreateThermalTwoPhaseFlowComponentialProcess.h"
+#endif
 #ifdef OGS_BUILD_PROCESS_THERMALTWOPHASEFLOWWITHPP
 #include "ProcessLib/ThermalTwoPhaseFlowWithPP/CreateThermalTwoPhaseFlowWithPPProcess.h"
 #endif
@@ -939,6 +942,17 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                     name, *_mesh_vec[0], std::move(jacobian_assembler),
                     _process_variables, _parameters, integration_order,
                     process_config, _curves);
+        }
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_THERMALTWOPHASEFLOWCOMPONENTIAL
+            if (type == "THERMAL_TWOPHASE_COMPONENTIAL")
+        {
+            process = ProcessLib::ThermalTwoPhaseFlowComponential::
+                createThermalTwoPhaseFlowComponentialProcess(
+                    name, *_mesh_vec[0], std::move(jacobian_assembler),
+                    _process_variables, _parameters, integration_order,
+                    process_config, _curves, _media);
         }
         else
 #endif

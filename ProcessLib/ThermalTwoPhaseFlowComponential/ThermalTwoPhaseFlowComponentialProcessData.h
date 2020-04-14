@@ -10,16 +10,16 @@
 
 #pragma once
 
-#include "TwoPhaseFlowWithPrhoMaterialProperties.h"
+#include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 
 namespace ProcessLib
 {
 template <typename T>
 struct Parameter;
 
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-struct TwoPhaseFlowWithPrhoProcessData
+struct ThermalTwoPhaseFlowComponentialProcessData
 {
     Eigen::VectorXd const _specific_body_force;
 
@@ -28,8 +28,8 @@ struct TwoPhaseFlowWithPrhoProcessData
     ParameterLib::Parameter<double> const& _diffusion_coeff_component_b;
     ParameterLib::Parameter<double> const& _diffusion_coeff_component_a;
     ParameterLib::Parameter<double> const& _temperature;
-    std::unique_ptr<TwoPhaseFlowWithPrhoMaterialProperties> _material;
+    std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties> _material;
 };
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

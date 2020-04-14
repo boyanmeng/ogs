@@ -29,14 +29,14 @@ template <typename PROP_VAL_TYPE>
 class PropertyVector;
 }
 
-namespace ProcessLib::TwoPhaseFlowWithPrho
+namespace ProcessLib::ThermalTwoPhaseFlowComponential
 {
-class TwoPhaseFlowWithPrhoMaterialProperties
+class ThermalTwoPhaseFlowComponentialMaterialProperties
 {
 public:
     using ArrayType = MaterialLib::Fluid::FluidProperty::ArrayType;
 
-    TwoPhaseFlowWithPrhoMaterialProperties(
+    ThermalTwoPhaseFlowComponentialMaterialProperties(
         boost::optional<MeshLib::PropertyVector<int> const&> const material_ids,
         std::unique_ptr<MaterialLib::Fluid::FluidProperty>
             liquid_density,
@@ -183,4 +183,4 @@ private:
                           int current_material_id) const;
 };
 
-}  // namespace ProcessLib::TwoPhaseFlowWithPrho
+}  // namespace ProcessLib::ThermalTwoPhaseFlowComponential

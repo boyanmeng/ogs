@@ -50,9 +50,9 @@ class ProcessVariable;
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
-std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
+std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
     std::string name,
     MeshLib::Mesh& mesh,
     std::unique_ptr<ProcessLib::AbstractJacobianAssembler>&& jacobian_assembler,
@@ -62,6 +62,7 @@ std::unique_ptr<Process> createTwoPhaseFlowWithPrhoProcess(
     BaseLib::ConfigTree const& config,
     std::map<std::string,
              std::unique_ptr<MathLib::PiecewiseLinearInterpolation>> const&
-        curves);
-}  // namespace TwoPhaseFlowWithPrho
+        curves,
+    std::map<int, std::shared_ptr<MaterialPropertyLib::Medium>> const& media);
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

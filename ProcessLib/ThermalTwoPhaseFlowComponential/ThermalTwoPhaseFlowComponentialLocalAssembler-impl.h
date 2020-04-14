@@ -10,19 +10,19 @@
 
 #pragma once
 
-#include "TwoPhaseFlowWithPrhoLocalAssembler.h"
+#include "ThermalTwoPhaseFlowComponentialLocalAssembler.h"
 
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "NumLib/Function/Interpolation.h"
-#include "TwoPhaseFlowWithPrhoProcessData.h"
+#include "ThermalTwoPhaseFlowComponentialProcessData.h"
 
 namespace ProcessLib
 {
-namespace TwoPhaseFlowWithPrho
+namespace ThermalTwoPhaseFlowComponential
 {
 template <typename ShapeFunction, typename IntegrationMethod,
           unsigned GlobalDim>
-void TwoPhaseFlowWithPrhoLocalAssembler<
+void ThermalTwoPhaseFlowComponentialLocalAssembler<
     ShapeFunction, IntegrationMethod,
     GlobalDim>::assemble(double const t, double const /*dt*/,
                          std::vector<double> const& local_x,
@@ -237,5 +237,5 @@ void TwoPhaseFlowWithPrhoLocalAssembler<
     }  // end of mass-lumping
 }
 
-}  // namespace TwoPhaseFlowWithPrho
+}  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib
