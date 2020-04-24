@@ -8,9 +8,13 @@
  *
  */
 
+// TODO: nomenclature
+
 #pragma once
 
 #include "ThermalTwoPhaseFlowComponentialLocalAssembler.h"
+#include "MaterialLib/MPL/Medium.h"
+#include "MaterialLib/MPL/Utils/FormEigenTensor.h"
 
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "NumLib/Function/Interpolation.h"
@@ -20,11 +24,13 @@ namespace ProcessLib
 {
 namespace ThermalTwoPhaseFlowComponential
 {
+namespace MPL = MaterialPropertyLib;
+
 template <typename ShapeFunction, typename IntegrationMethod,
           unsigned GlobalDim>
 void ThermalTwoPhaseFlowComponentialLocalAssembler<
     ShapeFunction, IntegrationMethod,
-    GlobalDim>::assemble(double const t, double const /*dt*/,
+    GlobalDim>::assemble(double const t, double const dt,
                          std::vector<double> const& local_x,
                          std::vector<double> const& /*local_xdot*/,
                          std::vector<double>& local_M_data,
@@ -42,179 +48,312 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     auto local_b = MathLib::createZeroedVector<LocalVectorType>(
         local_b_data, local_matrix_size);
 
+    // TODO: rename
     auto Mgp =
         local_M.template block<nonwet_pressure_size, nonwet_pressure_size>(
             nonwet_pressure_matrix_index, nonwet_pressure_matrix_index);
-    auto Mgx = local_M.template block<nonwet_pressure_size, cap_pressure_size>(
-        nonwet_pressure_matrix_index, cap_pressure_matrix_index);
+    auto Mgxa =
+        local_M.template block<nonwet_pressure_size, overall_mol_frac_air_size>(
+            nonwet_pressure_matrix_index, overall_mol_frac_air_matrix_index);
+    auto Mgxc = local_M.template block<nonwet_pressure_size,
+                                       overall_mol_frac_contaminant_size>(
+        nonwet_pressure_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Mgt = local_M.template block<nonwet_pressure_size, temperature_size>(
+        nonwet_pressure_matrix_index, temperature_matrix_index);
 
-    auto Mlp = local_M.template block<cap_pressure_size, nonwet_pressure_size>(
-        cap_pressure_matrix_index, nonwet_pressure_matrix_index);
+    auto Map =
+        local_M.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
+            overall_mol_frac_air_matrix_index, nonwet_pressure_matrix_index);
+    auto Maxa = local_M.template block<overall_mol_frac_air_size,
+                                       overall_mol_frac_air_size>(
+        overall_mol_frac_air_matrix_index, overall_mol_frac_air_matrix_index);
+    auto Maxc = local_M.template block<overall_mol_frac_air_size,
+                                       overall_mol_frac_contaminant_size>(
+        overall_mol_frac_air_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Mat =
+        local_M.template block<overall_mol_frac_air_size, temperature_size>(
+            overall_mol_frac_air_matrix_index, temperature_matrix_index);
 
-    auto Mlx = local_M.template block<cap_pressure_size, cap_pressure_size>(
-        cap_pressure_matrix_index, cap_pressure_matrix_index);
+    auto Mcp = local_M.template block<overall_mol_frac_contaminant_size,
+                                      nonwet_pressure_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        nonwet_pressure_matrix_index);
+    auto Mcxa = local_M.template block<overall_mol_frac_contaminant_size,
+                                       overall_mol_frac_air_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        overall_mol_frac_air_matrix_index);
+    auto Mcxc = local_M.template block<overall_mol_frac_contaminant_size,
+                                       overall_mol_frac_contaminant_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Mct = local_M.template block<overall_mol_frac_contaminant_size,
+                                      temperature_size>(
+        overall_mol_frac_contaminant_matrix_index, temperature_matrix_index);
 
+    auto Mep = local_M.template block<temperature_size,
+                                      nonwet_pressure_size>(
+        temperature_matrix_index,
+        nonwet_pressure_matrix_index);
+    auto Mexa =
+        local_M.template block<temperature_size,
+                                       overall_mol_frac_air_size>(
+            temperature_matrix_index,
+        overall_mol_frac_air_matrix_index);
+    auto Mexc = local_M.template block<temperature_size,
+                                       overall_mol_frac_contaminant_size>(
+        temperature_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Met = local_M.template block<temperature_size,
+                                      temperature_size>(
+        temperature_matrix_index, temperature_matrix_index);
+    
     NodalMatrixType laplace_operator =
         NodalMatrixType::Zero(ShapeFunction::NPOINTS, ShapeFunction::NPOINTS);
 
     auto Kgp =
         local_K.template block<nonwet_pressure_size, nonwet_pressure_size>(
             nonwet_pressure_matrix_index, nonwet_pressure_matrix_index);
+    auto Kgxa =
+        local_K.template block<nonwet_pressure_size, overall_mol_frac_air_size>(
+            nonwet_pressure_matrix_index, overall_mol_frac_air_matrix_index);
+    auto Kgxc = local_K.template block<nonwet_pressure_size,
+                                       overall_mol_frac_contaminant_size>(
+        nonwet_pressure_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Kgt = local_K.template block<nonwet_pressure_size, temperature_size>(
+        nonwet_pressure_matrix_index, temperature_matrix_index);
 
-    auto Kgx = local_K.template block<nonwet_pressure_size, cap_pressure_size>(
-        nonwet_pressure_matrix_index, cap_pressure_matrix_index);
+    auto Kap =
+        local_K.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
+            overall_mol_frac_air_matrix_index, nonwet_pressure_matrix_index);
+    auto Kaxa = local_K.template block<overall_mol_frac_air_size,
+                                       overall_mol_frac_air_size>(
+        overall_mol_frac_air_matrix_index, overall_mol_frac_air_matrix_index);
+    auto Kaxc = local_K.template block<overall_mol_frac_air_size,
+                                       overall_mol_frac_contaminant_size>(
+        overall_mol_frac_air_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Kat =
+        local_K.template block<overall_mol_frac_air_size, temperature_size>(
+            overall_mol_frac_air_matrix_index, temperature_matrix_index);
 
-    auto Klp = local_K.template block<cap_pressure_size, nonwet_pressure_size>(
-        cap_pressure_matrix_index, nonwet_pressure_matrix_index);
+    auto Kcp = local_K.template block<overall_mol_frac_contaminant_size,
+                                      nonwet_pressure_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        nonwet_pressure_matrix_index);
+    auto Kcxa = local_K.template block<overall_mol_frac_contaminant_size,
+                                       overall_mol_frac_air_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        overall_mol_frac_air_matrix_index);
+    auto Kcxc = local_K.template block<overall_mol_frac_contaminant_size,
+                                       overall_mol_frac_contaminant_size>(
+        overall_mol_frac_contaminant_matrix_index,
+        overall_mol_frac_contaminant_matrix_index);
+    auto Kct = local_K.template block<overall_mol_frac_contaminant_size,
+                                      temperature_size>(
+        overall_mol_frac_contaminant_matrix_index, temperature_matrix_index);
 
-    auto Klx = local_K.template block<cap_pressure_size, cap_pressure_size>(
-        cap_pressure_matrix_index, cap_pressure_matrix_index);
+    auto Kep = local_K.template block<temperature_size, nonwet_pressure_size>(
+        temperature_matrix_index, nonwet_pressure_matrix_index);
+    auto Kexa =
+        local_K.template block<temperature_size, overall_mol_frac_air_size>(
+            temperature_matrix_index, overall_mol_frac_air_matrix_index);
+    auto Kexc = local_K.template block<temperature_size,
+                                       overall_mol_frac_contaminant_size>(
+        temperature_matrix_index, overall_mol_frac_contaminant_matrix_index);
+    auto Ket = local_K.template block<temperature_size, temperature_size>(
+        temperature_matrix_index, temperature_matrix_index);
 
     auto Bg = local_b.template segment<nonwet_pressure_size>(
         nonwet_pressure_matrix_index);
 
-    auto Bl =
-        local_b.template segment<cap_pressure_size>(cap_pressure_matrix_index);
+    auto Ba = local_b.template segment<overall_mol_frac_air_size>(
+        overall_mol_frac_air_matrix_index);
+
+    auto Bc = local_b.template segment<overall_mol_frac_contaminant_size>(
+        overall_mol_frac_contaminant_matrix_index);
+
+    auto Be = local_b.template segment<temperature_size>(
+        temperature_matrix_index);
+
+    auto const& medium = *_process_data.media_map->getMedium(_element.getID());
+    auto const& liquid_phase = medium.phase("AqueousLiquid");
+    auto const& gas_phase = medium.phase("Gas");
+    auto const& solid_phase = medium.phase("Solid");
+
+    // components
+    auto const& liquid_water = liquid_phase.component("wasser");
+    auto const& dissolved_air = liquid_phase.component("air");    
+    auto const& dissolved_contaminant = liquid_phase.component("contaminant");
+    auto const& water_vapor = gas_phase.component("wasser");
+    auto const& gaseous_air = gas_phase.component("air");
+    auto const& contaminant_vapor = gas_phase.component("contaminant");
+    
+    using MaterialLib::PhysicalConstant::IdealGasConstant;
+    auto const& water_mol_mass =
+        MaterialLib::PhysicalConstant::MolarMass::Water;
+    auto const& air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
 
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
     ParameterLib::SpatialPosition pos;
     pos.setElementID(_element.getID());
-    const int material_id =
-        _process_data._material->getMaterialID(pos.getElementID().get());
-
-    const Eigen::MatrixXd& perm = _process_data._material->getPermeability(
-        material_id, t, pos, _element.getDimension());
-    assert(perm.rows() == _element.getDimension() || perm.rows() == 1);
-    GlobalDimMatrixType permeability = GlobalDimMatrixType::Zero(
-        _element.getDimension(), _element.getDimension());
-    if (perm.rows() == _element.getDimension())
-    {
-        permeability = perm;
-    }
-    else if (perm.rows() == 1)
-    {
-        permeability.diagonal().setConstant(perm(0, 0));
-    }
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
+        pos.setIntegrationPoint(ip); // TODO: necessary?
         auto const& sm = _shape_matrices[ip];
 
-        double pl_int_pt = 0.;
-        double totalrho_int_pt =
-            0.;  // total mass density of the light component
-        NumLib::shapeFunctionInterpolate(local_x, sm.N, pl_int_pt,
-                                         totalrho_int_pt);
-
-        const double temperature = _process_data._temperature(t, pos)[0];
-
-        double const rho_gas =
-            _process_data._material->getGasDensity(pl_int_pt, temperature);
-        double const rho_h2o =
-            _process_data._material->getLiquidDensity(pl_int_pt, temperature);
+        double pg_int_pt = 0.;
+        double Xa_int_pt =
+            0.;  // total molar fraction of the light component air
+        double Xc_int_pt =
+            0.;  // total molar fraction of the light component contaminant
+        double T_int_pt = 0.;
+        NumLib::shapeFunctionInterpolate(local_x, sm.N, pg_int_pt,
+                                         Xa_int_pt, Xc_int_pt,
+                                         T_int_pt);
 
         double& Sw = _ip_data[ip].sw;
-        /// Here only consider one component in gas phase
-        double const X_h2_nonwet = 1.0;
-        double& rho_h2_wet = _ip_data[ip].rho_m;
-        double& dSwdP = _ip_data[ip].dsw_dpg;
-        double& dSwdrho = _ip_data[ip].dsw_drho;
-        double& drhoh2wet = _ip_data[ip].drhom_dpg;
-        double& drhoh2wet_drho = _ip_data[ip].drhom_drho;
-        if (!_ip_data[ip].mat_property.computeConstitutiveRelation(
+        double& mol_frac_water_wet = _ip_data[ip].x_w_L;
+        double& mol_frac_air_wet = _ip_data[ip].x_a_L;
+        double& mol_frac_contaminant_wet = _ip_data[ip].x_c_L;
+        // TODO: derivatives initial values
+
+        // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
+        /*
+        if (!_ip_data[ip].mat_property.computeConstitutiveRelation(        
                 t,
                 pos,
-                material_id,
-                pl_int_pt,
-                totalrho_int_pt,
-                temperature,
+                material_id,   // ???
+                pg_int_pt,
+                Xa_int_pt,
+                Xc_int_pt,
+                T_int_pt,
                 Sw,
-                rho_h2_wet,
-                dSwdP,
-                dSwdrho,
-                drhoh2wet,
-                drhoh2wet_drho))
+                mol_frac_water_wet,
+                mol_frac_air_wet,
+                mol_frac_contaminant_wet,
+                // TODO: derivatives))
         {
             OGS_FATAL("Computation of local constitutive relation failed.");
         }
-        double const pc = _process_data._material->getCapillaryPressure(
-            material_id, t, pos, pl_int_pt, temperature, Sw);
+       */
 
-        double const rho_wet = rho_h2o + rho_h2_wet;
+        MPL::VariableArray variables;
+        variables[static_cast<int>(MPL::Variable::phase_pressure)] = pg_int_pt;
+        variables[static_cast<int>(MPL::Variable::liquid_saturation)] = Sw;
+        variables[static_cast<int>(MPL::Variable::temperature)] = T_int_pt;
+
+        auto pc = medium.property(MPL::PropertyType::capillary_pressure)
+                      .template value<double>(variables, pos, t, dt);
+        variables[static_cast<int>(MPL::Variable::capillary_pressure)] = pc;
+
+        _capillary_pressure[ip] = pc;
+
         _saturation[ip] = Sw;
-        _pressure_nonwetting[ip] = pl_int_pt + pc;
+        _pressure_wetting[ip] = pg_int_pt - pc;
+        _liquid_molar_fraction_air[ip] = mol_frac_air_wet;
+        _liquid_molar_fraction_contaminant[ip] = mol_frac_contaminant_wet;
+        // TODO: remaining SVs
+            
+        /* double const rho_gas = */
+        double const rho_h2o =
+            liquid_water.property(MPL::PropertyType::density)
+                .template value<double>(variables, pos, t, dt);
 
         // Assemble M matrix
+
         // nonwetting
-        double dPC_dSw =
-            _process_data._material->getCapillaryPressureDerivative(
-                material_id, t, pos, pl_int_pt, temperature, Sw);
+        auto dPC_dSw =
+            medium.property(MPL::PropertyType::capillary_pressure)
+                .template dValue<double>(
+                    variables, MPL::Variable::liquid_saturation, pos, t, dt);
 
-        double const porosity = _process_data._material->getPorosity(
-            material_id, t, pos, pl_int_pt, temperature, 0);
+        auto const porosity =
+            medium.property(MPL::PropertyType::porosity)
+                .template value<double>(variables, pos, t, dt);
 
-        Mgx.noalias() += porosity * _ip_data[ip].massOperator;
+        auto const k_rel =
+            medium.property(MPL::PropertyType::relative_permeability)
+                .template value<Eigen::Vector2d>(variables, pos, t, dt);
 
-        Mlp.noalias() += porosity * rho_h2o * dSwdP * _ip_data[ip].massOperator;
-
-        Mlx.noalias() +=
-            porosity * (1 + dSwdrho * rho_h2o) * _ip_data[ip].massOperator;
-        double const k_rel_gas =
-            _process_data._material->getNonwetRelativePermeability(
-                t, pos, _pressure_nonwetting[ip], temperature, Sw);
-        double const mu_gas = _process_data._material->getGasViscosity(
-            _pressure_nonwetting[ip], temperature);
-        double const lambda_gas = k_rel_gas / mu_gas;
-        double const diffusion_coeff_component_h2 =
-            _process_data._diffusion_coeff_component_b(t, pos)[0];
-
-        // wet
-        double const k_rel_wet =
-            _process_data._material->getWetRelativePermeability(
-                t, pos, pl_int_pt, temperature, Sw);
-        double const mu_wet =
-            _process_data._material->getLiquidViscosity(pl_int_pt, temperature);
+        auto const k_rel_wet = k_rel[0];
+        auto const k_rel_nonwet = k_rel[1];
+        auto const mu_nonwet =
+            gas_phase.property(MPL::PropertyType::viscosity)
+                .template value<double>(variables, pos, t, dt);
+        double const lambda_gas = k_rel_nonwet / mu_nonwet;
+        auto const mu_wet = liquid_phase.property(MPL::PropertyType::viscosity)
+                                .template value<double>(variables, pos, t, dt);
         double const lambda_wet = k_rel_wet / mu_wet;
 
-        laplace_operator.noalias() = sm.dNdx.transpose() * permeability *
+        auto const K = MPL::formEigenTensor<GlobalDim>(
+            medium.property(MPL::PropertyType::permeability)
+                .template value<double>(variables, pos, t, dt));
+
+        // diffusion coefficients
+        double const diffusion_coeff_a_L =
+            dissolved_air.property(MPL::PropertyType::molecular_diffusion)
+                .template value<double>(variables, pos, t, dt);
+        double const diffusion_coeff_c_L =
+            dissolved_contaminant
+                .property(MPL::PropertyType::molecular_diffusion)
+                .template value<double>(variables, pos, t, dt);
+        double const diffusion_coeff_w_G =
+            water_vapor.property(MPL::PropertyType::molecular_diffusion)
+                .template value<double>(variables, pos, t, dt);
+        double const diffusion_coeff_c_G =
+            contaminant_vapor.property(MPL::PropertyType::molecular_diffusion)
+                .template value<double>(variables, pos, t, dt);
+
+        // heat capacity
+        double const heat_capacity_water =
+            water_vapor.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(variables, pos, t, dt);
+        double const heat_capacity_air =
+            gaseous_air.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(variables, pos, t, dt);
+        double const heat_capacity_contaminant =
+            contaminant_vapor.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(variables, pos, t, dt);
+        double const heat_capacity_solid =
+            solid_phase.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(variables, pos, t, dt);
+
+        auto const effective_thermal_conductivity =
+            medium.property(MPL::PropertyType::thermal_conductivity)
+                .template value<double>(variables, pos, t, dt);
+
+        double const density_solid =
+            solid_phase.property(MPL::PropertyType::density)
+                .template value<double>(variables, pos, t, dt);
+
+        laplace_operator.noalias() = sm.dNdx.transpose() * K *
                                      sm.dNdx * _ip_data[ip].integration_weight;
 
-        Kgp.noalias() +=
-            (rho_gas * X_h2_nonwet * lambda_gas * (1 + dPC_dSw * dSwdP) +
-             rho_h2_wet * lambda_wet) *
-                laplace_operator +
-            (Sw * porosity * diffusion_coeff_component_h2 *
-             (rho_h2o / rho_wet) * drhoh2wet) *
-                _ip_data[ip].diffusionOperator;
-        Kgx.noalias() +=
-            (rho_gas * X_h2_nonwet * lambda_gas * dPC_dSw * dSwdrho) *
-                laplace_operator +
-            (Sw * porosity * diffusion_coeff_component_h2 *
-             (rho_h2o / rho_wet) * drhoh2wet_drho) *
-                _ip_data[ip].diffusionOperator;
-        Klp.noalias() += (rho_gas * lambda_gas * (1 + dPC_dSw * dSwdP) +
-                          rho_wet * lambda_wet) *
-                         laplace_operator;
+        // Assemble K matrix
 
-        Klx.noalias() +=
-            (rho_gas * lambda_gas * dPC_dSw * dSwdrho) * laplace_operator;
-
+        /*
         if (_process_data._has_gravity)
         {
             auto const& b = _process_data._specific_body_force;
             Bg.noalias() += (rho_gas * rho_gas * lambda_gas +
                              rho_h2_wet * rho_wet * lambda_wet) *
-                            sm.dNdx.transpose() * permeability * b *
+                            sm.dNdx.transpose() * K * b *
                             _ip_data[ip].integration_weight;
             Bl.noalias() += (rho_wet * lambda_wet * rho_wet +
                              rho_gas * rho_gas * lambda_gas) *
-                            sm.dNdx.transpose() * permeability * b *
+                            sm.dNdx.transpose() * K * b *
                             _ip_data[ip].integration_weight;
 
         }  // end of has gravity
+        */
     }
+    /*
     if (_process_data._has_mass_lumping)
     {
         for (unsigned row = 0; row < Mgp.cols(); row++)
@@ -235,6 +374,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             }
         }
     }  // end of mass-lumping
+    */
 }
 
 }  // namespace ThermalTwoPhaseFlowComponential

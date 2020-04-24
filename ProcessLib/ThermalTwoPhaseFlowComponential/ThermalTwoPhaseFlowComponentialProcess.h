@@ -31,7 +31,7 @@ namespace ProcessLib
 namespace ThermalTwoPhaseFlowComponential
 {
 /**
- * \brief A class to simulate the two-phase flow process with P-rho model in
+ * \brief A class to simulate the non-isothermal componential two-phase flow process in
  * porous media
  */
 class ThermalTwoPhaseFlowComponentialProcess final : public Process
@@ -48,7 +48,6 @@ public:
             process_variables,
         ThermalTwoPhaseFlowComponentialProcessData&& process_data,
         SecondaryVariableCollection&& secondary_variables,
-        BaseLib::ConfigTree const& config,
         std::map<std::string,
                  std::unique_ptr<MathLib::PiecewiseLinearInterpolation>> const&
             curves);
@@ -70,11 +69,11 @@ private:
         GlobalVector const& xdot, const double dxdot_dx, const double dx_dx,
         int const process_id, GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
         GlobalMatrix& Jac) override;
-
+    /*
     void preTimestepConcreteProcess(std::vector<GlobalVector*> const& x,
                                     const double t, const double dt,
                                     const int process_id) override;
-
+    */
     ThermalTwoPhaseFlowComponentialProcessData _process_data;
 
     std::vector<std::unique_ptr<ThermalTwoPhaseFlowComponentialLocalAssemblerInterface>>

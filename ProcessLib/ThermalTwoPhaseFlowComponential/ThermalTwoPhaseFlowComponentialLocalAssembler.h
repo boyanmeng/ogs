@@ -30,25 +30,20 @@ namespace ThermalTwoPhaseFlowComponential
 template <typename NodalMatrixType>
 struct IntegrationPointData final
 {
-    explicit IntegrationPointData(
-        ThermalTwoPhaseFlowComponentialMaterialProperties& material_property_)
-        : mat_property(material_property_),
-          sw(1.0),
-          rho_m(0.0),
-          dsw_dpg(0.0),
-          dsw_drho(0.0),
-          drhom_dpg(0.0),
-          drhom_drho(0.0)
+    explicit IntegrationPointData()
+        : sw(1.0),
+          x_w_L(1.0),
+          x_a_L(0.0),
+          x_c_L(0.0)
+          // TODO: various derivatives
     {
     }
-    ThermalTwoPhaseFlowComponentialMaterialProperties& mat_property;
+    // ThermalTwoPhaseFlowComponentialMaterialProperties& mat_property;
     double sw;
-    double rho_m;
-    double dsw_dpg;
-    double dsw_drho;
-    double drhom_dpg;
-    double drhom_drho;
-    double pressure_nonwetting;
+    double x_w_L;
+    double x_a_L;
+    double x_c_L;
+    // TODO: various derivatives
 
     double integration_weight;
     NodalMatrixType massOperator;
@@ -56,7 +51,7 @@ struct IntegrationPointData final
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
-const unsigned NUM_NODAL_DOF = 2;
+const unsigned NUM_NODAL_DOF = 4;
 
 class ThermalTwoPhaseFlowComponentialLocalAssemblerInterface
     : public ProcessLib::LocalAssemblerInterface,
@@ -69,7 +64,32 @@ public:
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
         std::vector<double>& cache) const = 0;
 
-    virtual std::vector<double> const& getIntPtNonWettingPressure(
+    virtual std::vector<double> const& getIntPtWettingPressure(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtCapillaryPressure(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtLiquidMolFracAir(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtLiquidMolFracContaminant(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtGasMolFracWater(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtGasMolFracContaminant(
         const double t,
         std::vector<GlobalVector*> const& x,
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
@@ -86,7 +106,10 @@ class ThermalTwoPhaseFlowComponentialLocalAssembler
 
     using LocalAssemblerTraits = ProcessLib::LocalAssemblerTraits<
         ShapeMatricesType, ShapeFunction::NPOINTS, NUM_NODAL_DOF, GlobalDim>;
+    using NodalRowVectorType = typename ShapeMatricesType::NodalRowVectorType;
 
+    using GlobalDimNodalMatrixType =
+        typename ShapeMatricesType::GlobalDimNodalMatrixType;
     using NodalMatrixType = typename ShapeMatricesType::NodalMatrixType;
     using NodalVectorType = typename ShapeMatricesType::NodalVectorType;
     using GlobalDimMatrixType = typename ShapeMatricesType::GlobalDimMatrixType;
@@ -109,16 +132,26 @@ public:
           _process_data(process_data),
           _saturation(
               std::vector<double>(_integration_method.getNumberOfPoints())),
-          _pressure_nonwetting(
+          _pressure_wetting(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _capillary_pressure(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _liquid_molar_fraction_air(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _liquid_molar_fraction_contaminant(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _gas_molar_fraction_water(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _gas_molar_fraction_contaminant(
               std::vector<double>(_integration_method.getNumberOfPoints()))
     {
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
-        _ip_data.reserve(n_integration_points);
+        _ip_data.reserve(n_integration_points);  // reserve memory space, size is still 0
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
-            _ip_data.emplace_back(*_process_data._material);
-            auto const& sm = _shape_matrices[ip];
+            _ip_data.emplace_back();   // create object at end, ip_data.size() = 1->2->3->4
+            auto const& sm = _shape_matrices[ip];  // size = n_integration_points
             _ip_data[ip].integration_weight =
                 sm.integralMeasure * sm.detJ *
                 _integration_method.getWeightedPoint(ip).getWeight();
@@ -133,7 +166,7 @@ public:
         }
     }
 
-    void assemble(double const t, double const /*dt*/,
+    void assemble(double const t, double const dt,
                   std::vector<double> const& local_x,
                   std::vector<double> const& local_xdot,
                   std::vector<double>& local_M_data,
@@ -159,14 +192,64 @@ public:
         return _saturation;
     }
 
-    std::vector<double> const& getIntPtNonWettingPressure(
+    std::vector<double> const& getIntPtWettingPressure(
         const double /*t*/,
         std::vector<GlobalVector*> const& /*x*/,
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
         std::vector<double>& /*cache*/) const override
     {
-        assert(!_pressure_nonwetting.empty());
-        return _pressure_nonwetting;
+        assert(!_pressure_wetting.empty());
+        return _pressure_wetting;
+    }
+
+    std::vector<double> const& getIntPtCapillaryPressure(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_capillary_pressure.empty());
+        return _capillary_pressure;
+    }
+
+    std::vector<double> const& getIntPtLiquidMolFracAir(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_liquid_molar_fraction_air.empty());
+        return _liquid_molar_fraction_air;
+    }
+
+    std::vector<double> const& getIntPtLiquidMolFracContaminant(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_liquid_molar_fraction_contaminant.empty());
+        return _liquid_molar_fraction_contaminant;
+    }
+
+    std::vector<double> const& getIntPtGasMolFracWater(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_gas_molar_fraction_water.empty());
+        return _gas_molar_fraction_water;
+    }
+
+    std::vector<double> const& getIntPtGasMolFracContaminant(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_gas_molar_fraction_contaminant.empty());
+        return _gas_molar_fraction_contaminant;
     }
 
 private:
@@ -182,15 +265,23 @@ private:
         _ip_data;
 
     std::vector<double> _saturation;  /// used for secondary variable output
-    std::vector<double> _pressure_nonwetting;
-    static const int nonwet_pressure_coeff_index = 0;
-    static const int cap_pressure_coeff_index = 1;
+    std::vector<double> _pressure_wetting;
+    std::vector<double> _capillary_pressure;
+    std::vector<double> _liquid_molar_fraction_air;
+    std::vector<double> _liquid_molar_fraction_contaminant;
+    std::vector<double> _gas_molar_fraction_water;
+    std::vector<double> _gas_molar_fraction_contaminant;
 
     static const int nonwet_pressure_matrix_index = 0;
-    static const int cap_pressure_matrix_index = ShapeFunction::NPOINTS;
+    static const int overall_mol_frac_air_matrix_index = ShapeFunction::NPOINTS;
+    static const int overall_mol_frac_contaminant_matrix_index =
+        2 * ShapeFunction::NPOINTS;
+    static const int temperature_matrix_index = 3 * ShapeFunction::NPOINTS;
 
     static const int nonwet_pressure_size = ShapeFunction::NPOINTS;
-    static const int cap_pressure_size = ShapeFunction::NPOINTS;
+    static const int overall_mol_frac_air_size = ShapeFunction::NPOINTS;
+    static const int overall_mol_frac_contaminant_size = ShapeFunction::NPOINTS;
+    static const int temperature_size = ShapeFunction::NPOINTS;
 };
 
 }  // namespace ThermalTwoPhaseFlowComponential
