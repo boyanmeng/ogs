@@ -27,7 +27,6 @@ ThermalTwoPhaseFlowComponentialProcess::ThermalTwoPhaseFlowComponentialProcess(
         process_variables,
     ThermalTwoPhaseFlowComponentialProcessData&& process_data,
     SecondaryVariableCollection&& secondary_variables,
-    BaseLib::ConfigTree const& /*config*/,
     std::map<std::string,
              std::unique_ptr<MathLib::PiecewiseLinearInterpolation>> const&
     /*curves*/)
@@ -58,10 +57,41 @@ void ThermalTwoPhaseFlowComponentialProcess::initializeConcreteProcess(
             &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::getIntPtSaturation));
 
     _secondary_variables.addSecondaryVariable(
-        "pressure_nonwetting",
+        "pressure_wetting",
         makeExtrapolator(1, getExtrapolator(), _local_assemblers,
                          &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                             getIntPtNonWettingPressure));
+                             getIntPtWettingPressure));
+    _secondary_variables.addSecondaryVariable(
+        "capillary_pressure",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtCapillaryPressure));
+    _secondary_variables.addSecondaryVariable(
+        "liquid_molar_fraction_air",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtLiquidMolFracAir));
+    _secondary_variables.addSecondaryVariable(
+        "liquid_molar_fraction_contaminant",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtLiquidMolFracContaminant));
+    _secondary_variables.addSecondaryVariable(
+        "gas_molar_fraction_water",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtGasMolFracWater));
+    _secondary_variables.addSecondaryVariable(
+        "gas_molar_fraction_contaminant",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtGasMolFracContaminant));
+    
 }
 
 void ThermalTwoPhaseFlowComponentialProcess::assembleConcreteProcess(
@@ -100,6 +130,7 @@ void ThermalTwoPhaseFlowComponentialProcess::assembleWithJacobianConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, dt, x, xdot,
         dxdot_dx, dx_dx, process_id, M, K, b, Jac, _coupled_solutions);
 }
+/*
 void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(
     std::vector<GlobalVector*> const& x, double const t, double const dt,
     const int process_id)
@@ -113,6 +144,6 @@ void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(
         pv.getActiveElementIDs(), *_local_to_global_index_map, *x[process_id],
         t, dt);
 }
-
+*/
 }  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib
