@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
+#include "MaterialLib/MPL/MaterialSpatialDistributionMap.h"
 
 namespace ProcessLib
 {
@@ -25,10 +25,8 @@ struct ThermalTwoPhaseFlowComponentialProcessData
 
     bool const _has_gravity;
     bool const _has_mass_lumping;
-    ParameterLib::Parameter<double> const& _diffusion_coeff_component_b;
-    ParameterLib::Parameter<double> const& _diffusion_coeff_component_a;
-    ParameterLib::Parameter<double> const& _temperature;
-    std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties> _material;
+    std::unique_ptr<MaterialPropertyLib::MaterialSpatialDistributionMap>
+        media_map;
 };
 
 }  // namespace ThermalTwoPhaseFlowComponential
