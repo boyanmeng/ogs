@@ -36,12 +36,40 @@
          <phases>
             <phase>
                <type>AqueousLiquid</type>
+			   <components>
+                   <component>
+				       <name>wasser</name>
+                       <properties>
+                           <property>
+                               <name>density</name>
+                               <type>Constant</type>
+                               <value>1.0e3</value>
+						   </property>
+                       </properties>
+				   </component>
+				   <component>
+				       <name>air</name>
+                       <properties>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>2.0e-9</value>
+                           </property>
+                       </properties>
+				   </component>
+				   <component>
+				       <name>contaminant</name>
+                       <properties>
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>8.0e-10</value>
+                           </property>
+                       </properties>
+				   </component>
+			   </components>
                <properties>
-                  <property>
-                     <name>density</name>
-                     <type>Constant</type>
-                     <value>1.0e3</value>
-                  </property>
                   <property>
                       <name>viscosity</name>
                       <type>Exponential</type>
@@ -52,12 +80,6 @@
                           <factor>0.01333333</factor>
                       </exponent>
                   </property>
-<!-- D=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->
-				  <property>
-                     <name>diffusion_coefficient</name>
-                     <type>Constant</type>
-                     <value>1.0e-10</value>
-                  </property>
                </properties>
             </phase>
             <phase>
@@ -66,6 +88,10 @@
                    <component>
                        <name>air</name>
                        <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
                            <property>
                                <name>molar_mass</name>
                                <type>Constant</type>
@@ -85,8 +111,37 @@
                        </properties>
                    </component>
 				   <component>
+                       <name>wasser</name>
+                       <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.18</value>
+                           </property>
+						   <property>
+                              <name>molecular_diffusion</name>
+<!-- Fuller's Law, power=1.75							   -->
+                              <type>Constant</type>
+                              <value>2.4e-5</value>
+                           </property>
+                           <property>
+                               <name>heat_capacity </name>
+                               <type>Constant</type>
+                              <value>4187</value>
+                           </property>						   
+                       </properties>
+                   </component>
+				   <component>
                        <name>contaminant</name>
                        <properties>
+						   <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
                            <property>
                                <name>molar_mass</name>
                                <type>Constant</type>
@@ -100,45 +155,24 @@
                            <!-- </property> -->
 <!-- Fuller's Law, power=1.75							   -->
 						   <property>
-                              <name>diffusion_coefficient</name>
+                              <name>molecular_diffusion</name>
                               <type>Constant</type>
                               <value>7e-6</value>
                            </property>
 						   <property>
-                               <name>heat_capacity </name>
-                               <type>Constant</type>
+                              <name>heat_capacity </name>
+                              <type>Constant</type>
                               <value>576</value>                <!-- Wikipedia PCE  -->   
                            </property>
                        </properties>
                    </component>
-				   <component>
-                       <name>water</name>
-                       <properties>
-                           <property>
-                               <name>molar_mass</name>
-                               <type>Constant</type>
-                               <value>0.18</value>
-                           </property>
-						   <property>
-                              <name>diffusion_coefficient</name>
-<!-- Fuller's Law, power=1.75							   -->
-                              <type>Constant</type>
-                              <value>2.4e-5</value>
-                           </property>
-                           <property>
-                               <name>heat_capacity </name>
-                               <type>Constant</type>
-                              <value>4187</value>
-                           </property>						   
-                       </properties>
-                   </component>
-			   <components>
+			   </components>
                <properties>
                   <property>
                      <name>density</name>
                      <type>IdealGasLaw</type>
                   </property>
-<!-- dependence on T and compostion	(square root increase with T, composition see Wilke's method)			   -->
+<!-- dependence on T and composition	(square root increase with T, composition see Wilke's method)			   -->
                   <property>
                      <name>viscosity</name>
                      <type>Constant</type>
@@ -175,6 +209,15 @@
             </property>
 <!-- currently Curve type is disabled, debug to find out the problem. -->
             <property>
+               <name>capillary_pressure</name>
+               <type>CapillaryPressureBrooksCorey</type>
+               <residual_liquid_saturation>0.0</residual_liquid_saturation>
+               <maximum_liquid_saturation>1.0</maximum_liquid_saturation>
+               <lambda>2.0</lambda>
+               <entry_pressure>5000</entry_pressure>
+               <maximum_capillary_pressure>2e6</maximum_capillary_pressure>
+            </property>
+			<property>
                <name>saturation</name>
                <type>SaturationBrooksCorey</type>
                <residual_liquid_saturation>0.0</residual_liquid_saturation>
@@ -196,27 +239,18 @@
                <type>Constant</type>
                <value>0.3</value>
             </property>
-<!-- how to? lambda_dry/lambda_wet or curve? (2 types)			 -->
-<!-- add to PropertyType.h -->
+<!-- square root or curve (2 types)			 -->
+<!-- add to MPL property -->
 			<property>
-               <name>thermal_conductivity_dry </name>
-               <type>Constant</type>
-               <value>0.5</value>
-            </property>	
-			<property>
-               <name>thermal_conductivity_wet </name>
-               <type>Constant</type>
-               <value>2.5</value>
+               <name>thermal_conductivity</name>
+               <type>Curve</type>
+               <curve>lambda_Sw</curve>
+               <independent_variable>liquid_saturation</independent_variable>
             </property>	
          </properties>
       </medium>
     </media>	
     <parameters>
-        <parameter>
-            <name>molX_Dirichlet_right</name>
-            <type>Constant</type>
-            <value>1e-6</value>
-        </parameter>
         <parameter>
             <name>pg_Dirichlet</name>
             <type>Constant</type>
@@ -247,21 +281,6 @@
             <type>Constant</type>
             <value>50</value>
         </parameter>
-        <parameter>
-            <name>diff_coef_a</name>
-            <type>Constant</type>
-            <value>0.0</value>
-        </parameter>
-        <parameter>
-            <name>constant_porosity_parameter</name>
-            <type>Constant</type>
-            <value>0.15</value>
-        </parameter>
-        <parameter>
-            <name>kappa1</name>
-            <type>Constant</type>
-            <values>5.e-20</values>
-        </parameter>
     </parameters>
     <time_loop>
         <processes>
@@ -275,7 +294,7 @@
                 <time_discretization>
                     <type>CrankNicolson</type>
                     <theta>0.5</theta>
-					<type>BackwardEuler</type>
+					<!-- <type>BackwardEuler</type> -->
                 </time_discretization>
                 <time_stepping>
                     <type>EvolutionaryPIDcontroller</type>
@@ -385,4 +404,13 @@
             </petsc>
         </linear_solver>
     </linear_solvers>
+	<curves>
+        <curve>
+            <name>lambda_Sw</name>
+            <coords>0	0.01	0.02	0.03	0.04	0.05	0.06	0.07	0.08	0.09	0.1	0.11	0.12	0.13	0.14	0.15	0.16	0.17	0.18	0.19	0.2	0.21	0.22	0.23	0.24	0.25	0.26	0.27	0.28	0.29	0.3	0.31	0.32	0.33	0.34	0.35	0.36	0.37	0.38	0.39	0.4	0.41	0.42	0.43	0.44	0.45	0.46	0.47	0.48	0.49	0.5	0.51	0.52	0.53	0.54	0.55	0.56	0.57	0.58	0.59	0.6	0.61	0.62	0.63	0.64	0.65	0.66	0.67	0.68	0.69	0.7	0.71	0.72	0.73	0.74	0.75	0.76	0.77	0.78	0.79	0.8	0.81	0.82	0.83	0.84	0.85	0.86	0.87	0.88	0.89	0.9	0.91	0.92	0.93	0.94	0.95	0.96	0.97	0.98	0.99	1
+			</coords>
+			<values>0.5	0.7	0.782842712	0.846410162	0.9	0.947213595	0.989897949	1.029150262	1.065685425	1.1	1.132455532	1.163324958	1.192820323	1.221110255	1.248331477	1.274596669	1.3	1.324621125	1.348528137	1.371779789	1.394427191	1.416515139	1.438083152	1.459166305	1.479795897	1.5	1.519803903	1.539230485	1.558300524	1.577032961	1.595445115	1.613552873	1.63137085	1.648912529	1.666190379	1.683215957	1.7	1.716552506	1.732882801	1.7489996	1.764911064	1.780624847	1.79614814	1.811487705	1.826649916	1.841640786	1.856465997	1.87113092	1.885640646	1.9	1.914213562	1.928285686	1.94222051	1.956021978	1.969693846	1.983239697	1.996662955	2.009966887	2.023154621	2.03622915	2.049193338	2.062049935	2.074801575	2.087450787	2.1	2.11245155	2.124807681	2.137070554	2.14924225	2.161324773	2.173320053	2.185229955	2.197056275	2.208800749	2.220465053	2.232050808	2.243559577	2.254992877	2.266352173	2.277638883	2.288854382	2.3	2.311077028	2.322086716	2.333030278	2.343908891	2.354723699	2.365475811	2.376166304	2.386796226	2.397366596	2.407878403	2.418332609	2.428730152	2.439071943	2.449358869	2.459591794	2.46977156	2.479898987	2.489974874	2.5
+			</values>
+		</curve>
+    </curves>
 </OpenGeoSysProject>
