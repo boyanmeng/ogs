@@ -11,6 +11,7 @@
 #pragma once
 
 #include "MaterialLib/MPL/MaterialSpatialDistributionMap.h"
+#include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 
 namespace ProcessLib
 {
@@ -21,12 +22,13 @@ namespace ThermalTwoPhaseFlowComponential
 {
 struct ThermalTwoPhaseFlowComponentialProcessData
 {
-    Eigen::VectorXd const _specific_body_force;
+    Eigen::VectorXd const specific_body_force;
 
-    bool const _has_gravity;
-    bool const _has_mass_lumping;
+    bool const has_gravity;
+    bool const has_mass_lumping;
     std::unique_ptr<MaterialPropertyLib::MaterialSpatialDistributionMap>
         media_map;
+    std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties> material;
 };
 
 }  // namespace ThermalTwoPhaseFlowComponential
