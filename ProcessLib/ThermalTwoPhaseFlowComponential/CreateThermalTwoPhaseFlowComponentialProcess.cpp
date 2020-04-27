@@ -19,6 +19,8 @@
 
 #include "ThermalTwoPhaseFlowComponentialProcess.h"
 #include "ThermalTwoPhaseFlowComponentialProcessData.h"
+#include "CreateThermalTwoPhaseFlowComponentialMaterialProperties.h"
+#include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 
 namespace ProcessLib
 {
@@ -76,6 +78,9 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
     //! \ogs_file_param{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__mass_lumping}
     auto const mass_lumping = config.getConfigParameter<bool>("mass_lumping");
 
+    std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties>
+        material = nullptr;
+
     auto const material_ids = materialIDs(mesh);
     if (material_ids)
     {
@@ -86,11 +91,14 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
         INFO("The twophase flow is in homogeneous porous media.");
     }
 
+    material = createThermalTwoPhaseFlowComponentialMaterialProperties();
+
     auto media_map =
         MaterialPropertyLib::createMaterialSpatialDistributionMap(media, mesh);
 
     ThermalTwoPhaseFlowComponentialProcessData process_data{
-        specific_body_force, has_gravity, mass_lumping, std::move(media_map)};
+        specific_body_force, has_gravity, mass_lumping, std::move(media_map),
+        std::move(material)};
 
     return std::make_unique<ThermalTwoPhaseFlowComponentialProcess>(
         std::move(name), mesh, std::move(jacobian_assembler), parameters,
