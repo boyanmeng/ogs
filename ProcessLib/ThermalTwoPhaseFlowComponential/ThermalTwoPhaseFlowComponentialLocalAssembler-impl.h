@@ -37,6 +37,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                          std::vector<double>& local_K_data,
                          std::vector<double>& local_b_data)
 {
+    using MaterialLib::PhysicalConstant::IdealGasConstant;
+    auto const& water_mol_mass =
+        MaterialLib::PhysicalConstant::MolarMass::Water;
+    auto const& air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
+
     auto const local_matrix_size = local_x.size();
 
     assert(local_matrix_size == ShapeFunction::NPOINTS * NUM_NODAL_DOF);
@@ -190,17 +195,16 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     auto const& water_vapor = gas_phase.component("wasser");
     auto const& gaseous_air = gas_phase.component("air");
     auto const& contaminant_vapor = gas_phase.component("contaminant");
-    
-    using MaterialLib::PhysicalConstant::IdealGasConstant;
-    auto const& water_mol_mass =
-        MaterialLib::PhysicalConstant::MolarMass::Water;
-    auto const& air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
 
     unsigned const n_integration_points =
         _integration_method.getNumberOfPoints();
 
     ParameterLib::SpatialPosition pos;
     pos.setElementID(_element.getID());
+
+    auto const num_nodes = ShapeFunction::NPOINTS;
+    auto const pg_nodal_values =
+        Eigen::Map<const NodalVectorType>(&local_x[0], num_nodes);
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
@@ -218,9 +222,9 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                          T_int_pt);
 
         double& Sw = _ip_data[ip].sw;
-        double& mol_frac_water_wet = _ip_data[ip].x_w_L;
-        double& mol_frac_air_wet = _ip_data[ip].x_a_L;
-        double& mol_frac_contaminant_wet = _ip_data[ip].x_c_L;
+        double& x_water_wet = _ip_data[ip].x_w_L;
+        double& x_air_wet = _ip_data[ip].x_a_L;
+        double& x_contaminant_wet = _ip_data[ip].x_c_L;
         // TODO: derivatives initial values
 
         // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
@@ -234,9 +238,9 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 Xc_int_pt,
                 T_int_pt,
                 Sw,
-                mol_frac_water_wet,
-                mol_frac_air_wet,
-                mol_frac_contaminant_wet,
+                x_water_wet,
+                x_air_wet,
+                x_contaminant_wet,
                 // TODO: derivatives))
         {
             OGS_FATAL("Computation of local constitutive relation failed.");
@@ -256,16 +260,56 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         _saturation[ip] = Sw;
         _pressure_wetting[ip] = pg_int_pt - pc;
-        _liquid_molar_fraction_air[ip] = mol_frac_air_wet;
-        _liquid_molar_fraction_contaminant[ip] = mol_frac_contaminant_wet;
+        _liquid_molar_fraction_air[ip] = x_air_wet;
+        _liquid_molar_fraction_contaminant[ip] = x_contaminant_wet;
         // TODO: remaining SVs
-            
-        /* double const rho_gas = */
-        double const rho_h2o =
+
+        double const contaminant_mol_mass =
+            contaminant_vapor.property(MPL::PropertyType::molar_mass)
+                .template value<double>(variables, pos, t, dt);
+        double const density_water =
             liquid_water.property(MPL::PropertyType::density)
                 .template value<double>(variables, pos, t, dt);
+        double const mol_density_water = density_water / water_mol_mass;
+        double const mol_density_wet = mol_density_water / x_water_wet;
+        double const density_air_wet = mol_density_wet * air_mol_mass * x_air_wet;
+        double const density_contaminant_wet =
+            mol_density_wet * contaminant_mol_mass * x_contaminant_wet;
+        double const density_wet = density_air_wet + density_water + density_contaminant_wet;
+
+        double const p_vapor_nonwet =
+            _process_data.material->calculateVaporPressureNonwet(pc, T_int_pt,
+                                                                 density_wet);
+        double const x_water_nonwet = p_vapor_nonwet / pg_int_pt * x_water_wet;
+        _gas_molar_fraction_water[ip] = x_water_nonwet;
+
+        // TODO: should be able to read H_ref and delta from input file.
+        double const henry_air =
+            _process_data.material->calculateHenryConstant(T_int_pt, 6.4e-6, 1600);
+        double const henry_contaminant = _process_data.material->calculateHenryConstant(
+            T_int_pt, 6.2e-4, 4500);
+
+        double const x_air_nonwet =
+            mol_density_wet / henry_air / pg_int_pt * x_air_wet;
+        double const x_contaminant_nonwet =
+            mol_density_wet / henry_contaminant / pg_int_pt * x_contaminant_wet;
+        _gas_molar_fraction_contaminant[ip] = x_contaminant_nonwet;
+        double const mol_density_nonwet =
+            pg_int_pt / IdealGasConstant / T_int_pt;
+        double const density_water_nonwet =
+            mol_density_nonwet * water_mol_mass * x_water_nonwet;
+        double const density_air_nonwet =
+            mol_density_nonwet * air_mol_mass * x_air_nonwet;
+        double const density_contaminant_nonwet =
+            mol_density_nonwet * contaminant_mol_mass * x_contaminant_nonwet;
+        double const density_nonwet =
+            density_air_nonwet + density_water_nonwet + density_contaminant_nonwet;
+
 
         // Assemble M matrix
+
+
+
 
         // nonwetting
         auto dPC_dSw =
@@ -286,7 +330,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         auto const mu_nonwet =
             gas_phase.property(MPL::PropertyType::viscosity)
                 .template value<double>(variables, pos, t, dt);
-        double const lambda_gas = k_rel_nonwet / mu_nonwet;
+        double const lambda_nonwet = k_rel_nonwet / mu_nonwet;
         auto const mu_wet = liquid_phase.property(MPL::PropertyType::viscosity)
                                 .template value<double>(variables, pos, t, dt);
         double const lambda_wet = k_rel_wet / mu_wet;
@@ -294,6 +338,13 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         auto const K = MPL::formEigenTensor<GlobalDim>(
             medium.property(MPL::PropertyType::permeability)
                 .template value<double>(variables, pos, t, dt));
+
+        GlobalDimVectorType const velocity_nonwet =
+            -lambda_nonwet * K *
+            (sm.dNdx * pg_nodal_values);
+        /* GlobalDimVectorType const velocity_wet =
+            -lambda_wet * K *
+            (sm.dNdx * (pg_nodal_values - pc_nodal_values)); */
 
         // diffusion coefficients
         double const diffusion_coeff_a_L =
@@ -331,6 +382,39 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const density_solid =
             solid_phase.property(MPL::PropertyType::density)
                 .template value<double>(variables, pos, t, dt);
+
+        double const latent_heat_evaporation = 2258000.;
+
+        // enthalpy
+        double const enthalpy_water_nonwet =
+            _process_data.material->getWaterVaporEnthalpySimple(
+                T_int_pt, heat_capacity_water, pg_int_pt,
+                latent_heat_evaporation);
+        double const enthalpy_air_nonwet =
+            _process_data.material->getAirEnthalpySimple(
+                T_int_pt, heat_capacity_air, pg_int_pt);
+        double const enthalpy_contaminant_nonwet =
+            _process_data.material->getContaminantEnthalpySimple(
+                T_int_pt, heat_capacity_contaminant, contaminant_mol_mass, pg_int_pt);
+        double const mol_mass_nonwet =
+            x_water_nonwet * water_mol_mass + x_air_nonwet * air_mol_mass +
+            x_contaminant_nonwet * contaminant_mol_mass;
+        double const X_water_nonwet =
+            x_water_nonwet * water_mol_mass / mol_mass_nonwet;
+        double const X_air_nonwet =
+            x_air_nonwet * air_mol_mass / mol_mass_nonwet;
+        double const X_contaminant_nonwet = 1 - X_water_nonwet - X_air_nonwet;
+        double const enthalpy_nonwet =
+            X_water_nonwet * enthalpy_water_nonwet +
+            X_air_nonwet * enthalpy_air_nonwet +
+            X_contaminant_nonwet * enthalpy_contaminant_nonwet;
+        double const internal_energy_nonwet =
+            enthalpy_nonwet - pg_int_pt / density_nonwet;
+
+        double const enthalpy_wet =
+            _process_data.material->getLiquidWaterEnthalpySimple(
+                T_int_pt, heat_capacity_water, _pressure_wetting[ip]);
+        double const internal_energy_wet = enthalpy_wet;
 
         laplace_operator.noalias() = sm.dNdx.transpose() * K *
                                      sm.dNdx * _ip_data[ip].integration_weight;
