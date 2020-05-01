@@ -31,6 +31,8 @@ public:
         std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties>&&
             water_vapor_properties);
 
+    /// calculate Henry constants
+    double calculateHenryConstant(const double T, const double H_ref, const double delta) const;
     /// water vapor saturation pressure
     double calculateSaturatedVaporPressure(const double T) const;
     /// partial water vapor pressure in nonwetting phase
@@ -59,6 +61,11 @@ public:
     /// Specific enthalpy of air
     double getAirEnthalpySimple(const double temperature,
                                 const double heat_capacity_dry_air,
+                                const double /*pg*/) const;
+    /// Specific enthalpy of contaminant
+    double getContaminantEnthalpySimple(const double temperature,
+                                const double contaminant_heat_capacity,
+                                const double contaminant_molar_mass,
                                 const double /*pg*/) const;
     /// Specific enthalpy of liquid water
     double getLiquidWaterEnthalpySimple(const double temperature,

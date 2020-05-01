@@ -10,6 +10,7 @@
 
 #include "ThermalTwoPhaseFlowComponentialMaterialProperties.h"
 #include <utility>  // ?
+#include <cmath>
 #include "BaseLib/Logging.h"
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "MeshLib/Mesh.h"
@@ -33,7 +34,16 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::ThermalTwoPhaseFlowComponenti
     DBUG("Create material properties for ThermalTwoPhaseFlowComponential process model.");
 }
 
-//bool ThermalTwoPhaseFlowComponentialMaterialProperties::computeConstitutiveRelation(
+double
+ThermalTwoPhaseFlowComponentialMaterialProperties::calculateHenryConstant(
+    const double T, const double H_ref, const double delta) const
+{
+    double const T_ref = 298.15;
+    return H_ref * std::exp((1 / T - 1 / T_ref) * delta);
+}
+
+// bool
+// ThermalTwoPhaseFlowComponentialMaterialProperties::computeConstitutiveRelation(
 //    double const t,
 //    ParameterLib::SpatialPosition const& x,
 //    int const material_id,
@@ -303,6 +313,17 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::ThermalTwoPhaseFlowComponenti
       return heat_capacity_dry_air * (temperature - CelsiusZeroInKelvin) +
              IdealGasConstant * (temperature - CelsiusZeroInKelvin) /
                  _air_mol_mass;
+  }
+
+  double ThermalTwoPhaseFlowComponentialMaterialProperties::
+      getContaminantEnthalpySimple(const double temperature,
+                                   const double contaminant_heat_capacity,
+                                   const double contaminant_molar_mass,
+                                   const double) const
+  {
+      return contaminant_heat_capacity * (temperature - CelsiusZeroInKelvin) +
+             IdealGasConstant * (temperature - CelsiusZeroInKelvin) /
+                 contaminant_molar_mass;
   }
   
   double
