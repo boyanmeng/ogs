@@ -227,12 +227,26 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double& x_contaminant_wet = _ip_data[ip].x_c_L;
         // TODO: derivatives initial values
 
+        // get reference
+        auto& capillary_pressure_model =
+            medium.property(MPL::PropertyType::capillary_pressure);
+
+        MPL::VariableArray variables;
+        variables[static_cast<int>(MPL::Variable::phase_pressure)] = pg_int_pt;
+        variables[static_cast<int>(MPL::Variable::temperature)] = T_int_pt;
+
+        // if water density depends on T, NCP needs to be modified
+        double const density_water =
+            liquid_water.property(MPL::PropertyType::density)
+                .template value<double>(variables, pos, t, dt);
+
         // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
-        /*
-        if (!_ip_data[ip].mat_property.computeConstitutiveRelation(        
+        if (!_process_data.material->computeConstitutiveRelation(        
                 t,
+                dt,
                 pos,
-                material_id,   // ???
+                capillary_pressure_model,
+                density_water,
                 pg_int_pt,
                 Xa_int_pt,
                 Xc_int_pt,
@@ -240,20 +254,17 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 Sw,
                 x_water_wet,
                 x_air_wet,
-                x_contaminant_wet,
-                // TODO: derivatives))
+                x_contaminant_wet))
+                // TODO: derivatives
         {
             OGS_FATAL("Computation of local constitutive relation failed.");
         }
-       */
 
-        MPL::VariableArray variables;
-        variables[static_cast<int>(MPL::Variable::phase_pressure)] = pg_int_pt;
         variables[static_cast<int>(MPL::Variable::liquid_saturation)] = Sw;
-        variables[static_cast<int>(MPL::Variable::temperature)] = T_int_pt;
 
-        auto pc = medium.property(MPL::PropertyType::capillary_pressure)
-                      .template value<double>(variables, pos, t, dt);
+         auto pc = capillary_pressure_model.template value<double>(variables,
+                                                                  pos, t, dt);
+
         variables[static_cast<int>(MPL::Variable::capillary_pressure)] = pc;
 
         _capillary_pressure[ip] = pc;
@@ -266,9 +277,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         double const contaminant_mol_mass =
             contaminant_vapor.property(MPL::PropertyType::molar_mass)
-                .template value<double>(variables, pos, t, dt);
-        double const density_water =
-            liquid_water.property(MPL::PropertyType::density)
                 .template value<double>(variables, pos, t, dt);
         double const mol_density_water = density_water / water_mol_mass;
         double const mol_density_wet = mol_density_water / x_water_wet;
@@ -312,8 +320,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
 
         // nonwetting
-        auto dPC_dSw =
-            medium.property(MPL::PropertyType::capillary_pressure)
+        auto dPC_dSw = capillary_pressure_model
                 .template dValue<double>(
                     variables, MPL::Variable::liquid_saturation, pos, t, dt);
 
