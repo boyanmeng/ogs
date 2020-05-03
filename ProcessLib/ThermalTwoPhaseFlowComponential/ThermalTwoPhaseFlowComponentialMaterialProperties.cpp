@@ -18,6 +18,7 @@
 #include "NumLib/NewtonRaphson.h"
 #include "ParameterLib/Parameter.h"
 #include "ParameterLib/SpatialPosition.h"
+#include "MaterialLib/MPL/Property.h"
 
 namespace ProcessLib
 {
@@ -42,223 +43,6 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateHenryConstant(
     return H_ref * std::exp((1 / T - 1 / T_ref) * delta);
 }
 
-// bool
-// ThermalTwoPhaseFlowComponentialMaterialProperties::computeConstitutiveRelation(
-//    double const t,
-//    ParameterLib::SpatialPosition const& x,
-//    int const material_id,
-//    double const pg,
-//    double const X,
-//    double const T,
-//    double& Sw,
-//    double& X_m,
-//    double& dsw_dpg,
-//    double& dsw_dX,
-//    double& dxm_dpg,
-//    double& dxm_dX)
-//{
-//    {  // Local Newton solver
-//        using LocalJacobianMatrix =
-//            Eigen::Matrix<double, 2, 2, Eigen::RowMajor>;
-//        using LocalResidualVector = Eigen::Matrix<double, 2, 1>;
-//        using LocalUnknownVector = Eigen::Matrix<double, 2, 1>;
-//        LocalJacobianMatrix J_loc;
-//
-//        Eigen::PartialPivLU<LocalJacobianMatrix> linear_solver(2);
-//        auto const update_residual = [&](LocalResidualVector& residual) {
-//            calculateResidual(material_id, pg, X, T, Sw, X_m, residual);
-//        };
-//
-//        auto const update_jacobian = [&](LocalJacobianMatrix& jacobian) {
-//            calculateJacobian(material_id, t, x, pg, X, T, jacobian, Sw,
-//                              X_m);  // for solution dependent Jacobians
-//        };
-//
-//        auto const update_solution = [&](LocalUnknownVector const& increment) {
-//            // increment solution vectors
-//            Sw += increment[0];
-//            X_m += increment[1];
-//        };
-//
-//        // TODO Make the following choice of maximum iterations and convergence
-//        // criteria available from the input file configuration. See Ehlers
-//        // material model implementation for the example.
-//        const int maximum_iterations(20);
-//        const double tolerance(1.e-14);
-//
-//        auto newton_solver = NumLib::NewtonRaphson<
-//            decltype(linear_solver), LocalJacobianMatrix,
-//            decltype(update_jacobian), LocalResidualVector,
-//            decltype(update_residual), decltype(update_solution)>(
-//            linear_solver, update_jacobian, update_residual, update_solution,
-//            {maximum_iterations, tolerance});
-//
-//        auto const success_iterations = newton_solver.solve(J_loc);
-//
-//        if (!success_iterations)
-//        {
-//            return false;
-//        }
-//    }
-//    dsw_dpg = calculatedSwdP(pg, Sw, X_m, T, material_id);
-//    dsw_dX = calculatedSwdX(pg, X, Sw, X_m, T, material_id);
-//    dxm_dpg = calculatedXmdP(pg, Sw, X_m, dsw_dpg, material_id);
-//    dxm_dX = calculatedXmdX(pg, Sw, X_m, dsw_dX, material_id);
-//    return true;
-//}
-//void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResidual(
-//    const int material_id, double const pl, double const X, double const T,
-//    double Sw, double rho_h2_wet, ResidualVector& res)
-//{
-//    const double pg =
-//        pl + _capillary_pressure_models[material_id]->getCapillaryPressure(Sw);
-//    const double rho_h2_nonwet = pg * H2 / IdealGasConstant / T;
-//
-//    // calculating residual
-//    res(0) = calculateEquilibiumRhoWetLight(pg, Sw, rho_h2_wet);
-//    res(1) = calculateSaturation(pl, X, Sw, rho_h2_wet, rho_h2_nonwet, T);
-//}
-//
-//void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateJacobian(
-//    const int material_id, double const /*t*/,
-//    ParameterLib::SpatialPosition const& /*x*/, double const pl,
-//    double const /*X*/, double const T, JacobianMatrix& Jac, double Sw,
-//    double rho_h2_wet)
-//{
-//    const double pg =
-//        pl + _capillary_pressure_models[material_id]->getCapillaryPressure(Sw);
-//    const double rho_h2_nonwet = pg * H2 / IdealGasConstant / T;
-//    double const rho_equili_h2_wet = pg * HenryConstantH2 * H2;
-//    double const dPC_dSw =
-//        _capillary_pressure_models[material_id]->getdPcdS(Sw);
-//    double const drhoh2wet_dpg = HenryConstantH2 * H2;
-//    Jac.setZero();
-//    if ((1 - Sw) < (rho_equili_h2_wet - rho_h2_wet))
-//    {
-//        Jac(0, 0) = -1;
-//    }
-//    else
-//    {
-//        Jac(0, 0) = drhoh2wet_dpg * dPC_dSw;
-//        Jac(0, 1) = -1;
-//    }
-//
-//    Jac(1, 0) = rho_h2_nonwet - rho_h2_wet;
-//    Jac(1, 1) = -Sw;
-//}
-//
-///** Complementary condition 1
-//* for calculating molar fraction of light component in the liquid phase
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateEquilibiumRhoWetLight(
-//    double const pg, double const Sw, double const rho_wet_h2) const
-//{
-//    double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
-//    return std::min(1 - Sw, rho_equilibrium_wet_h2 - rho_wet_h2);
-//}
-//
-///** Complementary condition 2
-//* for calculating the saturation
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateSaturation(
-//    double /*PL*/, double X, double Sw, double rho_wet_h2, double rho_nonwet_h2,
-//    double /*T*/) const
-//{
-//    return X - (Sw * rho_wet_h2 + (1 - Sw) * rho_nonwet_h2);
-//}
-//
-///**
-//* Calculate the derivatives using the analytical way
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedSwdP(
-//    double pl, double S, double rho_wet_h2, double const T,
-//    int current_material_id) const
-//{
-//    const double pg =
-//        pl +
-//        _capillary_pressure_models[current_material_id]->getCapillaryPressure(
-//            S);
-//    double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
-//    if ((1 - S) < (rho_equilibrium_wet_h2 - rho_wet_h2))
-//    {
-//        return 0.0;
-//    }
-//    double const drhoh2wet_dpg = HenryConstantH2 * H2;
-//    double const drhoh2nonwet_dpg = H2 / IdealGasConstant / T;
-//    double const alpha =
-//        ((drhoh2nonwet_dpg - drhoh2wet_dpg) * (1 - S) + drhoh2wet_dpg);
-//    double const beta = (drhoh2nonwet_dpg - drhoh2wet_dpg) *
-//                        pg;  // NOTE here should be PG^h, but we ignore vapor
-//    double const dPC_dSw =
-//        _capillary_pressure_models[current_material_id]->getdPcdS(S);
-//    return alpha / (beta - alpha * dPC_dSw);
-//}
-///**
-//* Calculate the derivatives using the analytical way
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedSwdX(
-//    double const pl, const double /*X*/, const double S,
-//    const double rho_wet_h2, double const T, int current_material_id) const
-//{
-//    const double pg =
-//        pl +
-//        _capillary_pressure_models[current_material_id]->getCapillaryPressure(
-//            S);
-//    double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
-//    if ((1 - S) < (rho_equilibrium_wet_h2 - rho_wet_h2))
-//    {
-//        return 0.0;
-//    }
-//    double const drhoh2wet_dpg = HenryConstantH2 * H2;
-//    double const drhoh2nonwet_dpg = H2 / IdealGasConstant / T;
-//    double const alpha =
-//        ((drhoh2nonwet_dpg - drhoh2wet_dpg) * (1 - S) + drhoh2wet_dpg);
-//    double const beta = (drhoh2nonwet_dpg - drhoh2wet_dpg) *
-//                        pg;  // NOTE here should be PG^h, but we ignore vapor
-//    double const dPC_dSw =
-//        _capillary_pressure_models[current_material_id]->getdPcdS(S);
-//    return -1 / (beta - alpha * dPC_dSw);
-//}
-///**
-//* Calculate the derivatives using the analytical way
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedXmdX(
-//    double pl, double Sw, double rho_wet_h2, double dSwdX,
-//    int current_material_id) const
-//{
-//    const double pg =
-//        pl +
-//        _capillary_pressure_models[current_material_id]->getCapillaryPressure(
-//            Sw);
-//    double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
-//    double const dPC_dSw =
-//        _capillary_pressure_models[current_material_id]->getdPcdS(Sw);
-//    if ((1 - Sw) < (rho_equilibrium_wet_h2 - rho_wet_h2))
-//    {
-//        return 1.0;
-//    }
-//    return HenryConstantH2 * H2 * dPC_dSw * dSwdX;
-//}
-///**
-//* Calculate the derivatives using the analytical way
-//*/
-//double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedXmdP(
-//    double pl, double Sw, double rho_wet_h2, double dSwdP,
-//    int current_material_id) const
-//{
-//    const double pg =
-//        pl +
-//        _capillary_pressure_models[current_material_id]->getCapillaryPressure(
-//            Sw);
-//    double const rho_equilibrium_wet_h2 = pg * HenryConstantH2 * H2;
-//    double const dPC_dSw =
-//        _capillary_pressure_models[current_material_id]->getdPcdS(Sw);
-//    if ((1 - Sw) < (rho_equilibrium_wet_h2 - rho_wet_h2))
-//    {
-//        return 0.0;
-//    }
-//    return HenryConstantH2 * H2 * (1 + dPC_dSw * dSwdP);
-//}
   double
   ThermalTwoPhaseFlowComponentialMaterialProperties::calculateSaturatedVaporPressure(
       const double T) const
@@ -333,6 +117,180 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateHenryConstant(
       const double /*pl*/) const
   {
       return heat_capacity_liquid_water * (temperature - CelsiusZeroInKelvin);
+  }
+
+  bool ThermalTwoPhaseFlowComponentialMaterialProperties::
+      computeConstitutiveRelation(
+          double const t, double const dt,
+          ParameterLib::SpatialPosition const& x_position,
+          MaterialPropertyLib::Property const& pc_model, double const rho_w,
+          double const pg,
+                                  double const Xa,
+                                  double const Xc, double const T, double& Sw,
+                                  double& x_w_L, double& x_a_L, double& x_c_L)
+  {
+      {  // Local Newton solver
+          using LocalJacobianMatrix =
+              Eigen::Matrix<double, 4, 4, Eigen::RowMajor>;
+          using LocalResidualVector = Eigen::Matrix<double, 4, 1>;
+          using LocalUnknownVector = Eigen::Matrix<double, 4, 1>;
+          LocalJacobianMatrix J_loc;
+
+          Eigen::PartialPivLU<LocalJacobianMatrix> linear_solver(4);
+          auto const update_residual = [&](LocalResidualVector& residual) {
+              calculateResidual(t, dt, x_position, pc_model, rho_w, pg, Xa, Xc,
+                                T, Sw,
+                                x_w_L, x_a_L, x_c_L, residual);
+          };
+
+          auto const update_jacobian = [&](LocalJacobianMatrix& jacobian) {
+              calculateJacobian(t, dt, x_position, pc_model, rho_w, pg, Xa, Xc, T, jacobian, Sw, x_w_L, x_a_L,
+                                x_c_L);  // for solution dependent Jacobians
+          };
+
+          auto const update_solution =
+              [&](LocalUnknownVector const& increment) {
+                  // increment solution vectors
+                  Sw += increment[0];
+                  x_w_L += increment[1];
+                  x_a_L += increment[2];
+                  x_c_L += increment[3];
+              };
+
+          // TODO Make the following choice of maximum iterations and
+          // convergence criteria available from the input file configuration.
+          // See Ehlers material model implementation for the example.
+          const int maximum_iterations(20);
+          const double tolerance(1.e-14);
+
+          auto newton_solver = NumLib::NewtonRaphson<
+              decltype(linear_solver), LocalJacobianMatrix,
+              decltype(update_jacobian), LocalResidualVector,
+              decltype(update_residual), decltype(update_solution)>(
+              linear_solver, update_jacobian, update_residual, update_solution,
+              {maximum_iterations, tolerance});
+
+          auto const success_iterations = newton_solver.solve(J_loc);
+
+          if (!success_iterations)
+          {
+              return false;
+          }
+      }
+      // dsw_dpg = calculatedSwdP(pg, Sw, X_m, T, material_id);
+      return true;
+  }
+
+  void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResidual(
+      double const t, double const dt,
+      ParameterLib::SpatialPosition const& x_position,
+      MaterialPropertyLib::Property const& pc_model, double const rho_w,
+      double const pg, double const Xa, double const Xc, double const T,
+      double Sw, double x_w_L, double x_a_L, double x_c_L, ResidualVector& res)
+  {
+      MaterialPropertyLib::VariableArray vars;
+      vars[static_cast<int>(MaterialPropertyLib::Variable::liquid_saturation)] =
+          Sw;
+      double const pc = pc_model.template value<double>(vars, x_position, t, dt);
+      // use water density for simplicity
+      double const p_vap =
+          calculateVaporPressureNonwet(pc, T, rho_w);
+      double const x_w_G = p_vap / pg * x_w_L;
+      double const H_a = calculateHenryConstant(T, 6.4e-6, 1600);
+      double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
+      double const N_w = rho_w / _water_mol_mass;
+      double const x_a_G = N_w / H_a / pg * x_a_L;
+      double const x_c_G = N_w / H_c / pg * x_c_L;
+      // calculating residual
+      res(0) = calculateResEq1(Sw, x_w_L, x_a_L, x_c_L);
+      res(1) = calculateResEq2(Sw, x_w_G, x_a_G, x_c_G);
+      res(2) = calculateResEq3(Sw, Xa, x_a_L, x_a_G, rho_w, pg, T);
+      res(3) = calculateResEq4(Sw, Xc, x_c_L, x_c_G, rho_w, pg, T);
+  }
+
+  void ThermalTwoPhaseFlowComponentialMaterialProperties::calculateJacobian(
+      double const t, double const dt,
+      ParameterLib::SpatialPosition const& x_position,
+      MaterialPropertyLib::Property const& pc_model, double const rho_w,
+      double const pg, double const Xa, double const Xc,
+      double const T,
+      JacobianMatrix& Jac, double Sw, double x_w_L, double x_a_L, double x_c_L)
+  {
+      MaterialPropertyLib::VariableArray vars;
+      vars[static_cast<int>(MaterialPropertyLib::Variable::liquid_saturation)] =
+          Sw;
+      double const pc =
+          pc_model.template value<double>(vars, x_position, t, dt);
+      // use water density for simplicity
+      double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
+      double const x_w_G = p_vap / pg * x_w_L;
+      double const H_a = calculateHenryConstant(T, 6.4e-6, 1600);
+      double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
+      double const N_w = rho_w / _water_mol_mass;
+      double const N_G = pg / IdealGasConstant / T;
+      double const x_a_G = N_w / H_a / pg * x_a_L;
+      double const x_c_G = N_w / H_c / pg * x_c_L;
+      double const dpc_dSw = pc_model.template dValue<double>(
+          vars, MaterialPropertyLib::Variable::liquid_saturation, x_position, t,
+          dt);
+      double const dpvap_dSw = -p_vap * dpc_dSw / N_w / IdealGasConstant / T;
+      Jac.setZero();
+      if (Sw <= (1 - x_w_L - x_a_L - x_c_L))
+      {
+          Jac(0, 0) = 1;
+      }
+      else
+      {
+          Jac(0, 1) = -1;
+          Jac(0, 2) = -1;
+          Jac(0, 3) = -1;
+      }
+      if ((1 - Sw) <= (1 - x_w_G - x_a_G - x_c_G))
+      {
+          Jac(1, 0) = -1;
+      }
+      else
+      {
+          Jac(1, 0) = -x_w_L * dpvap_dSw / pg;
+          Jac(1, 1) = -p_vap / pg;
+          Jac(1, 2) = -N_w / pg / H_a;
+          Jac(1, 3) = -N_w / pg / H_c;
+      }
+
+      Jac(2, 0) = N_w * (Xa - x_a_L) - N_G * (Xa - x_a_G);
+      Jac(2, 2) = -(Sw + (1 - Sw) / H_a / IdealGasConstant / T) * N_w;
+      Jac(3, 0) = N_w * (Xc - x_c_L) - N_G * (Xc - x_c_G);
+      Jac(3, 3) = -(Sw + (1 - Sw) / H_c / IdealGasConstant / T) * N_w;
+  }
+
+  double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResEq1(
+      double Sw, double x_w_L, double x_a_L, double x_c_L) const
+  {
+      return std::min(Sw, 1 - x_w_L - x_a_L - x_c_L);
+  }
+
+  double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResEq2(
+      double Sw, double x_w_G, double x_a_G, double x_c_G) const
+  {
+      return std::min(1 - Sw, 1 - x_w_G - x_a_G - x_c_G);
+  }
+
+  double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResEq3(
+      double Sw, double Xa, double x_a_L, double x_a_G, double rho_w, double pg,
+      double T) const
+  {
+      double const N_w = rho_w / _water_mol_mass;
+      double const N_G = pg / IdealGasConstant / T;
+      return Sw * N_w * (Xa - x_a_L) + (1 - Sw) * N_G * (Xa - x_a_G);
+  }
+
+  double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateResEq4(
+      double Sw, double Xc, double x_c_L, double x_c_G, double rho_w, double pg,
+      double T) const
+  {
+      double const N_w = rho_w / _water_mol_mass;
+      double const N_G = pg / IdealGasConstant / T;
+      return Sw * N_w * (Xc - x_c_L) + (1 - Sw) * N_G * (Xc - x_c_G);
   }
       
 }  // namespace ThermalTwoPhaseFlowComponential

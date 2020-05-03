@@ -15,6 +15,8 @@
 #include "MaterialLib/PhysicalConstant.h"
 #include "MaterialLib/Fluid/WaterVaporProperties/WaterVaporProperties.h"
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
+#include "ParameterLib/SpatialPosition.h"
+#include "MaterialLib/MPL/Property.h"
 
 namespace MeshLib
 {
@@ -71,62 +73,80 @@ public:
     double getLiquidWaterEnthalpySimple(const double temperature,
                                         const double heat_capacity_liquid_water,
                                         const double /*pl*/) const;
-    /*
+  
     bool computeConstitutiveRelation(
         double const t,
+        double const dt,
         ParameterLib::SpatialPosition const& x_position,
-        const int material_id,
+        MaterialPropertyLib::Property const& pc_model,        // pass by ref
+        double const rho_w,
         double const pg,
-        double const X,
+        double const Xa,
+        double const Xc,
         double const T,
         double& Sw,
-        double& X_m,
-        double& dsw_dpg,
-        double& dsw_dX,
-        double& dxm_dpg,
-        double& dxm_dX);
-    */
+        double& x_w_L,
+        double& x_a_L,
+        double& x_c_L);
+
 private:
     double const& _air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
+    double const& _water_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Water;
     std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties> const
         _water_vapor_properties;
-    /*
-    static int const jacobian_residual_size = 2;
+    
+    static int const jacobian_residual_size = 4;
     using ResidualVector = Eigen::Matrix<double, jacobian_residual_size, 1>;
     using JacobianMatrix =
         Eigen::Matrix<double, jacobian_residual_size, jacobian_residual_size,
                       Eigen::RowMajor>;
     using UnknownVector = Eigen::Matrix<double, jacobian_residual_size, 1>;
-
-private:
     
     // Calculates the residual vector.
   
-    void calculateResidual(const int material_id, double const pl,
-                           double const X, double const T, double Sw,
-                           double rho_h2_wet, ResidualVector& res);
+    void calculateResidual(double const t, double const dt,
+                           ParameterLib::SpatialPosition const& x_position,
+                           MaterialPropertyLib::Property const& pc_model,       // pass by ref
+                           double const rho_w, double const pg, double const Xa,
+                           double const Xc,
+                           double const T, double Sw, double x_w_L,
+                           double x_a_L, double x_c_L, ResidualVector& res);
     
     // Calculates the Jacobian.
     
-    void calculateJacobian(const int material_id, double const t,
-                           ParameterLib::SpatialPosition const& x,
-                           double const pl, double const X, double const T,
-                           JacobianMatrix& Jac, double Sw, double rho_h2_wet);
+    void calculateJacobian(double const t, double const dt,
+                           ParameterLib::SpatialPosition const& x_position,
+                           MaterialPropertyLib::Property const& pc_model,        // pass by ref
+                           double const rho_w, double const pg, double const Xa,
+                           double const Xc,
+                           double const T, JacobianMatrix& Jac, double Sw,
+                           double x_w_L, double x_a_L, double x_c_L);
     // Complementary condition 1
-    // for calculating molar fraction of light component in the liquid phase
+    // for calculating ...
     
-    double calculateEquilibiumRhoWetLight(double const pg, double const Sw,
-                                          double const rho_wet_h2) const;
+    double calculateResEq1(double Sw, double x_w_L, double x_a_L,
+                              double x_c_L) const;
     // Complementary condition 2
-    // for calculating the saturation
+    // for calculating ...
     
-    double calculateSaturation(double , double X, double Sw,
-                               double rho_wet_h2, double rho_nonwet_h2,
-                               double ) const;
+    double calculateResEq2(double Sw, double x_w_G, double x_a_G,
+                              double x_c_G) const;
+    // Complementary condition 3
+    // for calculating ...
+
+    double calculateResEq3(double Sw, double Xa, double x_a_L, double x_a_G,
+                           double rho_w, double pg, double T) const;
+
+    // Complementary condition 4
+    // for calculating ...
+
+    double calculateResEq4(double Sw, double Xc, double x_c_L, double x_c_G,
+                           double rho_w, double pg, double T) const;
     
     // Calculate the derivatives using the analytical way
     
     double calculatedSwdP(double pl, double S, double rho_wet_h2,
+                          double const T, int current_material_id) const;
     
     double calculatedSwdX(double const pl, const double , const double S,
                           const double rho_wet_h2, double const T,
@@ -136,7 +156,6 @@ private:
   
     double calculatedXmdP(double pl, double Sw, double rho_wet_h2, double dSwdP,
                           int current_material_id) const;
-    */
 };
 
 }  // namespace ProcessLib::ThermalTwoPhaseFlowComponential
