@@ -279,7 +279,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             contaminant_vapor.property(MPL::PropertyType::molar_mass)
                 .template value<double>(variables, pos, t, dt);
         double const mol_density_water = density_water / water_mol_mass;
-        double const mol_density_wet = mol_density_water / x_water_wet;
+        double const mol_density_wet = mol_density_water;
         double const density_air_wet = mol_density_wet * air_mol_mass * x_air_wet;
         double const density_contaminant_wet =
             mol_density_wet * contaminant_mol_mass * x_contaminant_wet;
@@ -287,7 +287,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         double const p_vapor_nonwet =
             _process_data.material->calculateVaporPressureNonwet(pc, T_int_pt,
-                                                                 density_wet);
+                                                                 density_water);
         double const x_water_nonwet = p_vapor_nonwet / pg_int_pt * x_water_wet;
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
