@@ -35,6 +35,9 @@ public:
 
     /// calculate Henry constants
     double calculateHenryConstant(const double T, const double H_ref, const double delta) const;
+    /// calculate Henry constant derivative
+    double calculateDerivativedHdT(const double T, const double H_ref,
+                                  const double delta) const;
     /// water vapor saturation pressure
     double calculateSaturatedVaporPressure(const double T) const;
     /// partial water vapor pressure in nonwetting phase
@@ -87,7 +90,35 @@ public:
         double& Sw,
         double& x_w_L,
         double& x_a_L,
-        double& x_c_L);
+        double& x_c_L,
+        double& dsw_dpg, 
+        double& dxwG_dpg,
+        double& dxaG_dpg,
+        double& dxcG_dpg,
+        double& dsw_dXa,
+        double& dxwG_dXa,
+        double& dxaG_dXa,
+        double& dxcG_dXa,
+        double& dsw_dXc,
+        double& dxwG_dXc,
+        double& dxaG_dXc,
+        double& dxcG_dXc,
+        double& dsw_dT,
+        double& dxwG_dT,
+        double& dxaG_dT,
+        double& dxcG_dT,
+        double& dxwL_dpg,
+        double& dxaL_dpg,
+        double& dxcL_dpg,
+        double& dxwL_dXa,
+        double& dxaL_dXa,
+        double& dxcL_dXa,
+        double& dxwL_dXc,
+        double& dxaL_dXc,
+        double& dxcL_dXc,
+        double& dxwL_dT,
+        double& dxaL_dT,
+        double& dxcL_dT);
 
 private:
     double const& _air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
@@ -143,19 +174,21 @@ private:
     double calculateResEq4(double Sw, double Xc, double x_c_L, double x_c_G,
                            double rho_w, double pg, double T) const;
     
-    // Calculate the derivatives using the analytical way
+    // Calculate the derivatives using the numerical way
     
-    double calculatedSwdP(double pl, double S, double rho_wet_h2,
-                          double const T, int current_material_id) const;
-    
-    double calculatedSwdX(double const pl, const double , const double S,
-                          const double rho_wet_h2, double const T,
-                          int current_material_id) const;
-    double calculatedXmdX(double pl, double Sw, double rho_wet_h2, double dSwdX,
-                          int current_material_id) const;
-  
-    double calculatedXmdP(double pl, double Sw, double rho_wet_h2, double dSwdP,
-                          int current_material_id) const;
+    void calculateDerivatives(double const t, double const dt,
+                              ParameterLib::SpatialPosition const& x_position,
+                              MaterialPropertyLib::Property const& pc_model,
+        double const rho_w, double const pg, double const Xa, double const Xc,
+        double const T, double Sw, double x_w_L,
+                       double x_a_L, double x_c_L, double& dsw_dpg,
+        double& dxwG_dpg, double& dxaG_dpg, double& dxcG_dpg, double& dsw_dXa,
+        double& dxwG_dXa, double& dxaG_dXa, double& dxcG_dXa, double& dsw_dXc,
+        double& dxwG_dXc, double& dxaG_dXc, double& dxcG_dXc, double& dsw_dT,
+        double& dxwG_dT, double& dxaG_dT, double& dxcG_dT, double& dxwL_dpg,
+        double& dxaL_dpg, double& dxcL_dpg, double& dxwL_dXa, double& dxaL_dXa,
+        double& dxcL_dXa, double& dxwL_dXc, double& dxaL_dXc, double& dxcL_dXc,
+        double& dxwL_dT, double& dxaL_dT, double& dxcL_dT);
 };
 
 }  // namespace ProcessLib::ThermalTwoPhaseFlowComponential
