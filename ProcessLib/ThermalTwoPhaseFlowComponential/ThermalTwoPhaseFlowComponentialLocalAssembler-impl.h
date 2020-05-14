@@ -225,7 +225,34 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double& x_water_wet = _ip_data[ip].x_w_L;
         double& x_air_wet = _ip_data[ip].x_a_L;
         double& x_contaminant_wet = _ip_data[ip].x_c_L;
-        // TODO: derivatives initial values
+        double& dsw_dpg = _ip_data[ip].dsw_dpg;
+        double& dxwG_dpg = _ip_data[ip].dxwG_dpg;
+        double& dxaG_dpg = _ip_data[ip].dxaG_dpg;
+        double& dxcG_dpg = _ip_data[ip].dxcG_dpg;
+        double& dsw_dXa = _ip_data[ip].dsw_dXa;
+        double& dxwG_dXa = _ip_data[ip].dxwG_dXa;
+        double& dxaG_dXa = _ip_data[ip].dxaG_dXa;
+        double& dxcG_dXa = _ip_data[ip].dxcG_dXa;
+        double& dsw_dXc = _ip_data[ip].dsw_dXc;
+        double& dxwG_dXc = _ip_data[ip].dxwG_dXc;
+        double& dxaG_dXc = _ip_data[ip].dxaG_dXc;
+        double& dxcG_dXc = _ip_data[ip].dxcG_dXc;
+        double& dsw_dT = _ip_data[ip].dsw_dT;
+        double& dxwG_dT = _ip_data[ip].dxwG_dT;
+        double& dxaG_dT = _ip_data[ip].dxaG_dT;
+        double& dxcG_dT = _ip_data[ip].dxcG_dT;
+        double& dxwL_dpg = _ip_data[ip].dxwL_dpg;
+        double& dxaL_dpg = _ip_data[ip].dxaL_dpg;
+        double& dxcL_dpg = _ip_data[ip].dxcL_dpg;
+        double& dxwL_dXa = _ip_data[ip].dxwL_dXa;
+        double& dxaL_dXa = _ip_data[ip].dxaL_dXa;
+        double& dxcL_dXa = _ip_data[ip].dxcL_dXa;
+        double& dxwL_dXc = _ip_data[ip].dxwL_dXc;
+        double& dxaL_dXc = _ip_data[ip].dxaL_dXc;
+        double& dxcL_dXc = _ip_data[ip].dxcL_dXc;
+        double& dxwL_dT = _ip_data[ip].dxwL_dT;
+        double& dxaL_dT = _ip_data[ip].dxaL_dT;
+        double& dxcL_dT = _ip_data[ip].dxcL_dT;
 
         // get reference
         auto& capillary_pressure_model =
@@ -254,8 +281,35 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 Sw,
                 x_water_wet,
                 x_air_wet,
-                x_contaminant_wet))
-                // TODO: derivatives
+                x_contaminant_wet,
+                dsw_dpg, 
+                dxwG_dpg,
+                dxaG_dpg,
+                dxcG_dpg,
+                dsw_dXa, 
+                dxwG_dXa,
+                dxaG_dXa,
+                dxcG_dXa,
+                dsw_dXc, 
+                dxwG_dXc,
+                dxaG_dXc,
+                dxcG_dXc,
+                dsw_dT,
+                dxwG_dT, 
+                dxaG_dT,
+                dxcG_dT,
+                dxwL_dpg,
+                dxaL_dpg,
+                dxcL_dpg,
+                dxwL_dXa,
+                dxaL_dXa,
+                dxcL_dXa,
+                dxwL_dXc,
+                dxaL_dXc,
+                dxcL_dXc,
+                dxwL_dT, 
+                dxaL_dT,
+                dxcL_dT))
         {
             OGS_FATAL("Computation of local constitutive relation failed.");
         }
