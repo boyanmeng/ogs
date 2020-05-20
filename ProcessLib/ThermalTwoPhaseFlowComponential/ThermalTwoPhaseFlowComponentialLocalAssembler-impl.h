@@ -367,13 +367,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const density_nonwet =
             density_air_nonwet + density_water_nonwet + density_contaminant_nonwet;
 
-
-        // Assemble M matrix
-
-
-
-
-        // nonwetting
         auto dPC_dSw = capillary_pressure_model
                 .template dValue<double>(
                     variables, MPL::Variable::liquid_saturation, pos, t, dt);
@@ -381,6 +374,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         auto const porosity =
             medium.property(MPL::PropertyType::porosity)
                 .template value<double>(variables, pos, t, dt);
+
+        // Assemble M matrix
 
         auto const k_rel =
             medium.property(MPL::PropertyType::relative_permeability)
@@ -408,18 +403,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             (sm.dNdx * (pg_nodal_values - pc_nodal_values)); */
 
         // diffusion coefficients
-        double const diffusion_coeff_a_L =
-            dissolved_air.property(MPL::PropertyType::molecular_diffusion)
+        double const diffusion_coeff_wet =
+            liquid_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
-        double const diffusion_coeff_c_L =
-            dissolved_contaminant
-                .property(MPL::PropertyType::molecular_diffusion)
-                .template value<double>(variables, pos, t, dt);
-        double const diffusion_coeff_w_G =
-            water_vapor.property(MPL::PropertyType::molecular_diffusion)
-                .template value<double>(variables, pos, t, dt);
-        double const diffusion_coeff_c_G =
-            contaminant_vapor.property(MPL::PropertyType::molecular_diffusion)
+        double const diffusion_coeff_nonwet =
+            gas_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
 
         // heat capacity
