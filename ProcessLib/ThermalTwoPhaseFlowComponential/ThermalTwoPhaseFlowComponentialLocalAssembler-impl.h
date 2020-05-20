@@ -53,27 +53,26 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     auto local_b = MathLib::createZeroedVector<LocalVectorType>(
         local_b_data, local_matrix_size);
 
-    // TODO: rename
-    auto Mgp =
+    auto Mwp =
         local_M.template block<nonwet_pressure_size, nonwet_pressure_size>(
             nonwet_pressure_matrix_index, nonwet_pressure_matrix_index);
-    auto Mgxa =
+    auto Mwa =
         local_M.template block<nonwet_pressure_size, overall_mol_frac_air_size>(
             nonwet_pressure_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Mgxc = local_M.template block<nonwet_pressure_size,
+    auto Mwc = local_M.template block<nonwet_pressure_size,
                                        overall_mol_frac_contaminant_size>(
         nonwet_pressure_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Mgt = local_M.template block<nonwet_pressure_size, temperature_size>(
+    auto Mwt = local_M.template block<nonwet_pressure_size, temperature_size>(
         nonwet_pressure_matrix_index, temperature_matrix_index);
 
     auto Map =
         local_M.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
             overall_mol_frac_air_matrix_index, nonwet_pressure_matrix_index);
-    auto Maxa = local_M.template block<overall_mol_frac_air_size,
+    auto Maa = local_M.template block<overall_mol_frac_air_size,
                                        overall_mol_frac_air_size>(
         overall_mol_frac_air_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Maxc = local_M.template block<overall_mol_frac_air_size,
+    auto Mac = local_M.template block<overall_mol_frac_air_size,
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_air_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
@@ -85,11 +84,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                       nonwet_pressure_size>(
         overall_mol_frac_contaminant_matrix_index,
         nonwet_pressure_matrix_index);
-    auto Mcxa = local_M.template block<overall_mol_frac_contaminant_size,
+    auto Mca = local_M.template block<overall_mol_frac_contaminant_size,
                                        overall_mol_frac_air_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_air_matrix_index);
-    auto Mcxc = local_M.template block<overall_mol_frac_contaminant_size,
+    auto Mcc = local_M.template block<overall_mol_frac_contaminant_size,
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
@@ -101,12 +100,12 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                       nonwet_pressure_size>(
         temperature_matrix_index,
         nonwet_pressure_matrix_index);
-    auto Mexa =
+    auto Mea =
         local_M.template block<temperature_size,
                                        overall_mol_frac_air_size>(
             temperature_matrix_index,
         overall_mol_frac_air_matrix_index);
-    auto Mexc = local_M.template block<temperature_size,
+    auto Mec = local_M.template block<temperature_size,
                                        overall_mol_frac_contaminant_size>(
         temperature_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
@@ -117,26 +116,26 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     NodalMatrixType laplace_operator =
         NodalMatrixType::Zero(ShapeFunction::NPOINTS, ShapeFunction::NPOINTS);
 
-    auto Kgp =
+    auto Kwp =
         local_K.template block<nonwet_pressure_size, nonwet_pressure_size>(
             nonwet_pressure_matrix_index, nonwet_pressure_matrix_index);
-    auto Kgxa =
+    auto Kwa =
         local_K.template block<nonwet_pressure_size, overall_mol_frac_air_size>(
             nonwet_pressure_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Kgxc = local_K.template block<nonwet_pressure_size,
+    auto Kwc = local_K.template block<nonwet_pressure_size,
                                        overall_mol_frac_contaminant_size>(
         nonwet_pressure_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Kgt = local_K.template block<nonwet_pressure_size, temperature_size>(
+    auto Kwt = local_K.template block<nonwet_pressure_size, temperature_size>(
         nonwet_pressure_matrix_index, temperature_matrix_index);
 
     auto Kap =
         local_K.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
             overall_mol_frac_air_matrix_index, nonwet_pressure_matrix_index);
-    auto Kaxa = local_K.template block<overall_mol_frac_air_size,
+    auto Kaa = local_K.template block<overall_mol_frac_air_size,
                                        overall_mol_frac_air_size>(
         overall_mol_frac_air_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Kaxc = local_K.template block<overall_mol_frac_air_size,
+    auto Kac = local_K.template block<overall_mol_frac_air_size,
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_air_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
@@ -148,11 +147,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                       nonwet_pressure_size>(
         overall_mol_frac_contaminant_matrix_index,
         nonwet_pressure_matrix_index);
-    auto Kcxa = local_K.template block<overall_mol_frac_contaminant_size,
+    auto Kca = local_K.template block<overall_mol_frac_contaminant_size,
                                        overall_mol_frac_air_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_air_matrix_index);
-    auto Kcxc = local_K.template block<overall_mol_frac_contaminant_size,
+    auto Kcc = local_K.template block<overall_mol_frac_contaminant_size,
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
@@ -162,16 +161,16 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
     auto Kep = local_K.template block<temperature_size, nonwet_pressure_size>(
         temperature_matrix_index, nonwet_pressure_matrix_index);
-    auto Kexa =
+    auto Kea =
         local_K.template block<temperature_size, overall_mol_frac_air_size>(
             temperature_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Kexc = local_K.template block<temperature_size,
+    auto Kec = local_K.template block<temperature_size,
                                        overall_mol_frac_contaminant_size>(
         temperature_matrix_index, overall_mol_frac_contaminant_matrix_index);
     auto Ket = local_K.template block<temperature_size, temperature_size>(
         temperature_matrix_index, temperature_matrix_index);
 
-    auto Bg = local_b.template segment<nonwet_pressure_size>(
+    auto Bw = local_b.template segment<nonwet_pressure_size>(
         nonwet_pressure_matrix_index);
 
     auto Ba = local_b.template segment<overall_mol_frac_air_size>(
@@ -377,6 +376,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         // Assemble M matrix
 
+
         auto const k_rel =
             medium.property(MPL::PropertyType::relative_permeability)
                 .template value<Eigen::Vector2d>(variables, pos, t, dt);
@@ -489,16 +489,16 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     /*
     if (_process_data._has_mass_lumping)
     {
-        for (unsigned row = 0; row < Mgp.cols(); row++)
+        for (unsigned row = 0; row < Mwp.cols(); row++)
         {
-            for (unsigned column = 0; column < Mgp.cols(); column++)
+            for (unsigned column = 0; column < Mwp.cols(); column++)
             {
                 if (row != column)
                 {
-                    Mgx(row, row) += Mgx(row, column);
-                    Mgx(row, column) = 0.0;
-                    Mgp(row, row) += Mgp(row, column);
-                    Mgp(row, column) = 0.0;
+                    Mwx(row, row) += Mwx(row, column);
+                    Mwx(row, column) = 0.0;
+                    Mwp(row, row) += Mwp(row, column);
+                    Mwp(row, column) = 0.0;
                     Mlx(row, row) += Mlx(row, column);
                     Mlx(row, column) = 0.0;
                     Mlp(row, row) += Mlp(row, column);
