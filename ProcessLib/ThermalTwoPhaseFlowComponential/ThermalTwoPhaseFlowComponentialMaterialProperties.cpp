@@ -103,7 +103,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       const double /*pg*/) const
   {
       return heat_capacity_dry_air * (temperature - CelsiusZeroInKelvin) +
-             IdealGasConstant * (temperature - CelsiusZeroInKelvin) /
+             IdealGasConstant * temperature /
                  _air_mol_mass;
   }
 
@@ -114,7 +114,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
                                    const double) const
   {
       return contaminant_heat_capacity * (temperature - CelsiusZeroInKelvin) +
-             IdealGasConstant * (temperature - CelsiusZeroInKelvin) /
+             IdealGasConstant * temperature /
                  contaminant_molar_mass;
   }
   
