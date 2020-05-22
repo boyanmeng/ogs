@@ -80,6 +80,12 @@
                           <factor>0.01333333</factor>
                       </exponent>
                   </property>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                  <property>
+                      <name>molecular_diffusion</name>
+                      <type>Constant</type>
+                      <value>8.0e-10</value>
+                  </property>
                </properties>
             </phase>
             <phase>
@@ -122,12 +128,6 @@
                                <type>Constant</type>
                                <value>0.18</value>
                            </property>
-						   <property>
-                              <name>molecular_diffusion</name>
-<!-- Fuller's Law, power=1.75							   -->
-                              <type>Constant</type>
-                              <value>2.4e-5</value>
-                           </property>
                            <property>
                                <name>heat_capacity </name>
                                <type>Constant</type>
@@ -153,12 +153,6 @@
                                <!-- <type>Constant</type> -->
                                <!-- <value>1</value> -->
                            <!-- </property> -->
-<!-- Fuller's Law, power=1.75							   -->
-						   <property>
-                              <name>molecular_diffusion</name>
-                              <type>Constant</type>
-                              <value>7e-6</value>
-                           </property>
 						   <property>
                               <name>heat_capacity </name>
                               <type>Constant</type>
@@ -178,11 +172,12 @@
                      <type>Constant</type>
                      <value>1.8e-5</value>
                   </property>
-                  <!-- <property> -->
-                     <!-- <name>molar_mass</name> -->
-                     <!-- <type>Constant</type> -->
-                     <!-- <value>0.028964397787206768</value> -->
-                  <!-- </property> -->
+<!-- Fuller's Law, power=1.75, value for water vapor is 2.4e-5						   -->				  
+				  <property>
+                     <name>molecular_diffusion</name>
+                     <type>Constant</type>
+                     <value>7e-6</value>
+                  </property>
                </properties>
             </phase>
 			<phase>
@@ -208,24 +203,28 @@
                <value>1.0e-10</value>
             </property>
 <!-- currently Curve type is disabled, debug to find out the problem. -->
+<!-- only allows for regularized vG or curve type, since dpc_dS has to be bounded -->
             <property>
                <name>capillary_pressure</name>
-               <type>CapillaryPressureBrooksCorey</type>
-               <residual_liquid_saturation>0.0</residual_liquid_saturation>
-               <maximum_liquid_saturation>1.0</maximum_liquid_saturation>
-               <lambda>2.0</lambda>
-               <entry_pressure>5000</entry_pressure>
-               <maximum_capillary_pressure>2e6</maximum_capillary_pressure>
+               <!-- <type>CapillaryPressureRegularizedVanGenuchten</type> -->
+               <!-- <residual_liquid_saturation>0.1</residual_liquid_saturation> -->
+               <!-- <maximum_liquid_saturation>1.0</maximum_liquid_saturation> -->
+               <!-- <exponent>0.3288590604</exponent> -->
+               <!-- <p_b>2e+6</p_b> -->
+			   <type>Curve</type>
+               <curve>pc_Sw</curve>
+               <independent_variable>liquid_saturation</independent_variable>
             </property>
 			<property>
                <name>saturation</name>
-               <type>SaturationBrooksCorey</type>
-               <residual_liquid_saturation>0.0</residual_liquid_saturation>
+               <type>SaturationVanGenuchten</type>
+               <residual_liquid_saturation>0.1</residual_liquid_saturation>
                <residual_gas_saturation>0.0</residual_gas_saturation>
-               <lambda>2.0</lambda>
-               <entry_pressure>5000</entry_pressure>
+               <exponent>0.3288590604</exponent>
+               <p_b>2e+6</p_b>
             </property>
             <property>
+<!-- cannot use vG type unless source code is modified (returns a number instead of a 2x1 vector) -->
                <name>relative_permeability</name>
                <type>RelPermBrooksCorey</type>
                <residual_liquid_saturation>0.0</residual_liquid_saturation>
@@ -249,32 +248,32 @@
             </property>	
          </properties>
       </medium>
-    </media>	
+    </media>		
     <parameters>
         <parameter>
-            <name>pg_Dirichlet</name>
+            <name>pg_0</name>
             <type>Constant</type>
             <value>101000</value>
         </parameter>
         <parameter>
             <name>Xa_0</name>
-            <type>MeshNode</type>
-            <field_name>Xa_ini</field_name>
+            <type>Constant</type>
+            <value>2e-5</value>
         </parameter>
 		<parameter>
             <name>Xc_0</name>
-            <type>MeshNode</type>
-            <field_name>Xc_ini</field_name>
-        </parameter>
-        <parameter>
-            <name>pg_0</name>
-            <type>MeshNode</type>
-            <field_name>pg_ini</field_name>
+            <type>Constant</type>
+            <value>1e-5</value>
         </parameter>
 		<parameter>
             <name>T_0</name>
             <type>Constant</type>
-            <value>283.15</value>
+            <value>293.15</value>
+        </parameter>
+		<parameter>
+            <name>pg_Dirichlet</name>
+            <type>Constant</type>
+            <value>101000</value>
         </parameter>
         <parameter>
             <name>T_neumann</name>
@@ -411,6 +410,13 @@
 			</coords>
 			<values>0.5	0.7	0.782842712	0.846410162	0.9	0.947213595	0.989897949	1.029150262	1.065685425	1.1	1.132455532	1.163324958	1.192820323	1.221110255	1.248331477	1.274596669	1.3	1.324621125	1.348528137	1.371779789	1.394427191	1.416515139	1.438083152	1.459166305	1.479795897	1.5	1.519803903	1.539230485	1.558300524	1.577032961	1.595445115	1.613552873	1.63137085	1.648912529	1.666190379	1.683215957	1.7	1.716552506	1.732882801	1.7489996	1.764911064	1.780624847	1.79614814	1.811487705	1.826649916	1.841640786	1.856465997	1.87113092	1.885640646	1.9	1.914213562	1.928285686	1.94222051	1.956021978	1.969693846	1.983239697	1.996662955	2.009966887	2.023154621	2.03622915	2.049193338	2.062049935	2.074801575	2.087450787	2.1	2.11245155	2.124807681	2.137070554	2.14924225	2.161324773	2.173320053	2.185229955	2.197056275	2.208800749	2.220465053	2.232050808	2.243559577	2.254992877	2.266352173	2.277638883	2.288854382	2.3	2.311077028	2.322086716	2.333030278	2.343908891	2.354723699	2.365475811	2.376166304	2.386796226	2.397366596	2.407878403	2.418332609	2.428730152	2.439071943	2.449358869	2.459591794	2.46977156	2.479898987	2.489974874	2.5
 			</values>
+		</curve>
+		<curve>
+            <name>pc_Sw</name>
+            <coords>0	0.101212121	0.151212121	0.155757576	0.160606061	0.165757576	0.170909091	0.176060606	0.181818182	0.187878788	0.194545455	0.201818182	0.20969697	0.217575758	0.225757576	0.234545455	0.243333333	0.253030303	0.263030303	0.273636364	0.285454545	0.297575758	0.31	0.322727273	0.335454545	0.348181818	0.361212121	0.374242424	0.386969697	0.399393939	0.412121212	0.424545455	0.436969697	0.448787879	0.45969697	0.469393939	0.479090909	0.488181818	0.496969697	0.506060606	0.515454545	0.525151515	0.535454545	0.546060606	0.556666667	0.567575758	0.578484848	0.589393939	0.6	0.610606061	0.620909091	0.631515152	0.641818182	0.651818182	0.662121212	0.671818182	0.681818182	0.691515152	0.700909091	0.71030303	0.71969697	0.728787879	0.737878788	0.746969697	0.755757576	0.764545455	0.773333333	0.781818182	0.79030303	0.798484848	0.806363636	0.814242424	0.821818182	0.829090909	0.836060606	0.843030303	0.849393939	0.855757576	0.861818182	0.867575758	0.873030303	0.878484848	0.883333333	0.888181818	0.892727273	0.896666667	0.900606061	0.904545455	0.907878788	0.910909091	0.913939394	0.916363636	0.918787879	1
+            </coords>
+            <values>1105617.518	402239.7558	54762.71766	49372.48566	44104.71219	39489.80529	35520.98435	32024.69427	28739.88277	25791.99835	23253.32129	21158.50568	19296.78652	17680.11121	16273.65079	15013.60523	13915.05709	12926.6203	12008.39576	11181.11186	10458.87548	9805.844283	9257.313947	8759.614471	8326.931507	7952.157853	7611.758351	7302.725769	7054.804648	6799.625476	6583.926779	6404.496496	6215.627684	6032.32862	5881.457896	5760.829109	5655.682128	5552.454295	5476.271766	5401.134501	5314.776333	5229.798936	5134.344348	5052.251859	4948.6301	4847.133624	4736.799392	4639.647568	4534.036295	4441.043145	4339.952661	4241.163277	4144.622615	4050.279486	3948.980529	3841.359846	3736.672126	3626.477542	3511.437901	3392.22767	3269.527483	3158.529899	3058.33456	2954.50679	2841.090006	2757.306168	2675.993119	2597.077994	2520.490079	2412.598161	2363.115737	2336.065375	2246.389148	2145.284981	2135.428292	2125.61689	2020.621605	1929.678652	1851.334918	1755.840218	1653.807634	1543.423087	1443.726714	1338.088975	1195.322219	1041.082131	908.8348925	750.7321111	565.5682128	426.0739598	303.7281133	130.1622335	0.980584428	0
+            </values>
 		</curve>
     </curves>
 </OpenGeoSysProject>
