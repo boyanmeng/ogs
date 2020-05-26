@@ -734,8 +734,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 gravity_operator;
         }  // end of has gravity   
     }
-    /*
-    if (_process_data._has_mass_lumping)
+    if (_process_data.has_mass_lumping)
     {
         for (unsigned row = 0; row < Mwp.cols(); row++)
         {
@@ -743,19 +742,43 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             {
                 if (row != column)
                 {
-                    Mwx(row, row) += Mwx(row, column);
-                    Mwx(row, column) = 0.0;
                     Mwp(row, row) += Mwp(row, column);
                     Mwp(row, column) = 0.0;
-                    Mlx(row, row) += Mlx(row, column);
-                    Mlx(row, column) = 0.0;
-                    Mlp(row, row) += Mlp(row, column);
-                    Mlp(row, column) = 0.0;
+                    Mwa(row, row) += Mwa(row, column);
+                    Mwa(row, column) = 0.0;
+                    Mwc(row, row) += Mwc(row, column);
+                    Mwc(row, column) = 0.0;
+                    Mwt(row, row) += Mwt(row, column);
+                    Mwt(row, column) = 0.0;
+                    Map(row, row) += Map(row, column);
+                    Map(row, column) = 0.0;
+                    Maa(row, row) += Maa(row, column);
+                    Maa(row, column) = 0.0;
+                    Mac(row, row) += Mac(row, column);
+                    Mac(row, column) = 0.0;
+                    Mat(row, row) += Mat(row, column);
+                    Mat(row, column) = 0.0;
+                    Mcp(row, row) += Mcp(row, column);
+                    Mcp(row, column) = 0.0;
+                    Mca(row, row) += Mca(row, column);
+                    Mca(row, column) = 0.0;
+                    Mcc(row, row) += Mcc(row, column);
+                    Mcc(row, column) = 0.0;
+                    Mct(row, row) += Mct(row, column);
+                    Mct(row, column) = 0.0;
+                    Mep(row, row) += Mep(row, column);
+                    Mep(row, column) = 0.0;
+                    Mea(row, row) += Mea(row, column);
+                    Mea(row, column) = 0.0;
+                    Mec(row, row) += Mec(row, column);
+                    Mec(row, column) = 0.0;
+                    Met(row, row) += Met(row, column);
+                    Met(row, column) = 0.0;
                 }
             }
         }
     }  // end of mass-lumping
-    */
+
 }
 
 }  // namespace ThermalTwoPhaseFlowComponential
