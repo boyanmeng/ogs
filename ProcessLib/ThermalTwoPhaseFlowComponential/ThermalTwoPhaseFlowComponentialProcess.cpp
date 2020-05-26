@@ -130,7 +130,7 @@ void ThermalTwoPhaseFlowComponentialProcess::assembleWithJacobianConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, dt, x, xdot,
         dxdot_dx, dx_dx, process_id, M, K, b, Jac, _coupled_solutions);
 }
-/*
+
 void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(
     std::vector<GlobalVector*> const& x, double const t, double const dt,
     const int process_id)
@@ -144,6 +144,6 @@ void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(
         pv.getActiveElementIDs(), *_local_to_global_index_map, *x[process_id],
         t, dt);
 }
-*/
+
 }  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

@@ -69,11 +69,11 @@ private:
         GlobalVector const& xdot, const double dxdot_dx, const double dx_dx,
         int const process_id, GlobalMatrix& M, GlobalMatrix& K, GlobalVector& b,
         GlobalMatrix& Jac) override;
-    /*
+
     void preTimestepConcreteProcess(std::vector<GlobalVector*> const& x,
                                     const double t, const double dt,
                                     const int process_id) override;
-    */
+
     ThermalTwoPhaseFlowComponentialProcessData _process_data;
 
     std::vector<std::unique_ptr<ThermalTwoPhaseFlowComponentialLocalAssemblerInterface>>
