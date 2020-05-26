@@ -528,6 +528,64 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         laplace_operator.noalias() = sm.dNdx.transpose() * K_int *
                                      sm.dNdx * _ip_data[ip].integration_weight;
 
+        // Assemble energy equation M matrix
+
+        Mep.noalias() +=
+            porosity *
+            ((density_wet * internal_energy_wet -
+              density_nonwet * enthalpy_nonwet + pg_int_pt) *
+                 dsw_dpg +
+             (1 - Sw) *
+                 ((x_water_nonwet * water_mol_mass * enthalpy_water_nonwet +
+                   x_air_nonwet * air_mol_mass * enthalpy_air_nonwet +
+                   x_contaminant_nonwet * contaminant_mol_mass *
+                       enthalpy_contaminant_nonwet +
+                   pg_int_pt *
+                       (dxwG_dpg * water_mol_mass *
+                            enthalpy_water_nonwet +
+                        dxaG_dpg * air_mol_mass * enthalpy_air_nonwet +
+                        dxcG_dpg * contaminant_mol_mass *
+                            enthalpy_contaminant_nonwet)) /
+                  IdealGasConstant / T_int_pt - 1)) *
+            _ip_data[ip].mass_operator;
+        Mea.noalias() +=
+            porosity * (density_wet * internal_energy_wet * dsw_dXa +
+             (1 - Sw) * mol_density_nonwet *
+                 (dxwG_dXa * water_mol_mass * enthalpy_water_nonwet +
+                  dxaG_dXa * air_mol_mass * enthalpy_air_nonwet +
+                  dxcG_dXa * contaminant_mol_mass *
+                      enthalpy_contaminant_nonwet)) *
+                         _ip_data[ip].mass_operator;
+        Mec.noalias() += porosity *
+            (density_wet * internal_energy_wet * dsw_dXc +
+             (1 - Sw) * mol_density_nonwet *
+                 (dxwG_dXc * water_mol_mass * enthalpy_water_nonwet +
+                  dxaG_dXc * air_mol_mass * enthalpy_air_nonwet +
+                  dxcG_dXc * contaminant_mol_mass *
+                      enthalpy_contaminant_nonwet)) *
+                         _ip_data[ip].mass_operator;
+        Met.noalias() += porosity * (density_wet * (internal_energy_wet * dsw_dT +
+                                       Sw * heat_capacity_water) +
+                 (1 - Sw) * mol_density_nonwet *
+                     (-(x_water_nonwet * water_mol_mass *
+                            enthalpy_water_nonwet +
+                        x_air_nonwet * air_mol_mass * enthalpy_air_nonwet +
+                        x_contaminant_nonwet * contaminant_mol_mass *
+                            enthalpy_contaminant_nonwet) /
+                      T_int_pt + water_mol_mass *
+                     (heat_capacity_water * x_water_nonwet +
+                      enthalpy_water_nonwet * dxwG_dT) +
+                 (air_mol_mass * heat_capacity_air + IdealGasConstant) * x_air_nonwet +
+                 air_mol_mass * enthalpy_air_nonwet * dxaG_dT +
+                 (contaminant_mol_mass * heat_capacity_contaminant +
+                  IdealGasConstant) *
+                     x_contaminant_nonwet +
+                 contaminant_mol_mass * enthalpy_contaminant_nonwet * dxcG_dT)) *
+                _ip_data[ip].mass_operator +
+            (1 - porosity) *
+                density_solid * heat_capacity_solid *
+                _ip_data[ip].mass_operator;
+
         // Assemble K matrix
         Kwp.noalias() += (mol_density_wet * x_water_wet * lambda_wet *
                               (1 - dPC_dSw * dsw_dpg) +
@@ -634,7 +692,20 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                  (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
                      dxcG_dT) *
                 _ip_data[ip].diffusion_operator;
-                         
+        Kep.noalias() += (lambda_nonwet * density_nonwet * enthalpy_nonwet +
+                          lambda_wet * density_wet * enthalpy_wet * (1 - dPC_dSw * dsw_dpg)) *
+                         laplace_operator;
+        Kea.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXa) *
+            laplace_operator;
+        Kec.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXc) *
+            laplace_operator;
+        Ket.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dT) *
+                laplace_operator +
+            sm.dNdx.transpose() * effective_thermal_conductivity *
+                sm.dNdx * _ip_data[ip].integration_weight;    
         
         if (_process_data.has_gravity)
         {
@@ -656,6 +727,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                              mol_density_nonwet * x_contaminant_nonwet *
                                  lambda_nonwet * density_nonwet) *
                             gravity_operator;
+            Be.noalias() +=
+                (lambda_nonwet * density_nonwet * density_nonwet *
+                     enthalpy_nonwet +
+                 lambda_wet * density_wet * density_wet * enthalpy_wet) *
+                gravity_operator;
         }  // end of has gravity   
     }
     /*
