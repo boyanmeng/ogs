@@ -351,8 +351,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
         // TODO: should be able to read H_ref and delta from input file.
-        double const henry_air =
-            _process_data.material->calculateHenryConstant(T_int_pt, 6.4e-6, 1600);
+        double const henry_air = 8.5906e-6;
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.2e-4, 4500);
 
