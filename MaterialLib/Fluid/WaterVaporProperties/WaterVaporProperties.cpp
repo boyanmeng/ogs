@@ -28,8 +28,7 @@ static const double h_wg = 2258000.0;  /// latent heat of water evaporation
 double WaterVaporProperties::calculateSaturatedVaporPressure(
     const double T) const
 {
-    return p_0 * std::exp(((1 / temperature_0) - (1 / T)) * _water_mol_mass * h_wg /
-                           IdealGasConstant);
+    return 101300 * std::exp(13.7 - 5120 / T);
 }
 
 double WaterVaporProperties::calculateDerivativedPsatdT(const double T) const
