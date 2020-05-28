@@ -176,7 +176,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           // convergence criteria available from the input file configuration.
           // See Ehlers material model implementation for the example.
           const int maximum_iterations(20);
-          const double tolerance(1.e-14);
+          const double tolerance(1.e-12);
 
           auto newton_solver = NumLib::NewtonRaphson<
               decltype(linear_solver), LocalJacobianMatrix,
