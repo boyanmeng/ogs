@@ -1,0 +1,1 @@
+C:\Users\boyan\gmsh2ogs.exe -i 1D_andra.msh -o 1D_andra.vtu

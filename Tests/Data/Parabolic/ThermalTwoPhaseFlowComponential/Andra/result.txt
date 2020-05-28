@@ -1,0 +1,27 @@
+info: This is OpenGeoSys-6 version 6.3.0-554-g72ff3b21a.dirty.20200528114631.
+info: OGS started on 2020-05-28 15:05:05+0200.
+warning: Consider switching from mesh and geometry input to multiple meshes input. See https://www.opengeosys.org/docs/tools/model-preparation/constructmeshesfromgeometry/ tool for conversion.
+info: ConstantParameter: pg_0
+info: ConstantParameter: Xa_0
+info: ConstantParameter: Xc_0
+info: ConstantParameter: T_0
+info: ConstantParameter: pg_Dirichlet_left
+info: ConstantParameter: pg_Dirichlet_right
+info: ConstantParameter: Xa_Dirichlet_left
+info: ConstantParameter: Xa_Dirichlet_right
+info: No source terms for process variable 'gas_pressure' found.
+info: No source terms for process variable 'overall_molar_fraction_air' found.
+info: No source terms for process variable 'overall_molar_fraction_contaminant' found.
+info: No source terms for process variable 'temperature' found.
+info: The twophase flow is in heterogeneous porous media.
+info: Initialize processes.
+info: Solve processes.
+info: [time] Output of timestep 0 took 0.0076562 s.
+info: === Time stepping at step #1 and time 3600 with step size 3600
+info: Calculate non-equilibrium initial residuum.
+error: The local Newton method did not converge within the given number of iterations. Iteration: 20, increment 6.81277e-17, residual: 2.13163e-14
+critical: C:\Users\boyan\ogs\source\ProcessLib\ThermalTwoPhaseFlowComponential\ThermalTwoPhaseFlowComponentialLocalAssembler-impl.h:319 ProcessLib::ThermalTwoPhaseFlowComponential::ThermalTwoPhaseFlowComponentialLocalAssembler<class NumLib::ShapeLine2,class NumLib::IntegrationGaussLegendreRegular<1>,1>::assemble() 
+warning: There are still some matrices and vectors in use. This might be an indicator of a possible waste of memory.
+error: Computation of local constitutive relation failed.
+info: OGS terminated on 2020-05-28 15:05:05+0200.
+error: OGS terminated with error.

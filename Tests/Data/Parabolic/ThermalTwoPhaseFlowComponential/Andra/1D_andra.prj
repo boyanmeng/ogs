@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<OpenGeoSysProject>
+    <mesh axially_symmetric="true">1D_andra.vtu</mesh>
+    <geometry>1D_andra.gml</geometry>
+    <processes>
+        <process>
+            <name>GW23</name>
+            <type>THERMAL_TWOPHASE_COMPONENTIAL</type>
+            <integration_order>2</integration_order>
+            <process_variables>
+                <gas_pressure> gas_pressure </gas_pressure>
+                <overall_molar_fraction_air>overall_molar_fraction_air</overall_molar_fraction_air>
+				<overall_molar_fraction_contaminant>overall_molar_fraction_contaminant</overall_molar_fraction_contaminant>
+				<temperature>temperature</temperature>
+            </process_variables>
+            <jacobian_assembler>
+                <type>CentralDifferences</type>
+                <component_magnitudes>1e5 1e-4 1e-12 300</component_magnitudes>
+                <relative_epsilons>1e-6 1e-6 1e-6 1e-6</relative_epsilons>
+            </jacobian_assembler>
+			<secondary_variables>
+                <secondary_variable internal_name="saturation" output_name="saturation"/>
+                <secondary_variable internal_name="capillary_pressure" output_name="capillary_pressure"/>
+                <secondary_variable internal_name="pressure_wetting" output_name="pressure_wetting"/>
+                <secondary_variable internal_name="liquid_molar_fraction_air" output_name="liquid_molar_fraction_air"/>
+                <secondary_variable internal_name="liquid_molar_fraction_contaminant" output_name="liquid_molar_fraction_contaminant"/>
+				<secondary_variable internal_name="gas_molar_fraction_water" output_name="gas_molar_fraction_water"/>
+                <secondary_variable internal_name="gas_molar_fraction_contaminant" output_name="gas_molar_fraction_contaminant"/>
+            </secondary_variables>
+			<specific_body_force>0</specific_body_force>
+            <mass_lumping> true </mass_lumping>
+	    </process>
+    </processes>
+    <media>
+      <medium id="0">
+         <phases>
+            <phase>
+               <type>AqueousLiquid</type>
+			   <components>
+                   <component>
+				       <name>wasser</name>
+                       <properties>
+                           <property>
+                               <name>density</name>
+                               <type>Constant</type>
+                               <value>1.0e3</value>
+						   </property>
+                       </properties>
+				   </component>
+				   <component>
+				       <name>air</name>
+                       <properties>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>3.0e-9</value>
+                           </property>
+                       </properties>
+				   </component>
+				   <component>
+				       <name>contaminant</name>
+                       <properties>
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>8.0e-10</value>
+                           </property>
+                       </properties>
+				   </component>
+			   </components>
+               <properties>
+                  <property>
+                      <name>viscosity</name>
+                      <type>Constant</type>
+                      <value>1.0e-3</value>
+                  </property>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                  <property>
+                      <name>molecular_diffusion</name>
+                      <type>Constant</type>
+                      <value>3.0e-9</value>
+                  </property>
+               </properties>
+            </phase>
+            <phase>
+               <type>Gas</type>
+			   <components>
+                   <component>
+                       <name>air</name>
+                       <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.028964397787206768</value>
+                           </property>
+<!-- exponential with respect to 1/T						    -->
+                           <!-- <property> -->
+                               <!-- <name>Henry_constant</name> -->
+                               <!-- <type>Constant</type> -->
+                               <!-- <value>1</value> -->
+                           <!-- </property> -->
+						   <property>
+                               <name>heat_capacity </name>
+                               <type>Constant</type>
+                              <value>1040</value>
+                           </property>
+                       </properties>
+                   </component>
+				   <component>
+                       <name>wasser</name>
+                       <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.18</value>
+                           </property>
+                           <property>
+                               <name>heat_capacity </name>
+                               <type>Constant</type>
+                              <value>4187</value>
+                           </property>						   
+                       </properties>
+                   </component>
+				   <component>
+                       <name>contaminant</name>
+                       <properties>
+						   <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.16583</value>
+                           </property>
+<!-- exponential with respect to 1/T						    -->
+                           <!-- <property> -->
+                               <!-- <name>Henry_constant</name> -->
+                               <!-- <type>Constant</type> -->
+                               <!-- <value>1</value> -->
+                           <!-- </property> -->
+						   <property>
+                              <name>heat_capacity </name>
+                              <type>Constant</type>
+                              <value>576</value>                <!-- Wikipedia PCE  -->   
+                           </property>
+                       </properties>
+                   </component>
+			   </components>
+               <properties>
+                  <property>
+                     <name>density</name>
+                     <type>IdealGasLaw</type>
+                  </property>
+<!-- dependence on T and composition	(square root increase with T, composition see Wilke's method)			   -->
+                  <property>
+                     <name>viscosity</name>
+                     <type>Constant</type>
+                     <value>1.851e-5</value>
+                  </property>
+<!-- Fuller's Law, power=1.75, value for water vapor is 2.4e-5						   -->				  
+				  <property>
+                     <name>molecular_diffusion</name>
+                     <type>Constant</type>
+                     <value>1e-7</value>
+                  </property>
+               </properties>
+            </phase>
+			<phase>
+               <type>Solid</type>
+               <properties>
+                  <property>
+                     <name>density</name>
+                     <type>Constant</type>
+                     <value>2650</value>
+                  </property>
+                  <property>
+                      <name>heat_capacity </name>
+                      <type>Constant</type>
+                     <value>750</value>
+                  </property>
+               </properties>
+            </phase>
+         </phases>
+         <properties>
+            <property>
+               <name>permeability</name>
+               <type>Constant</type>
+               <value>5.0e-20</value>
+            </property>
+<!-- only allows for regularized vG or curve type, since dpc_dS has to be bounded -->
+            <property>
+               <name>capillary_pressure</name>
+               <type>CapillaryPressureVanGenuchten</type>
+               <residual_liquid_saturation>0.4</residual_liquid_saturation>
+               <residual_gas_saturation>0.0</residual_gas_saturation>
+               <exponent>0.3288590604</exponent>
+               <p_b>15e+6</p_b>
+			   <maximum_capillary_pressure>1e13</maximum_capillary_pressure>
+			   <!-- <type>Curve</type> -->
+               <!-- <curve>pc_Sw</curve> -->
+               <!-- <independent_variable>liquid_saturation</independent_variable> -->
+            </property>
+            <property>
+<!-- cannot use vG type unless source code is modified (returns a number instead of a 2x1 vector) -->
+               <name>relative_permeability</name>
+               <type>RelPermBrooksCorey</type>
+               <residual_liquid_saturation>0.0</residual_liquid_saturation>
+               <residual_gas_saturation>0.0</residual_gas_saturation>
+               <lambda>2</lambda>
+               <min_relative_permeability_liquid>0</min_relative_permeability_liquid>
+               <min_relative_permeability_gas>1e-9</min_relative_permeability_gas>
+            </property>
+            <property>
+               <name>porosity</name>
+               <type>Constant</type>
+               <value>0.15</value>
+            </property>
+<!-- square root or curve (2 types)			 -->
+<!-- add to MPL property -->
+			<property>
+               <name>thermal_conductivity</name>
+               <type>Curve</type>
+               <curve>lambda_Sw</curve>
+               <independent_variable>liquid_saturation</independent_variable>
+            </property>	
+         </properties>
+      </medium>
+    </media>		
+    <parameters>
+        <parameter>
+            <name>pg_0</name>
+            <type>Constant</type>
+            <value>1e5</value>
+        </parameter>
+        <parameter>
+            <name>Xa_0</name>
+            <type>Constant</type>
+            <value>4.195e-4</value>
+        </parameter>
+		<parameter>
+            <name>Xc_0</name>
+            <type>Constant</type>
+            <value>0</value>
+        </parameter>
+		<parameter>
+            <name>T_0</name>
+            <type>Constant</type>
+            <value>300</value>
+        </parameter>
+		<parameter>
+            <name>pg_Dirichlet_left</name>
+            <type>Constant</type>
+            <value>40e5</value>
+        </parameter>
+		<parameter>
+            <name>pg_Dirichlet_right</name>
+            <type>Constant</type>
+            <value>1e5</value>
+        </parameter>
+		<parameter>
+            <name>Xa_Dirichlet_left</name>
+            <type>Constant</type>
+            <value>0</value>
+        </parameter>
+		<parameter>
+            <name>Xa_Dirichlet_right</name>
+            <type>Constant</type>
+            <value>4.195e-4</value>
+        </parameter>
+        <!-- <parameter> -->
+            <!-- <name>T_neumann</name> -->
+            <!-- <type>Constant</type> -->
+            <!-- <value>50</value> -->
+        <!-- </parameter> -->
+    </parameters>
+    <time_loop>
+        <processes>
+            <process ref="GW23">
+                <nonlinear_solver>basic_newton</nonlinear_solver>
+                <convergence_criterion>
+                    <type>PerComponentDeltaX</type>
+                    <norm_type>NORM2</norm_type>
+                    <reltols>1.e-6 1.e-5 1.e-5 1.e-5</reltols>
+                </convergence_criterion>
+                <time_discretization>
+                    <!-- <type>CrankNicolson</type> -->
+                    <!-- <theta>0.5</theta> -->
+					<type>BackwardEuler</type>
+                </time_discretization>
+                <time_stepping>
+                    <type>EvolutionaryPIDcontroller</type>
+                    <t_initial> 0.0 </t_initial>
+                    <t_end> 315360000 </t_end>
+                    <dt_guess> 3600 </dt_guess>
+                    <dt_min> 10 </dt_min>
+                    <dt_max> 2592000 </dt_max>
+                    <rel_dt_min> 0.01 </rel_dt_min>
+                    <rel_dt_max> 1.5 </rel_dt_max>
+                    <tol> 5 </tol>
+                </time_stepping>
+            </process>
+        </processes>
+        <output>
+            <type>VTK</type>
+            <prefix>1D_andra_pcs_{:process_id}</prefix>
+            <timesteps>
+                <pair>
+                    <repeat> 1 </repeat>
+                    <each_steps> 1 </each_steps>
+                </pair>
+            </timesteps>
+            <output_iteration_results>false</output_iteration_results>
+            <variables>
+                <variable> gas_pressure </variable>
+                <variable> overall_molar_fraction_air </variable>
+                <variable> overall_molar_fraction_contaminant </variable>
+                <variable> temperature </variable>
+                <variable> saturation </variable>
+                <variable> capillary_pressure </variable>
+                <variable> pressure_wetting </variable>
+                <variable> liquid_molar_fraction_air </variable>
+                <variable> liquid_molar_fraction_contaminant </variable>
+                <variable> gas_molar_fraction_water </variable>
+                <variable> gas_molar_fraction_contaminant </variable>
+            </variables>
+			<suffix>_ts_{:timestep}_t_{:time}</suffix>
+        </output>
+    </time_loop>
+    <process_variables>
+        <process_variable>
+            <name>gas_pressure</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>pg_0</initial_condition>
+            <boundary_conditions>
+                <boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>left</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>pg_Dirichlet_left</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>right</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>pg_Dirichlet_right</parameter>
+                </boundary_condition>
+            </boundary_conditions>
+        </process_variable>
+        <process_variable>
+            <name>overall_molar_fraction_air</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>Xa_0</initial_condition>
+            <boundary_conditions>
+			    <boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>left</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xa_Dirichlet_left</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>right</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xa_Dirichlet_right</parameter>
+                </boundary_condition>
+            </boundary_conditions>
+        </process_variable>
+		<process_variable>
+            <name>overall_molar_fraction_contaminant</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>Xc_0</initial_condition>
+            <boundary_conditions>
+			    <boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>left</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xc_0</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>right</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xc_0</parameter>
+                </boundary_condition>
+            </boundary_conditions>
+        </process_variable>
+		<process_variable>
+            <name>temperature</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>T_0</initial_condition>
+            <boundary_conditions>
+			    <!-- <boundary_condition> -->
+                    <!-- <geometrical_set>geometry</geometrical_set> -->
+                    <!-- <geometry>heat_source</geometry> -->
+                    <!-- <type>Neumann</type> -->
+                    <!-- <parameter>T_neumann</parameter> -->
+                <!-- </boundary_condition> -->
+            </boundary_conditions>
+        </process_variable>
+    </process_variables>
+    <nonlinear_solvers>
+        <nonlinear_solver>
+            <name>     basic_newton </name>
+            <type>     Newton       </type>
+            <max_iter> 25          </max_iter>
+            <linear_solver>general_linear_solver</linear_solver>
+        </nonlinear_solver>
+    </nonlinear_solvers>
+    <linear_solvers>
+        <linear_solver>
+            <name>general_linear_solver</name>
+            <lis>-i bicgstab -p ilu -tol 1e-18 -maxiter 10000</lis>
+            <eigen>
+                <solver_type>SparseLU</solver_type>
+				<scaling>true</scaling>
+                <precon_type>ILUT</precon_type>
+                <max_iteration_step>10000</max_iteration_step>
+                <error_tolerance>1e-18</error_tolerance>
+            </eigen>
+            <petsc>
+                <prefix>multiphase</prefix>
+                <parameters>-gw_ksp_type cg -gw_pc_type bjacobi -gw_ksp_rtol 1e-16 -gw_ksp_max_it 10000</parameters>
+            </petsc>
+        </linear_solver>
+    </linear_solvers>
+	<curves>
+        <curve>
+            <name>lambda_Sw</name>
+            <coords>0	0.01	0.02	0.03	0.04	0.05	0.06	0.07	0.08	0.09	0.1	0.11	0.12	0.13	0.14	0.15	0.16	0.17	0.18	0.19	0.2	0.21	0.22	0.23	0.24	0.25	0.26	0.27	0.28	0.29	0.3	0.31	0.32	0.33	0.34	0.35	0.36	0.37	0.38	0.39	0.4	0.41	0.42	0.43	0.44	0.45	0.46	0.47	0.48	0.49	0.5	0.51	0.52	0.53	0.54	0.55	0.56	0.57	0.58	0.59	0.6	0.61	0.62	0.63	0.64	0.65	0.66	0.67	0.68	0.69	0.7	0.71	0.72	0.73	0.74	0.75	0.76	0.77	0.78	0.79	0.8	0.81	0.82	0.83	0.84	0.85	0.86	0.87	0.88	0.89	0.9	0.91	0.92	0.93	0.94	0.95	0.96	0.97	0.98	0.99	1
+			</coords>
+			<values>0.5	0.7	0.782842712	0.846410162	0.9	0.947213595	0.989897949	1.029150262	1.065685425	1.1	1.132455532	1.163324958	1.192820323	1.221110255	1.248331477	1.274596669	1.3	1.324621125	1.348528137	1.371779789	1.394427191	1.416515139	1.438083152	1.459166305	1.479795897	1.5	1.519803903	1.539230485	1.558300524	1.577032961	1.595445115	1.613552873	1.63137085	1.648912529	1.666190379	1.683215957	1.7	1.716552506	1.732882801	1.7489996	1.764911064	1.780624847	1.79614814	1.811487705	1.826649916	1.841640786	1.856465997	1.87113092	1.885640646	1.9	1.914213562	1.928285686	1.94222051	1.956021978	1.969693846	1.983239697	1.996662955	2.009966887	2.023154621	2.03622915	2.049193338	2.062049935	2.074801575	2.087450787	2.1	2.11245155	2.124807681	2.137070554	2.14924225	2.161324773	2.173320053	2.185229955	2.197056275	2.208800749	2.220465053	2.232050808	2.243559577	2.254992877	2.266352173	2.277638883	2.288854382	2.3	2.311077028	2.322086716	2.333030278	2.343908891	2.354723699	2.365475811	2.376166304	2.386796226	2.397366596	2.407878403	2.418332609	2.428730152	2.439071943	2.449358869	2.459591794	2.46977156	2.479898987	2.489974874	2.5
+			</values>
+		</curve>
+		<curve>
+            <name>pc_Sw</name>
+            <coords>0	0.101212121	0.151212121	0.155757576	0.160606061	0.165757576	0.170909091	0.176060606	0.181818182	0.187878788	0.194545455	0.201818182	0.20969697	0.217575758	0.225757576	0.234545455	0.243333333	0.253030303	0.263030303	0.273636364	0.285454545	0.297575758	0.31	0.322727273	0.335454545	0.348181818	0.361212121	0.374242424	0.386969697	0.399393939	0.412121212	0.424545455	0.436969697	0.448787879	0.45969697	0.469393939	0.479090909	0.488181818	0.496969697	0.506060606	0.515454545	0.525151515	0.535454545	0.546060606	0.556666667	0.567575758	0.578484848	0.589393939	0.6	0.610606061	0.620909091	0.631515152	0.641818182	0.651818182	0.662121212	0.671818182	0.681818182	0.691515152	0.700909091	0.71030303	0.71969697	0.728787879	0.737878788	0.746969697	0.755757576	0.764545455	0.773333333	0.781818182	0.79030303	0.798484848	0.806363636	0.814242424	0.821818182	0.829090909	0.836060606	0.843030303	0.849393939	0.855757576	0.861818182	0.867575758	0.873030303	0.878484848	0.883333333	0.888181818	0.892727273	0.896666667	0.900606061	0.904545455	0.907878788	0.910909091	0.913939394	0.916363636	0.918787879	1
+            </coords>
+            <values>1105617.518	402239.7558	54762.71766	49372.48566	44104.71219	39489.80529	35520.98435	32024.69427	28739.88277	25791.99835	23253.32129	21158.50568	19296.78652	17680.11121	16273.65079	15013.60523	13915.05709	12926.6203	12008.39576	11181.11186	10458.87548	9805.844283	9257.313947	8759.614471	8326.931507	7952.157853	7611.758351	7302.725769	7054.804648	6799.625476	6583.926779	6404.496496	6215.627684	6032.32862	5881.457896	5760.829109	5655.682128	5552.454295	5476.271766	5401.134501	5314.776333	5229.798936	5134.344348	5052.251859	4948.6301	4847.133624	4736.799392	4639.647568	4534.036295	4441.043145	4339.952661	4241.163277	4144.622615	4050.279486	3948.980529	3841.359846	3736.672126	3626.477542	3511.437901	3392.22767	3269.527483	3158.529899	3058.33456	2954.50679	2841.090006	2757.306168	2675.993119	2597.077994	2520.490079	2412.598161	2363.115737	2336.065375	2246.389148	2145.284981	2135.428292	2125.61689	2020.621605	1929.678652	1851.334918	1755.840218	1653.807634	1543.423087	1443.726714	1338.088975	1195.322219	1041.082131	908.8348925	750.7321111	565.5682128	426.0739598	303.7281133	130.1622335	0.980584428	0
+            </values>
+		</curve>
+    </curves>
+</OpenGeoSysProject>

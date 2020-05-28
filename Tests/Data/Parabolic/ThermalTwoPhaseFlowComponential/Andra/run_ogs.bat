@@ -1,0 +1,1 @@
+ogs.exe 1D_andra.prj > result.txt 
