@@ -1,5 +1,5 @@
 info: This is OpenGeoSys-6 version 6.3.0-554-g72ff3b21a.dirty.20200528114631.
-info: OGS started on 2020-05-28 15:05:05+0200.
+info: OGS started on 2020-05-28 19:43:36+0200.
 warning: Consider switching from mesh and geometry input to multiple meshes input. See https://www.opengeosys.org/docs/tools/model-preparation/constructmeshesfromgeometry/ tool for conversion.
 info: ConstantParameter: pg_0
 info: ConstantParameter: Xa_0
@@ -16,12 +16,266 @@ info: No source terms for process variable 'temperature' found.
 info: The twophase flow is in heterogeneous porous media.
 info: Initialize processes.
 info: Solve processes.
-info: [time] Output of timestep 0 took 0.0076562 s.
+info: [time] Output of timestep 0 took 0.0092004 s.
 info: === Time stepping at step #1 and time 3600 with step size 3600
 info: Calculate non-equilibrium initial residuum.
-error: The local Newton method did not converge within the given number of iterations. Iteration: 20, increment 6.81277e-17, residual: 2.13163e-14
-critical: C:\Users\boyan\ogs\source\ProcessLib\ThermalTwoPhaseFlowComponential\ThermalTwoPhaseFlowComponentialLocalAssembler-impl.h:319 ProcessLib::ThermalTwoPhaseFlowComponential::ThermalTwoPhaseFlowComponentialLocalAssembler<class NumLib::ShapeLine2,class NumLib::IntegrationGaussLegendreRegular<1>,1>::assemble() 
+info: [time] Assembly took 0.0650024 s.
+info: [time] Applying Dirichlet BCs took 0.0004497 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 4.378802e-23
+
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0034805 s.
+info: Convergence criterion, component 0: |dx|=1.2104e+08, |x|=3.9351e+07, |dx|/|x|=3.0760e+00
+info: Convergence criterion, component 1: |dx|=1.4634e-03, |x|=1.5224e-03, |dx|/|x|=9.6128e-01
+info: Convergence criterion, component 2: |dx|=2.2155e-19, |x|=2.2155e-19, |dx|/|x|=1.0000e+00
+info: Convergence criterion, component 3: |dx|=3.4615e-02, |x|=6.2929e+03, |dx|/|x|=5.5006e-06
+info: [time] Iteration #1 took 0.0693438 s.
+info: [time] Assembly took 0.0501145 s.
+info: [time] Applying Dirichlet BCs took 0.0003972 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 3.261427e-20
+
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.003277 s.
+info: Convergence criterion, component 0: |dx|=6.0244e+07, |x|=9.8712e+07, |dx|/|x|=6.1030e-01
+info: Convergence criterion, component 1: |dx|=2.0292e-03, |x|=3.5106e-03, |dx|/|x|=5.7800e-01
+info: Convergence criterion, component 2: |dx|=6.5602e-20, |x|=1.5617e-19, |dx|/|x|=4.2008e-01
+info: Convergence criterion, component 3: |dx|=1.8077e-01, |x|=6.2930e+03, |dx|/|x|=2.8725e-05
+info: [time] Iteration #2 took 0.0541928 s.
+info: [time] Assembly took 0.0490504 s.
+info: [time] Applying Dirichlet BCs took 0.0002809 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 4.272452e-20
+
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0036421 s.
+info: Convergence criterion, component 0: |dx|=1.3185e+10, |x|=1.3088e+10, |dx|/|x|=1.0074e+00
+info: Convergence criterion, component 1: |dx|=1.0906e-01, |x|=1.1138e-01, |dx|/|x|=9.7920e-01
+info: Convergence criterion, component 2: |dx|=7.2333e-17, |x|=7.2253e-17, |dx|/|x|=1.0011e+00
+info: Convergence criterion, component 3: |dx|=1.7152e+00, |x|=6.2920e+03, |dx|/|x|=2.7260e-04
+info: [time] Iteration #3 took 0.0533752 s.
+info: [time] Assembly took 0.0458638 s.
+info: [time] Applying Dirichlet BCs took 0.0004031 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 1/10000
+info: 	 residual: 8.036377e-19
+
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0031557 s.
+info: Convergence criterion, component 0: |dx|=1.3062e+10, |x|=2.9573e+07, |dx|/|x|=4.4170e+02
+info: Convergence criterion, component 1: |dx|=3.5348e-02, |x|=1.4051e-01, |dx|/|x|=2.5158e-01
+info: Convergence criterion, component 2: |dx|=6.6761e-17, |x|=1.1637e-17, |dx|/|x|=5.7367e+00
+info: Convergence criterion, component 3: |dx|=3.4893e+00, |x|=6.2939e+03, |dx|/|x|=5.5439e-04
+info: [time] Iteration #4 took 0.0498274 s.
+info: [time] Assembly took 0.0498018 s.
+info: [time] Applying Dirichlet BCs took 0.0007519 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0035035 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.28092 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 3600 s for process #0.
+info: [time] Time step #1 took 0.281178 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 1 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 1800 with step size 1800
+info: [time] Assembly took 0.048703 s.
+info: [time] Applying Dirichlet BCs took 0.0003907 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0028653 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0520146 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 1800 s for process #0.
+info: [time] Time step #1 took 0.052266 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 2 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 900 with step size 900
+info: [time] Assembly took 0.0552238 s.
+info: [time] Applying Dirichlet BCs took 0.0004014 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0028178 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0584983 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 900 s for process #0.
+info: [time] Time step #1 took 0.0587513 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 3 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 450 with step size 450
+info: [time] Assembly took 0.050164 s.
+info: [time] Applying Dirichlet BCs took 0.0004037 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0035484 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0542147 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 450 s for process #0.
+info: [time] Time step #1 took 0.0545528 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 4 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 225 with step size 225
+info: [time] Assembly took 0.0478981 s.
+info: [time] Applying Dirichlet BCs took 0.0003745 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0029062 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0512357 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 225 s for process #0.
+info: [time] Time step #1 took 0.0514876 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 5 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 112.5 with step size 112.5
+info: [time] Assembly took 0.0456296 s.
+info: [time] Applying Dirichlet BCs took 0.0003795 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0028154 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0488817 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 112.5 s for process #0.
+info: [time] Time step #1 took 0.0491321 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 6 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 56.25 with step size 56.25
+info: [time] Assembly took 0.0456371 s.
+info: [time] Applying Dirichlet BCs took 0.0005671 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0028825 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.049149 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 56.25 s for process #0.
+info: [time] Time step #1 took 0.0494013 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 7 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 28.125 with step size 28.125
+info: [time] Assembly took 0.0468625 s.
+info: [time] Applying Dirichlet BCs took 0.0004019 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.00287 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0501881 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 28.125 s for process #0.
+info: [time] Time step #1 took 0.0504362 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 8 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 14.0625 with step size 14.0625
+info: [time] Assembly took 0.0454633 s.
+info: [time] Applying Dirichlet BCs took 0.0006023 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0029014 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0490308 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 14.0625 s for process #0.
+info: [time] Time step #1 took 0.0492854 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 9 times and it will be repeated with a reduced step size.
+info: === Time stepping at step #1 and time 10 with step size 10
+info: [time] Assembly took 0.0511144 s.
+info: [time] Applying Dirichlet BCs took 0.0005874 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver computation
+info: -> scale
+info: -> solve with BiCGSTAB (precon ILUT)
+info: 	 iteration: 0/10000
+info: 	 residual: nan
+
+error: Failed during Eigen linear solve
+info: ------------------------------------------------------------------
+info: [time] Linear solver took 0.0030344 s.
+error: Newton: The linear solver failed.
+info: [time] Solving process #0 took 0.0547993 s in time step #1 
+error: The nonlinear solver failed in time step #1 at t = 10 s for process #0.
+info: [time] Time step #1 took 0.0550517 s.
+warning: Time step will be rejected due to nonlinear solver diverged
+warning: Time step 1 was rejected 10 times and it will be repeated with a reduced step size.
+critical: C:/Users/boyan/ogs/source/ProcessLib/TimeLoop.cpp:405 ProcessLib::TimeLoop::computeTimeStepping() 
 warning: There are still some matrices and vectors in use. This might be an indicator of a possible waste of memory.
-error: Computation of local constitutive relation failed.
-info: OGS terminated on 2020-05-28 15:05:05+0200.
+error: The new step size of 10 is the same as that of the previous rejected time step. 
+Please re-run ogs with a proper adjustment in the numerical settings, 
+e.g those for time stepper, local or global non-linear solver.
+info: OGS terminated on 2020-05-28 19:43:37+0200.
 error: OGS terminated with error.

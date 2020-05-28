@@ -240,12 +240,12 @@
         <parameter>
             <name>pg_0</name>
             <type>Constant</type>
-            <value>1e5</value>
+            <value>40e5</value>
         </parameter>
         <parameter>
             <name>Xa_0</name>
             <type>Constant</type>
-            <value>4.195e-4</value>
+            <value>0</value>
         </parameter>
 		<parameter>
             <name>Xc_0</name>
@@ -425,7 +425,8 @@
             <name>general_linear_solver</name>
             <lis>-i bicgstab -p ilu -tol 1e-18 -maxiter 10000</lis>
             <eigen>
-                <solver_type>SparseLU</solver_type>
+                <!-- <solver_type>SparseLU</solver_type> -->
+				<solver_type>BiCGSTAB</solver_type>
 				<scaling>true</scaling>
                 <precon_type>ILUT</precon_type>
                 <max_iteration_step>10000</max_iteration_step>
