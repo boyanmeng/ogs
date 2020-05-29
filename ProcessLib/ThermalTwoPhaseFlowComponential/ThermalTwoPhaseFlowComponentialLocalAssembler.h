@@ -31,9 +31,9 @@ template <typename NodalMatrixType>
 struct IntegrationPointData final
 {
     explicit IntegrationPointData()
-        : sw(1.0),
-          x_w_L(1.0),
-          x_a_L(0.0),
+        : sw(0.9),
+          x_w_L(0.99),
+          x_a_L(0.01),
           x_c_L(0.0),
           dsw_dpg(0.0),
           dxwG_dpg(0.0),
