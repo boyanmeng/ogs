@@ -352,7 +352,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
         // TODO: should be able to read H_ref and delta from input file.
-        double const henry_air = 8.5906e-6;
+        double const henry_air = 5.5556e-4;
+        // double const henry_air = 8.5906e-6;
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.2e-4, 4500);
 
@@ -457,7 +458,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         else
         {
             double const Se = (Sw - .4) / .6;
-            double const m_ = 0.3288590604;
+            double const m_ = 0.75;
             double const v = std::pow(1. - std::pow(Se, 1. / m_), m_);
             k_rel_wet = std::sqrt(Se) * (1 - v) * (1 - v);
             k_rel_nonwet = std::sqrt(1 - Se) * v * v;
