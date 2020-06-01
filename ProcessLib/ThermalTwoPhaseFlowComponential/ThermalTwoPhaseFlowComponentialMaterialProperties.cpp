@@ -218,7 +218,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const p_vap =
           calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 8.5906e-6;
+      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const x_a_G = N_w / H_a / pg * x_a_L;
@@ -246,7 +246,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 8.5906e-6;
+      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const N_G = pg / IdealGasConstant / T;
@@ -337,7 +337,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 8.5906e-6;
+      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const N_L = N_w;
