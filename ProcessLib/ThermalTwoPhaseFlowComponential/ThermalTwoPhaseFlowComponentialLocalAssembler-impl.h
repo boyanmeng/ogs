@@ -319,7 +319,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             OGS_FATAL("Computation of local constitutive relation failed.");
         }
 
-        variables[static_cast<int>(MPL::Variable::liquid_saturation)] = Sw;
+        variables[static_cast<int>(MPL::Variable::liquid_saturation)] =
+            std::clamp(Sw, 0., 1.);
 
          auto pc = capillary_pressure_model.template value<double>(variables,
                                                                   pos, t, dt);

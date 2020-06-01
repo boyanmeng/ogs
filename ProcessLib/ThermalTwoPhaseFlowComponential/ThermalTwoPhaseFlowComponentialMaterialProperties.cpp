@@ -240,7 +240,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
   {
       MaterialPropertyLib::VariableArray vars;
       vars[static_cast<int>(MaterialPropertyLib::Variable::liquid_saturation)] =
-          Sw;
+          std::clamp(Sw, 0., 1.);
       double const pc =
           pc_model.template value<double>(vars, x_position, t, dt);
       // use water density for simplicity
@@ -331,7 +331,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
   {
       MaterialPropertyLib::VariableArray vars;
       vars[static_cast<int>(MaterialPropertyLib::Variable::liquid_saturation)] =
-          Sw;
+          std::clamp(Sw, 0., 1.);
       double const pc =
           pc_model.template value<double>(vars, x_position, t, dt);
       // use water density for simplicity
