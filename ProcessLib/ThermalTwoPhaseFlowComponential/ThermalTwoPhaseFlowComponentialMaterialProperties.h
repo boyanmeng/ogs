@@ -83,6 +83,7 @@ public:
         ParameterLib::SpatialPosition const& x_position,
         MaterialPropertyLib::Property const& pc_model,        // pass by ref
         double const rho_w,
+        double const H_a,
         double const pg,
         double const Xa,
         double const Xc,
@@ -138,7 +139,8 @@ private:
     void calculateResidual(double const t, double const dt,
                            ParameterLib::SpatialPosition const& x_position,
                            MaterialPropertyLib::Property const& pc_model,       // pass by ref
-                           double const rho_w, double const pg, double const Xa,
+        double const rho_w, double const H_a, double const pg,
+        double const Xa,
                            double const Xc,
                            double const T, double Sw, double x_w_L,
                            double x_a_L, double x_c_L, ResidualVector& res);
@@ -148,7 +150,7 @@ private:
     void calculateJacobian(double const t, double const dt,
                            ParameterLib::SpatialPosition const& x_position,
                            MaterialPropertyLib::Property const& pc_model,        // pass by ref
-                           double const rho_w, double const pg, double const Xa,
+        double const rho_w, double const H_a, double const pg, double const Xa,
                            double const Xc,
                            double const T, JacobianMatrix& Jac, double Sw,
                            double x_w_L, double x_a_L, double x_c_L);
@@ -178,8 +180,8 @@ private:
     
     void calculateDerivatives(double const t, double const dt,
                               ParameterLib::SpatialPosition const& x_position,
-                              MaterialPropertyLib::Property const& pc_model,
-        double const rho_w, double const pg, double const Xa, double const Xc,
+                              MaterialPropertyLib::Property const& pc_model, double const rho_w,
+        double const H_a, double const pg, double const Xa, double const Xc,
         double const T, double Sw, double x_w_L,
                        double x_a_L, double x_c_L, double& dsw_dpg,
         double& dxwG_dpg, double& dxaG_dpg, double& dxcG_dpg, double& dsw_dXa,

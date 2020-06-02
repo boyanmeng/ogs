@@ -132,6 +132,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           double const t, double const dt,
           ParameterLib::SpatialPosition const& x_position,
           MaterialPropertyLib::Property const& pc_model, double const rho_w,
+          double const H_a,
           double const pg,
                                   double const Xa,
                                   double const Xc, double const T, double& Sw, double& x_w_L, double& x_a_L, double& x_c_L,
@@ -153,13 +154,13 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
 
           Eigen::PartialPivLU<LocalJacobianMatrix> linear_solver(4);
           auto const update_residual = [&](LocalResidualVector& residual) {
-              calculateResidual(t, dt, x_position, pc_model, rho_w, pg, Xa, Xc,
+              calculateResidual(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa, Xc,
                                 T, Sw,
                                 x_w_L, x_a_L, x_c_L, residual);
           };
 
           auto const update_jacobian = [&](LocalJacobianMatrix& jacobian) {
-              calculateJacobian(t, dt, x_position, pc_model, rho_w, pg, Xa, Xc, T, jacobian, Sw, x_w_L, x_a_L,
+              calculateJacobian(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa, Xc, T, jacobian, Sw, x_w_L, x_a_L,
                                 x_c_L);  // for solution dependent Jacobians
           };
 
@@ -192,7 +193,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
               return false;
           }
       }
-      calculateDerivatives(t, dt, x_position, pc_model, rho_w, pg, Xa, Xc, T,
+      calculateDerivatives(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa, Xc, T,
                            Sw, x_w_L, x_a_L, x_c_L, dsw_dpg, dxwG_dpg, dxaG_dpg, dxcG_dpg, dsw_dXa,
           dxwG_dXa, dxaG_dXa, dxcG_dXa, dsw_dXc,
           dxwG_dXc, dxaG_dXc, dxcG_dXc, dsw_dT,
@@ -207,6 +208,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const t, double const dt,
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
+      double const H_a,
       double const pg, double const Xa, double const Xc, double const T,
       double Sw, double x_w_L, double x_a_L, double x_c_L, ResidualVector& res)
   {
@@ -218,7 +220,6 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const p_vap =
           calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const x_a_G = N_w / H_a / pg * x_a_L;
@@ -234,6 +235,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const t, double const dt,
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
+      double const H_a,
       double const pg, double const Xa, double const Xc,
       double const T,
       JacobianMatrix& Jac, double Sw, double x_w_L, double x_a_L, double x_c_L)
@@ -246,7 +248,6 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const N_G = pg / IdealGasConstant / T;
@@ -319,6 +320,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const t, double const dt,
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
+      double const H_a,
       double const pg, double const Xa, double const Xc, double const T,
       double Sw, double x_w_L, double x_a_L, double x_c_L, double& dsw_dpg,
       double& dxwG_dpg, double& dxaG_dpg, double& dxcG_dpg, double& dsw_dXa,
@@ -337,7 +339,6 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
-      double const H_a = 5.5556e-4;
       double const H_c = calculateHenryConstant(T, 6.2e-4, 4500);
       double const N_w = rho_w / _water_mol_mass;
       double const N_L = N_w;

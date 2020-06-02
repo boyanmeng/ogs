@@ -56,6 +56,11 @@
                                <type>Constant</type>
                                <value>3.0e-9</value>
                            </property>
+						   <property>
+                               <name>henry_constant</name>
+                               <type>Constant</type>
+                               <value>8.5906e-6</value>
+                           </property>
                        </properties>
 				   </component>
 				   <component>
@@ -210,6 +215,11 @@
                <curve>pc_Sw</curve>
                <independent_variable>liquid_saturation</independent_variable>
             </property>
+			<property>
+               <name>vG_exponent</name>
+               <type>Constant</type>
+               <value>0.3288590604</value>
+            </property>
             <property>
 <!-- cannot use vG type unless source code is modified (returns a number instead of a 2x1 vector) -->
                <name>relative_permeability</name>
@@ -313,7 +323,7 @@
                     <timesteps>
                         <pair>
                             <repeat>10000</repeat>
-                            <delta_t>10</delta_t>
+                            <delta_t>3600</delta_t>
                         </pair>
                     </timesteps>
                 </time_stepping>
@@ -412,12 +422,18 @@
             <order>1</order>
             <initial_condition>T_0</initial_condition>
             <boundary_conditions>
-			    <!-- <boundary_condition> -->
-                    <!-- <geometrical_set>geometry</geometrical_set> -->
-                    <!-- <geometry>heat_source</geometry> -->
-                    <!-- <type>Neumann</type> -->
-                    <!-- <parameter>T_neumann</parameter> -->
-                <!-- </boundary_condition> -->
+			    <boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>left</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>T_0</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>right</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>T_0</parameter>
+                </boundary_condition>
             </boundary_conditions>
         </process_variable>
     </process_variables>
