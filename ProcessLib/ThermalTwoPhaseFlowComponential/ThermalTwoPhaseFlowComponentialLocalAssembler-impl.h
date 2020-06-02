@@ -274,6 +274,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             liquid_water.property(MPL::PropertyType::density)
                 .template value<double>(variables, pos, t, dt);
 
+        // TODO: should be able to read H_ref and delta from input file.
+        double const henry_air =
+            dissolved_air.property(MPL::PropertyType::henry_constant)
+                .template value<double>(variables, pos, t, dt);
+
         // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
         if (!_process_data.material->computeConstitutiveRelation(        
                 t,
@@ -281,6 +286,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 pos,
                 capillary_pressure_model,
                 density_water,
+                henry_air,
                 pg_int_pt,
                 Xa_int_pt,
                 Xc_int_pt,
@@ -353,9 +359,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const x_water_nonwet = p_vapor_nonwet / pg_int_pt * x_water_wet;
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
-        // TODO: should be able to read H_ref and delta from input file.
-        double const henry_air = 5.5556e-4;
-        // double const henry_air = 8.5906e-6;
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.2e-4, 4500);
 
@@ -460,7 +463,9 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         else
         {
             double const Se = (Sw - .4) / .6;
-            double const m_ = 0.75;
+            double const m_ =
+                medium.property(MPL::PropertyType::vG_exponent)
+                    .template value<double>(variables, pos, t, dt);
             double const v = std::pow(1. - std::pow(Se, 1. / m_), m_);
             k_rel_wet = std::sqrt(Se) * (1 - v) * (1 - v);
             k_rel_nonwet = std::sqrt(1 - Se) * v * v;

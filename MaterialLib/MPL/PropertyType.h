@@ -53,6 +53,7 @@ enum PropertyType : int
     entry_pressure,
     fredlund_parameters,
     heat_capacity,
+    henry_constant,
     /// used to compute the hydrodynamic dispersion tensor.
     longitudinal_dispersivity,
     molar_mass,
@@ -82,6 +83,7 @@ enum PropertyType : int
     transport_porosity,
     /// used to compute the hydrodynamic dispersion tensor.
     transversal_dispersivity,
+    vG_exponent,
     viscosity,
     number_of_properties
 };
@@ -168,6 +170,10 @@ inline PropertyType convertStringToProperty(std::string const& inString)
     if (boost::iequals(inString, "heat_capacity"))
     {
         return PropertyType::heat_capacity;
+    }
+    if (boost::iequals(inString, "henry_constant"))
+    {
+        return PropertyType::henry_constant;
     }
     if (boost::iequals(inString, "longitudinal_dispersivity"))
     {
@@ -269,6 +275,10 @@ inline PropertyType convertStringToProperty(std::string const& inString)
     {
         return PropertyType::transversal_dispersivity;
     }
+    if (boost::iequals(inString, "vG_exponent"))
+    {
+        return PropertyType::vG_exponent;
+    }
     if (boost::iequals(inString, "viscosity"))
     {
         return PropertyType::viscosity;
@@ -302,6 +312,7 @@ static const std::array<std::string, PropertyType::number_of_properties>
                              "entry_pressure",
                              "fredlund_parameters",
                              "heat_capacity",
+                             "henry_constant",
                              "longitudinal_dispersivity",
                              "molar_mass",
                              "mole_fraction",
@@ -327,6 +338,7 @@ static const std::array<std::string, PropertyType::number_of_properties>
                              "thermal_transversal_dispersivity",
                              "transport_porosity",
                              "transversal_dispersivity",
+                             "vG_exponent",
                              "viscosity"}};
 
 /// This data type is based on a std::array. It can hold pointers to objects of
