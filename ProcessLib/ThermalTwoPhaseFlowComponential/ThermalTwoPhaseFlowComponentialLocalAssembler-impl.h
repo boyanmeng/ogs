@@ -202,7 +202,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
     pos.setElementID(_element.getID());
 
     auto const num_nodes = ShapeFunction::NPOINTS;
-    auto const pg_nodal_values =
+    // only needed for advective form
+    /* auto const pg_nodal_values =
         Eigen::Map<const NodalVectorType>(&local_x[0], num_nodes);
     auto const Xa_nodal_values =
         Eigen::Map<const NodalVectorType>(&local_x[num_nodes], num_nodes);
@@ -210,6 +211,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         Eigen::Map<const NodalVectorType>(&local_x[2 * num_nodes], num_nodes);
     auto const T_nodal_values =
         Eigen::Map<const NodalVectorType>(&local_x[3 * num_nodes], num_nodes);
+    */
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
@@ -477,6 +479,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             medium.property(MPL::PropertyType::permeability)
                 .template value<double>(variables, pos, t, dt));
 
+        // only needed for advective form
+        /* 
         GlobalDimVectorType const velocity_nonwet =
             -lambda_nonwet * K_int *
             (sm.dNdx * pg_nodal_values);
@@ -486,6 +490,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
              dPC_dSw * dsw_dXa * sm.dNdx * Xa_nodal_values -
              dPC_dSw * dsw_dXc * sm.dNdx * Xc_nodal_values -
              dPC_dSw * dsw_dT * sm.dNdx * T_nodal_values);
+        */
 
         // diffusion coefficients
         double const diffusion_coeff_wet =
@@ -722,23 +727,20 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                  (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
                      dxcG_dT) *
                 _ip_data[ip].diffusion_operator;
-        Kep.noalias() += _ip_data[ip].integration_weight * sm.N.transpose() *
-                         d_vol_enthalpy_nonwet_dpg *
-                         velocity_nonwet.transpose() * sm.dNdx;
-        Kea.noalias() += _ip_data[ip].integration_weight * sm.N.transpose() *
-                         d_vol_enthalpy_nonwet_dXa *
-                         velocity_nonwet.transpose() * sm.dNdx;
-        Kec.noalias() += _ip_data[ip].integration_weight * sm.N.transpose() *
-                         d_vol_enthalpy_nonwet_dXc *
-                         velocity_nonwet.transpose() * sm.dNdx;
-        Ket.noalias() += _ip_data[ip].integration_weight * sm.N.transpose() *
-                             heat_capacity_water * density_wet *
-                             velocity_wet.transpose() * sm.dNdx +
-                         _ip_data[ip].integration_weight * sm.N.transpose() *
-                             d_vol_enthalpy_nonwet_dT *
-                             velocity_nonwet.transpose() * sm.dNdx +
-                         sm.dNdx.transpose() * effective_thermal_conductivity *
-                             sm.dNdx * _ip_data[ip].integration_weight;
+        Kep.noalias() += (lambda_nonwet * density_nonwet * enthalpy_nonwet +
+                          lambda_wet * density_wet * enthalpy_wet * (1 - dPC_dSw * dsw_dpg)) *
+                         laplace_operator;
+        Kea.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXa) *
+            laplace_operator;
+        Kec.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXc) *
+            laplace_operator;
+        Ket.noalias() +=
+            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dT) *
+                laplace_operator +
+            sm.dNdx.transpose() * effective_thermal_conductivity *
+                sm.dNdx * _ip_data[ip].integration_weight;    
         
         if (_process_data.has_gravity)
         {
@@ -760,6 +762,11 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                              mol_density_nonwet * x_contaminant_nonwet *
                                  lambda_nonwet * density_nonwet) *
                             gravity_operator;
+            Be.noalias() +=
+                (lambda_nonwet * density_nonwet * density_nonwet *
+                     enthalpy_nonwet +
+                 lambda_wet * density_wet * density_wet * enthalpy_wet) *
+                gravity_operator;
         }  // end of has gravity   
     }
     if (_process_data.has_mass_lumping)
