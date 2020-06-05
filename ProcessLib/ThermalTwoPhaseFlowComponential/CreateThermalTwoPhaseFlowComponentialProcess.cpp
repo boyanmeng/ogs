@@ -53,9 +53,7 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
          //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_molar_fraction_air}
          "overall_molar_fraction_air",
          //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_molar_fraction_contaminant}
-         "overall_molar_fraction_contaminant",
-         //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__temperature}
-         "temperature"});
+         "overall_molar_fraction_contaminant"});
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
         process_variables;
     process_variables.push_back(std::move(per_process_variables));
@@ -95,9 +93,13 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
 
     auto media_map =
         MaterialPropertyLib::createMaterialSpatialDistributionMap(media, mesh);
+    auto& temperature = ParameterLib::findParameter<double>(
+        config,
+        //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PP__temperature}
+        "temperature", parameters, 1, &mesh);
 
     ThermalTwoPhaseFlowComponentialProcessData process_data{
-        specific_body_force, has_gravity, mass_lumping, std::move(media_map),
+        specific_body_force, has_gravity, mass_lumping, temperature, std::move(media_map),
         std::move(material)};
 
     return std::make_unique<ThermalTwoPhaseFlowComponentialProcess>(
