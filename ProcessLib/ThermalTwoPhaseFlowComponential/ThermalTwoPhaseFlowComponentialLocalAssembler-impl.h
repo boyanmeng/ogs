@@ -450,6 +450,9 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             gas_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
 
+        laplace_operator.noalias() = sm.dNdx.transpose() *
+                                     K_int * sm.dNdx *
+                                     _ip_data[ip].integration_weight;
 
         // Assemble K matrix
         Kwp.noalias() += (mol_density_wet * x_water_wet * lambda_wet *
