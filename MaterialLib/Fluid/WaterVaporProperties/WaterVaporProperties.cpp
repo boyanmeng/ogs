@@ -33,9 +33,8 @@ double WaterVaporProperties::calculateSaturatedVaporPressure(
 
 double WaterVaporProperties::calculateDerivativedPsatdT(const double T) const
 {
-    return p_0 * (_water_mol_mass * h_wg / IdealGasConstant) * (1. / T / T) *
-           std::exp(((1. / temperature_0) - (1. / T)) * _water_mol_mass * h_wg /
-                    IdealGasConstant);
+    double const p_sat = calculateSaturatedVaporPressure(T);
+    return p_sat * 5120 / T / T;
 }
 
 double WaterVaporProperties::calculateVaporPressureNonwet(
