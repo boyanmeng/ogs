@@ -255,7 +255,8 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const dpc_dSw = pc_model.template dValue<double>(
           vars, MaterialPropertyLib::Variable::liquid_saturation, x_position, t,
           dt);
-      double const dpvap_dSw = -p_vap * dpc_dSw / N_w / IdealGasConstant / T;
+      double const dpvap_dpc = calculateDerivativedPgwdPC(pc, T, rho_w);
+      double const dpvap_dSw = dpvap_dpc * dpc_dSw;
       Jac.setZero();
       if (Sw <= (1 - x_w_L - x_a_L - x_c_L))
       {
