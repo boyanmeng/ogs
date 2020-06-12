@@ -352,6 +352,12 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const dpc_dsw = pc_model.template dValue<double>(
           vars, MaterialPropertyLib::Variable::liquid_saturation, x_position, t,
           dt);
+      double const coeff_w_1 =
+          -pg * dpvap_dpc * dpc_dsw * x_w_G / p_vap / p_vap;
+      double const coeff_a_3 = H_a * pg / N_L;
+      double const coeff_c_3 = H_c * pg / N_L;
+      double const pg_over_pvap = pg / p_vap;
+
       if (Sw <= (1 - x_w_L - x_a_L - x_c_L))
       {
           /*dsw_dpg = 0;
@@ -369,10 +375,10 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           dxwG_dpg = -x_w_G / pg;
           dxaG_dpg = -x_a_G / pg;
           dxcG_dpg = -x_c_G / pg;
-          dxwG_dXa = -p_vap / pg;
-          dxaG_dXa = N_L / pg / H_a;
-          dxwG_dXc = -p_vap / pg;
-          dxcG_dXc = N_L / pg / H_c;
+          dxwG_dXa = -1 / pg_over_pvap;
+          dxaG_dXa = 1 / coeff_a_3;
+          dxwG_dXc = -1 / pg_over_pvap;
+          dxcG_dXc = 1 / coeff_c_3;
           dxwG_dT = x_w_G * dpvap_dT / p_vap;
           dxaG_dT = -dHa_dT * x_a_G / H_a;
           dxcG_dT = -dHc_dT * x_c_G / H_c;
@@ -380,84 +386,47 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       else
       {
           // derivatives w.r.t. pg, Xa, Xc, T
-          Eigen::Matrix4d Kp, Ka, Kc, Kt;
+          Eigen::Matrix4d K;
           Eigen::Vector4d bp, ba, bc, bt;
-          Kp.setZero();
-          Ka.setZero();
-          Kc.setZero();
-          Kt.setZero();
+          K.setZero();
 
           double const coeff_a_1 = (N_L - N_G) * Xa - N_L * x_a_L + N_G * x_a_G;
           double const coeff_a_2 = -(H_a * Sw * pg + (1 - Sw) * N_G);
-          double const coeff_a_3 = H_a * pg / N_L;
           double const coeff_c_1 = (N_L - N_G) * Xc - N_L * x_c_L + N_G * x_c_G;
           double const coeff_c_2 = -(H_c * Sw * pg + (1 - Sw) * N_G);
-          double const coeff_c_3 = H_c * pg / N_L;
-          double const coeff_w_1 = -dpvap_dpc * dpc_dsw * x_w_G / p_vap / p_vap;
-          double const pg_over_pvap = pg / p_vap;
           double const N_tot = Sw * N_L + (1 - Sw) * N_G;
+          double const dNG_dT = -pg / IdealGasConstant / T / T;              
 
-          Kp(0, 0) = coeff_a_1;
-          Kp(0, 2) = coeff_a_2;
-          Kp(1, 0) = coeff_c_1;
-          Kp(1, 3) = coeff_c_2;
-          Kp(2, 1) = 1;
-          Kp(2, 2) = 1;
-          Kp(2, 3) = 1;
-          Kp(3, 0) = coeff_w_1 * pg;
-          Kp(3, 1) = pg_over_pvap;
-          Kp(3, 2) = coeff_a_3;
-          Kp(3, 3) = coeff_c_3;
+          K(0, 0) = coeff_a_1;
+          K(0, 2) = coeff_a_2;
+          K(1, 0) = coeff_c_1;
+          K(1, 3) = coeff_c_2;
+          K(2, 1) = 1;
+          K(2, 2) = 1;
+          K(2, 3) = 1;
+          K(3, 0) = coeff_w_1;
+          K(3, 1) = pg_over_pvap;
+          K(3, 2) = coeff_a_3;
+          K(3, 3) = coeff_c_3;
+
           bp << H_a * Sw * x_a_G -
-                     (1 - Sw) * (Xa - x_a_G) / IdealGasConstant / T,
+                    (1 - Sw) * (Xa - x_a_G) / IdealGasConstant / T,
               H_c * Sw * x_c_G - (1 - Sw) * (Xc - x_c_G) / IdealGasConstant / T,
               0, -(x_w_G / p_vap + (H_a * x_a_G + H_c * x_c_G) / N_L);
 
-          Ka(0, 0) = coeff_a_1;
-          Ka(0, 2) = coeff_a_2;
-          Ka(1, 0) = coeff_c_1;
-          Ka(1, 3) = coeff_c_2;
-          Ka(2, 1) = 1;
-          Ka(2, 2) = 1;
-          Ka(2, 3) = 1;
-          Ka(3, 0) = coeff_w_1;
-          Ka(3, 1) = pg_over_pvap;
-          Ka(3, 2) = coeff_a_3;
-          Ka(3, 3) = coeff_c_3;
           ba << -N_tot, 0, 0, 0;
 
-          Kc(0, 0) = coeff_a_1;
-          Kc(0, 2) = coeff_a_2;
-          Kc(1, 0) = coeff_c_1;
-          Kc(1, 3) = coeff_c_2;
-          Kc(2, 1) = 1;
-          Kc(2, 2) = 1;
-          Kc(2, 3) = 1;
-          Kc(3, 0) = coeff_w_1;
-          Kc(3, 1) = pg_over_pvap;
-          Kc(3, 2) = coeff_a_3;
-          Kc(3, 3) = coeff_c_3;
           bc << 0, -N_tot, 0, 0;
 
-          Kt(0, 0) = coeff_a_1;
-          Kt(0, 2) = coeff_a_2;
-          Kt(1, 0) = coeff_c_1;
-          Kt(1, 3) = coeff_c_2;
-          Kt(2, 1) = 1;
-          Kt(2, 2) = 1;
-          Kt(2, 3) = 1;
-          Kt(3, 0) = coeff_w_1 * pg;
-          Kt(3, 1) = pg_over_pvap;
-          Kt(3, 2) = coeff_a_3;
-          Kt(3, 3) = coeff_c_3;
-          bt << pg * Sw * dHa_dT * x_a_G, pg * Sw * dHc_dT * x_c_G, 0,
+          bt << pg * Sw * dHa_dT * x_a_G - (1 - Sw) * (Xa - x_a_G) * dNG_dT,
+              pg * Sw * dHc_dT * x_c_G - (1 - Sw) * (Xc - x_c_G) * dNG_dT, 0,
               pg * (x_w_G * dpvap_dT / p_vap / p_vap -
                     (dHa_dT * x_a_G + dHc_dT * x_c_G) / N_L);
 
-          Eigen::Vector4d x_dpg = Kp.partialPivLu().solve(bp);
-          Eigen::Vector4d x_dXa = Ka.partialPivLu().solve(ba);
-          Eigen::Vector4d x_dXc = Kc.partialPivLu().solve(bc);
-          Eigen::Vector4d x_dT = Kt.partialPivLu().solve(bt);
+          Eigen::Vector4d x_dpg = K.partialPivLu().solve(bp);
+          Eigen::Vector4d x_dXa = K.partialPivLu().solve(ba);
+          Eigen::Vector4d x_dXc = K.partialPivLu().solve(bc);
+          Eigen::Vector4d x_dT = K.partialPivLu().solve(bt);
           dsw_dpg = x_dpg[0];
           dxwG_dpg = x_dpg[1]; 
           dxaG_dpg = x_dpg[2];
@@ -475,20 +444,17 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           dxaG_dT= x_dT[2];
           dxcG_dT= x_dT[3];
       }
-      dxwL_dpg = (x_w_G + pg * dxwG_dpg) / p_vap -
-                 dpvap_dpc * dpc_dsw * pg * x_w_G * dsw_dpg / p_vap / p_vap;
+      dxwL_dpg = (x_w_G + pg * dxwG_dpg) / p_vap + coeff_w_1 * dsw_dpg;
       dxaL_dpg = (x_a_G + pg * dxaG_dpg) * H_a / N_L;
       dxcL_dpg = (x_c_G + pg * dxcG_dpg) * H_c / N_L;
-      dxwL_dXa = pg * dxwG_dXa / p_vap -
-                 dpvap_dpc * dpc_dsw * x_w_G * dsw_dXa / p_vap / p_vap;
-      dxaL_dXa = pg * H_a * dxaG_dXa / N_L;
-      dxcL_dXa = pg * H_c * dxcG_dXa / N_L;
-      dxwL_dXc = pg * dxwG_dXc / p_vap -
-                 dpvap_dpc * dpc_dsw * x_w_G * dsw_dXc / p_vap / p_vap;
-      dxaL_dXc = pg * H_a * dxaG_dXc / N_L;
-      dxcL_dXc = pg * H_c * dxcG_dXc / N_L;
-      dxwL_dT = pg * dxwG_dT / p_vap -
-                pg * x_w_G * (dpvap_dpc * dpc_dsw * dsw_dT + dpvap_dT) / p_vap /
+      dxwL_dXa = pg * dxwG_dXa / p_vap + coeff_w_1 * dsw_dXa;
+      dxaL_dXa = coeff_a_3 * dxaG_dXa;
+      dxcL_dXa = coeff_c_3 * dxcG_dXa;
+      dxwL_dXc = pg * dxwG_dXc / p_vap + coeff_w_1 * dsw_dXc;
+      dxaL_dXc = coeff_a_3 * dxaG_dXc;
+      dxcL_dXc = coeff_c_3 * dxcG_dXc;
+      dxwL_dT = pg * dxwG_dT / p_vap + coeff_w_1 * dsw_dT -
+                pg * x_w_G * dpvap_dT / p_vap /
                     p_vap;
       dxaL_dT = pg * (dHa_dT * x_a_G + H_a * dxaG_dT) / N_L;
       dxcL_dT = pg * (dHc_dT * x_c_G + H_c * dxcG_dT) / N_L;
