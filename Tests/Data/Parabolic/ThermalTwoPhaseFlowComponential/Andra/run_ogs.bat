@@ -1,1 +1,0 @@
-D:\MBY\PhD-ENVINF\OGS-builds\build_NonIsothermal2P3C_test_Andra\release\bin\ogs.exe 1D_andra.prj > result.txt 
