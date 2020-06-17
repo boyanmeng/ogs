@@ -279,12 +279,14 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             dissolved_air.property(MPL::PropertyType::henry_constant)
                 .template value<double>(variables, pos, t, dt);
 
+         const double error_tolerance = _process_data.error_tolerance;
         // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
         if (!_process_data.material->computeConstitutiveRelation(        
                 t,
                 dt,
                 pos,
                 capillary_pressure_model,
+                error_tolerance,
                 density_water,
                 henry_air,
                 pg_int_pt,

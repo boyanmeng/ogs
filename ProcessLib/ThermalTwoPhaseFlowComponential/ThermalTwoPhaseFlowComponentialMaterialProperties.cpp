@@ -131,7 +131,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       computeConstitutiveRelation(
           double const t, double const dt,
           ParameterLib::SpatialPosition const& x_position,
-          MaterialPropertyLib::Property const& pc_model, double const rho_w,
+          MaterialPropertyLib::Property const& pc_model, double const err_tol, double const rho_w,
           double const H_a,
           double const pg,
                                   double const Xa,
@@ -177,7 +177,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           // convergence criteria available from the input file configuration.
           // See Ehlers material model implementation for the example.
           const int maximum_iterations(20);
-          const double tolerance(1.e-12);
+          const double tolerance(err_tol);
 
           auto newton_solver = NumLib::NewtonRaphson<
               decltype(linear_solver), LocalJacobianMatrix,
