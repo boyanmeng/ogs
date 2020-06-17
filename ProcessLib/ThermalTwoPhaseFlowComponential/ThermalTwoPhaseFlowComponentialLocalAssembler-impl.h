@@ -274,12 +274,14 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             liquid_water.property(MPL::PropertyType::density)
                 .template value<double>(variables, pos, t, dt);
 
+         const double error_tolerance = _process_data.error_tolerance;
         // Calculate Sw, x_w_L, x_a_L, x_c_L and various derivatives from PVs
         if (!_process_data.material->computeConstitutiveRelation(        
                 t,
                 dt,
                 pos,
                 capillary_pressure_model,
+                error_tolerance,
                 density_water,
                 pg_int_pt,
                 Xa_int_pt,
@@ -353,9 +355,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const x_water_nonwet = p_vapor_nonwet / pg_int_pt * x_water_wet;
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
-        // TODO: should be able to read H_ref and delta from input file.
-        double const henry_air =
-            _process_data.material->calculateHenryConstant(T_int_pt, 6.4e-6, 1600);
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.2e-4, 4500);
 

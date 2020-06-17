@@ -95,9 +95,14 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
 
     auto media_map =
         MaterialPropertyLib::createMaterialSpatialDistributionMap(media, mesh);
+    double const error_tolerance =
+        config.getConfigParameter<double>("error_tolerance");
 
     ThermalTwoPhaseFlowComponentialProcessData process_data{
-        specific_body_force, has_gravity, mass_lumping, std::move(media_map),
+        specific_body_force,
+        has_gravity,
+        mass_lumping,
+        error_tolerance, std::move(media_map),
         std::move(material)};
 
     return std::make_unique<ThermalTwoPhaseFlowComponentialProcess>(
