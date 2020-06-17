@@ -27,6 +27,7 @@ struct ThermalTwoPhaseFlowComponentialProcessData
     bool const has_gravity;
     bool const has_mass_lumping;
     ParameterLib::Parameter<double> const& temperature;
+    double const error_tolerance;
     std::unique_ptr<MaterialPropertyLib::MaterialSpatialDistributionMap>
         media_map;
     std::unique_ptr<ThermalTwoPhaseFlowComponentialMaterialProperties> material;

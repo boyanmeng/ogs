@@ -97,9 +97,15 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
         config,
         //! \ogs_file_param_special{prj__processes__process__TWOPHASE_FLOW_PP__temperature}
         "temperature", parameters, 1, &mesh);
+    double const error_tolerance =
+        config.getConfigParameter<double>("error_tolerance");
 
     ThermalTwoPhaseFlowComponentialProcessData process_data{
-        specific_body_force, has_gravity, mass_lumping, temperature, std::move(media_map),
+        specific_body_force,
+        has_gravity,
+        mass_lumping,
+        temperature,
+        error_tolerance, std::move(media_map),
         std::move(material)};
 
     return std::make_unique<ThermalTwoPhaseFlowComponentialProcess>(
