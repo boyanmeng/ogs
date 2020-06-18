@@ -360,25 +360,38 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
 
       if (Sw <= (1 - x_w_L - x_a_L - x_c_L))
       {
-          /*dsw_dpg = 0;
+          dsw_dpg = 0;
           dxwG_dpg = 0;
           dxaG_dpg = 0;
-          dxcG_dpg = 0;*/      // zero by ctor
+          dxcG_dpg = 0;
+          dsw_dXa = 0;
           dxwG_dXa = -1;
           dxaG_dXa = 1;
+          dxcG_dXa = 0;
+          dsw_dXc = 0;
           dxwG_dXc = -1;
+          dxaG_dXc = 0;
           dxcG_dXc = 1;
+          dsw_dT = 0;
+          dxwG_dT = 0;
+          dxaG_dT = 0;
+          dxcG_dT = 0;
       }
       else if ((1 - Sw) <= (1 - x_w_G - x_a_G - x_c_G))
       {
-          // dsw_dpg = 0;
+          dsw_dpg = 0;
           dxwG_dpg = -x_w_G / pg;
           dxaG_dpg = -x_a_G / pg;
           dxcG_dpg = -x_c_G / pg;
+          dsw_dXa = 0;
           dxwG_dXa = -1 / pg_over_pvap;
           dxaG_dXa = 1 / coeff_a_3;
+          dxcG_dXa = 0;
+          dsw_dXc = 0;
           dxwG_dXc = -1 / pg_over_pvap;
+          dxaG_dXc = 0;
           dxcG_dXc = 1 / coeff_c_3;
+          dsw_dT = 0;
           dxwG_dT = x_w_G * dpvap_dT / p_vap;
           dxaG_dT = -dHa_dT * x_a_G / H_a;
           dxcG_dT = -dHc_dT * x_c_G / H_c;
