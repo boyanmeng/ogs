@@ -184,6 +184,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double& x_water_wet = _ip_data[ip].x_w_L;
         double& x_air_wet = _ip_data[ip].x_a_L;
         double& x_contaminant_wet = _ip_data[ip].x_c_L;
+        // TODO: remove derivatives from ip_data (no need to save values from last loop)
         double& dsw_dpg = _ip_data[ip].dsw_dpg;
         double& dxwG_dpg = _ip_data[ip].dxwG_dpg;
         double& dxaG_dpg = _ip_data[ip].dxaG_dpg;
