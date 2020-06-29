@@ -451,28 +451,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         Mct.noalias() += porosity * Xc_int_pt * d_mol_density_tot_dT *
                          _ip_data[ip].mass_operator;
 
-        double k_rel_wet = 0., k_rel_nonwet = 0.;
-        if (Sw < .4)
-        {
-            k_rel_wet = 0.;
-            k_rel_nonwet = 1.;
-        }
-        else if (Sw > 1.)
-        {
-            k_rel_wet = 1.;
-            k_rel_nonwet = 0.;
-        }
-        else
-        {
-            double const Se = (Sw - .4) / .6;
-            double const m_ =
-                medium.property(MPL::PropertyType::vG_exponent)
-                    .template value<double>(variables, pos, t, dt);
-            double const v = std::pow(1. - std::pow(Se, 1. / m_), m_);
-            k_rel_wet = std::sqrt(Se) * (1 - v) * (1 - v);
-            k_rel_nonwet = std::sqrt(1 - Se) * v * v;
-        }
-
+        double k_rel_wet = std::clamp(std::pow(Sw, 3.), 0., 1.);
+        double k_rel_nonwet = std::clamp(std::pow(1 - Sw, 3.), 0., 1.);
         
         auto const mu_nonwet =
             gas_phase.property(MPL::PropertyType::viscosity)
