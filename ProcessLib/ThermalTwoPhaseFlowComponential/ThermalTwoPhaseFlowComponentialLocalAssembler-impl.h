@@ -355,6 +355,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const x_water_nonwet = p_vapor_nonwet / pg_int_pt * x_water_wet;
         _gas_molar_fraction_water[ip] = x_water_nonwet;
 
+        double const henry_air = _process_data.material->calculateHenryConstant(
+            T_int_pt, 6.4e-6, 1600);
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.2e-4, 4500);
 
@@ -446,7 +448,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                          _ip_data[ip].mass_operator;
 
         double k_rel_wet = 0., k_rel_nonwet = 0.;
-        if (Sw < .4)
+        if (Sw < .1)
         {
             k_rel_wet = 0.;
             k_rel_nonwet = 1.;
@@ -458,7 +460,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         }
         else
         {
-            double const Se = (Sw - .4) / .6;
+            double const Se = (Sw - .1) / (1 - .1);
             double const m_ = 0.3288590604;
             double const v = std::pow(1. - std::pow(Se, 1. / m_), m_);
             k_rel_wet = std::sqrt(Se) * (1 - v) * (1 - v);
