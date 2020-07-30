@@ -87,40 +87,25 @@ public:
         double const H_a,
         double const pg,
         double const Xa,
-        double const Xc,
         double const T,
         double& Sw,
         double& x_w_L,
         double& x_a_L,
-        double& x_c_L,
         double& dsw_dpg, 
         double& dxwG_dpg,
         double& dxaG_dpg,
-        double& dxcG_dpg,
         double& dsw_dXa,
         double& dxwG_dXa,
         double& dxaG_dXa,
-        double& dxcG_dXa,
-        double& dsw_dXc,
-        double& dxwG_dXc,
-        double& dxaG_dXc,
-        double& dxcG_dXc,
         double& dsw_dT,
         double& dxwG_dT,
         double& dxaG_dT,
-        double& dxcG_dT,
         double& dxwL_dpg,
         double& dxaL_dpg,
-        double& dxcL_dpg,
         double& dxwL_dXa,
         double& dxaL_dXa,
-        double& dxcL_dXa,
-        double& dxwL_dXc,
-        double& dxaL_dXc,
-        double& dxcL_dXc,
         double& dxwL_dT,
-        double& dxaL_dT,
-        double& dxcL_dT);
+        double& dxaL_dT);
 
 private:
     double const& _air_mol_mass = MaterialLib::PhysicalConstant::MolarMass::Air;
@@ -128,7 +113,7 @@ private:
     std::unique_ptr<MaterialLib::Fluid::WaterVaporProperties> const
         _water_vapor_properties;
     
-    static int const jacobian_residual_size = 4;
+    static int const jacobian_residual_size = 3;
     using ResidualVector = Eigen::Matrix<double, jacobian_residual_size, 1>;
     using JacobianMatrix =
         Eigen::Matrix<double, jacobian_residual_size, jacobian_residual_size,
@@ -142,9 +127,8 @@ private:
                            MaterialPropertyLib::Property const& pc_model,       // pass by ref
         double const rho_w, double const H_a, double const pg,
         double const Xa,
-                           double const Xc,
                            double const T, double Sw, double x_w_L,
-                           double x_a_L, double x_c_L, ResidualVector& res);
+                           double x_a_L, ResidualVector& res);
     
     // Calculates the Jacobian.
     
@@ -152,46 +136,34 @@ private:
                            ParameterLib::SpatialPosition const& x_position,
                            MaterialPropertyLib::Property const& pc_model,        // pass by ref
         double const rho_w, double const H_a, double const pg, double const Xa,
-                           double const Xc,
                            double const T, JacobianMatrix& Jac, double Sw,
-                           double x_w_L, double x_a_L, double x_c_L);
+                           double x_w_L, double x_a_L);
     // Complementary condition 1
     // for calculating ...
     
-    double calculateResEq1(double Sw, double x_w_L, double x_a_L,
-                              double x_c_L) const;
+    double calculateResEq1(double Sw, double x_w_L, double x_a_L) const;
     // Complementary condition 2
     // for calculating ...
     
-    double calculateResEq2(double Sw, double x_w_G, double x_a_G,
-                              double x_c_G) const;
+    double calculateResEq2(double Sw, double x_w_G, double x_a_G) const;
     // Complementary condition 3
     // for calculating ...
 
     double calculateResEq3(double Sw, double Xa, double x_a_L, double x_a_G,
                            double rho_w, double pg, double T) const;
 
-    // Complementary condition 4
-    // for calculating ...
-
-    double calculateResEq4(double Sw, double Xc, double x_c_L, double x_c_G,
-                           double rho_w, double pg, double T) const;
-    
     // Calculate the derivatives using the numerical way
     
-    void calculateDerivatives(double const t, double const dt,
-                              ParameterLib::SpatialPosition const& x_position,
-                              MaterialPropertyLib::Property const& pc_model, double const rho_w,
-        double const H_a, double const pg, double const Xa, double const Xc,
-        double const T, double Sw, double x_w_L,
-                       double x_a_L, double x_c_L, double& dsw_dpg,
-        double& dxwG_dpg, double& dxaG_dpg, double& dxcG_dpg, double& dsw_dXa,
-        double& dxwG_dXa, double& dxaG_dXa, double& dxcG_dXa, double& dsw_dXc,
-        double& dxwG_dXc, double& dxaG_dXc, double& dxcG_dXc, double& dsw_dT,
-        double& dxwG_dT, double& dxaG_dT, double& dxcG_dT, double& dxwL_dpg,
-        double& dxaL_dpg, double& dxcL_dpg, double& dxwL_dXa, double& dxaL_dXa,
-        double& dxcL_dXa, double& dxwL_dXc, double& dxaL_dXc, double& dxcL_dXc,
-        double& dxwL_dT, double& dxaL_dT, double& dxcL_dT);
+    void calculateDerivatives(
+        double const t, double const dt,
+        ParameterLib::SpatialPosition const& x_position,
+        MaterialPropertyLib::Property const& pc_model, double const rho_w,
+        double const H_a, double const pg, double const Xa, double const T,
+        double& Sw, double& x_w_L, double& x_a_L, double& dsw_dpg,
+        double& dxwG_dpg, double& dxaG_dpg, double& dsw_dXa, double& dxwG_dXa,
+        double& dxaG_dXa, double& dsw_dT, double& dxwG_dT, double& dxaG_dT,
+        double& dxwL_dpg, double& dxaL_dpg, double& dxwL_dXa, double& dxaL_dXa,
+        double& dxwL_dT, double& dxaL_dT);
 };
 
 }  // namespace ProcessLib::ThermalTwoPhaseFlowComponential

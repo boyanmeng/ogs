@@ -74,24 +74,11 @@ void ThermalTwoPhaseFlowComponentialProcess::initializeConcreteProcess(
             &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
                 getIntPtLiquidMolFracAir));
     _secondary_variables.addSecondaryVariable(
-        "liquid_molar_fraction_contaminant",
-        makeExtrapolator(
-            1, getExtrapolator(), _local_assemblers,
-            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                getIntPtLiquidMolFracContaminant));
-    _secondary_variables.addSecondaryVariable(
         "gas_molar_fraction_water",
         makeExtrapolator(
             1, getExtrapolator(), _local_assemblers,
             &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
                 getIntPtGasMolFracWater));
-    _secondary_variables.addSecondaryVariable(
-        "gas_molar_fraction_contaminant",
-        makeExtrapolator(
-            1, getExtrapolator(), _local_assemblers,
-            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                getIntPtGasMolFracContaminant));
-    
 }
 
 void ThermalTwoPhaseFlowComponentialProcess::assembleConcreteProcess(
