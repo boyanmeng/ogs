@@ -63,9 +63,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         nonwet_pressure_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Mwt = local_M.template block<nonwet_pressure_size, temperature_size>(
-        nonwet_pressure_matrix_index, temperature_matrix_index);
-
+    
     auto Map =
         local_M.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
             overall_mol_frac_air_matrix_index, nonwet_pressure_matrix_index);
@@ -76,9 +74,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_air_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Mat =
-        local_M.template block<overall_mol_frac_air_size, temperature_size>(
-            overall_mol_frac_air_matrix_index, temperature_matrix_index);
 
     auto Mcp = local_M.template block<overall_mol_frac_contaminant_size,
                                       nonwet_pressure_size>(
@@ -92,26 +87,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Mct = local_M.template block<overall_mol_frac_contaminant_size,
-                                      temperature_size>(
-        overall_mol_frac_contaminant_matrix_index, temperature_matrix_index);
 
-    auto Mep = local_M.template block<temperature_size,
-                                      nonwet_pressure_size>(
-        temperature_matrix_index,
-        nonwet_pressure_matrix_index);
-    auto Mea =
-        local_M.template block<temperature_size,
-                                       overall_mol_frac_air_size>(
-            temperature_matrix_index,
-        overall_mol_frac_air_matrix_index);
-    auto Mec = local_M.template block<temperature_size,
-                                       overall_mol_frac_contaminant_size>(
-        temperature_matrix_index,
-        overall_mol_frac_contaminant_matrix_index);
-    auto Met = local_M.template block<temperature_size,
-                                      temperature_size>(
-        temperature_matrix_index, temperature_matrix_index);
     
     NodalMatrixType laplace_operator =
         NodalMatrixType::Zero(ShapeFunction::NPOINTS, ShapeFunction::NPOINTS);
@@ -126,8 +102,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         nonwet_pressure_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Kwt = local_K.template block<nonwet_pressure_size, temperature_size>(
-        nonwet_pressure_matrix_index, temperature_matrix_index);
 
     auto Kap =
         local_K.template block<overall_mol_frac_air_size, nonwet_pressure_size>(
@@ -139,9 +113,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_air_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Kat =
-        local_K.template block<overall_mol_frac_air_size, temperature_size>(
-            overall_mol_frac_air_matrix_index, temperature_matrix_index);
 
     auto Kcp = local_K.template block<overall_mol_frac_contaminant_size,
                                       nonwet_pressure_size>(
@@ -155,20 +126,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                                        overall_mol_frac_contaminant_size>(
         overall_mol_frac_contaminant_matrix_index,
         overall_mol_frac_contaminant_matrix_index);
-    auto Kct = local_K.template block<overall_mol_frac_contaminant_size,
-                                      temperature_size>(
-        overall_mol_frac_contaminant_matrix_index, temperature_matrix_index);
-
-    auto Kep = local_K.template block<temperature_size, nonwet_pressure_size>(
-        temperature_matrix_index, nonwet_pressure_matrix_index);
-    auto Kea =
-        local_K.template block<temperature_size, overall_mol_frac_air_size>(
-            temperature_matrix_index, overall_mol_frac_air_matrix_index);
-    auto Kec = local_K.template block<temperature_size,
-                                       overall_mol_frac_contaminant_size>(
-        temperature_matrix_index, overall_mol_frac_contaminant_matrix_index);
-    auto Ket = local_K.template block<temperature_size, temperature_size>(
-        temperature_matrix_index, temperature_matrix_index);
 
     auto Bw = local_b.template segment<nonwet_pressure_size>(
         nonwet_pressure_matrix_index);
@@ -178,9 +135,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
     auto Bc = local_b.template segment<overall_mol_frac_contaminant_size>(
         overall_mol_frac_contaminant_matrix_index);
-
-    auto Be = local_b.template segment<temperature_size>(
-        temperature_matrix_index);
 
     auto const& medium = *_process_data.media_map->getMedium(_element.getID());
     auto const& liquid_phase = medium.phase("AqueousLiquid");
@@ -223,10 +177,9 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             0.;  // total molar fraction of the light component air
         double Xc_int_pt =
             0.;  // total molar fraction of the light component contaminant
-        double T_int_pt = 0.;
+        double T_int_pt = 298.15;
         NumLib::shapeFunctionInterpolate(local_x, sm.N, pg_int_pt,
-                                         Xa_int_pt, Xc_int_pt,
-                                         T_int_pt);
+                                         Xa_int_pt, Xc_int_pt);
 
         double& Sw = _ip_data[ip].sw;
         double& x_water_wet = _ip_data[ip].x_w_L;
@@ -421,13 +374,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
              mol_density_nonwet *
                  ((1 - Sw) * dxwG_dXc - x_water_nonwet * dsw_dXc)) *
             _ip_data[ip].mass_operator;
-        Mwt.noalias() +=
-            porosity *
-            (mol_density_wet * (x_water_wet * dsw_dT + Sw * dxwL_dT) +
-             d_mol_density_nonwet_dT * (1 - Sw) * x_water_nonwet +
-             mol_density_nonwet *
-                 ((1 - Sw) * dxwG_dT - x_water_nonwet * dsw_dT)) *
-            _ip_data[ip].mass_operator;
+        
         Map.noalias() += porosity * Xa_int_pt * d_mol_density_tot_dpg *
                          _ip_data[ip].mass_operator;
         Maa.noalias() += porosity *
@@ -435,16 +382,13 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                          _ip_data[ip].mass_operator;     
         Mac.noalias() += porosity * Xa_int_pt * d_mol_density_tot_dXc *
                          _ip_data[ip].mass_operator;
-        Mat.noalias() += porosity * Xa_int_pt * d_mol_density_tot_dT *
-                         _ip_data[ip].mass_operator;
+        
         Mcp.noalias() += porosity * Xc_int_pt * d_mol_density_tot_dpg *
                          _ip_data[ip].mass_operator;
         Mca.noalias() += porosity * Xc_int_pt * d_mol_density_tot_dXa *
                          _ip_data[ip].mass_operator;
         Mcc.noalias() += porosity *
                          (Xc_int_pt * d_mol_density_tot_dXc + mol_density_tot) *
-                         _ip_data[ip].mass_operator;
-        Mct.noalias() += porosity * Xc_int_pt * d_mol_density_tot_dT *
                          _ip_data[ip].mass_operator;
 
         double k_rel_wet = 0., k_rel_nonwet = 0.;
@@ -599,28 +543,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         // Assemble energy equation M matrix
 
-        Mep.noalias() +=
-            porosity *
-            ((density_wet * internal_energy_wet -
-              density_nonwet * enthalpy_nonwet + pg_int_pt) *
-                 dsw_dpg +
-             (1 - Sw) * (d_vol_enthalpy_nonwet_dpg - 1)) *
-            _ip_data[ip].mass_operator;
-        Mea.noalias() +=
-            porosity * (density_wet * internal_energy_wet * dsw_dXa +
-                          (1 - Sw) * d_vol_enthalpy_nonwet_dXa) *
-                         _ip_data[ip].mass_operator;
-        Mec.noalias() += porosity *
-            (density_wet * internal_energy_wet * dsw_dXc +
-                          (1 - Sw) * d_vol_enthalpy_nonwet_dXc) *
-                         _ip_data[ip].mass_operator;
-        Met.noalias() += porosity * (density_wet * (internal_energy_wet * dsw_dT +
-                                       Sw * heat_capacity_water) +
-                              (1 - Sw) * d_vol_enthalpy_nonwet_dT) *
-                _ip_data[ip].mass_operator +
-            (1 - porosity) *
-                density_solid * heat_capacity_solid *
-                _ip_data[ip].mass_operator;
+        
 
         // Assemble K matrix
         Kwp.noalias() += (mol_density_wet * x_water_wet * lambda_wet *
@@ -649,14 +572,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                  (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
                      dxwG_dXc) *
                 _ip_data[ip].diffusion_operator;
-        Kwt.noalias() +=
-            (-mol_density_wet * x_water_wet * lambda_wet * dPC_dSw * dsw_dT) *
-                laplace_operator +
-            porosity *
-                (Sw * mol_density_wet * diffusion_coeff_wet * dxwL_dT +
-                 (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
-                     dxwG_dT) *
-                _ip_data[ip].diffusion_operator;
+        
         Kap.noalias() +=
             (mol_density_wet * x_air_wet * lambda_wet *
                  (1 - dPC_dSw * dsw_dpg) +
@@ -683,14 +599,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                  (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
                      dxaG_dXc) *
                 _ip_data[ip].diffusion_operator;
-        Kat.noalias() +=
-            (-mol_density_wet * x_air_wet * lambda_wet * dPC_dSw * dsw_dT) *
-                laplace_operator +
-            porosity *
-                (Sw * mol_density_wet * diffusion_coeff_wet * dxaL_dT +
-                 (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
-                     dxaG_dT) *
-                _ip_data[ip].diffusion_operator;
+        
         Kcp.noalias() +=
             (mol_density_wet * x_contaminant_wet * lambda_wet *
                  (1 - dPC_dSw * dsw_dpg) +
@@ -719,29 +628,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                  (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
                      dxcG_dXc) *
                 _ip_data[ip].diffusion_operator;
-        Kct.noalias() +=
-            (-mol_density_wet * x_contaminant_wet * lambda_wet * dPC_dSw *
-             dsw_dT) *
-                laplace_operator +
-            porosity *
-                (Sw * mol_density_wet * diffusion_coeff_wet * dxcL_dT +
-                 (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
-                     dxcG_dT) *
-                _ip_data[ip].diffusion_operator;
-        Kep.noalias() += (lambda_nonwet * density_nonwet * enthalpy_nonwet +
-                          lambda_wet * density_wet * enthalpy_wet * (1 - dPC_dSw * dsw_dpg)) *
-                         laplace_operator;
-        Kea.noalias() +=
-            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXa) *
-            laplace_operator;
-        Kec.noalias() +=
-            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dXc) *
-            laplace_operator;
-        Ket.noalias() +=
-            (-lambda_wet * density_wet * enthalpy_wet * dPC_dSw * dsw_dT) *
-                laplace_operator +
-            sm.dNdx.transpose() * effective_thermal_conductivity *
-                sm.dNdx * _ip_data[ip].integration_weight;    
+        
+       
         
         if (_process_data.has_gravity)
         {
@@ -763,11 +651,6 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                              mol_density_nonwet * x_contaminant_nonwet *
                                  lambda_nonwet * density_nonwet) *
                             gravity_operator;
-            Be.noalias() +=
-                (lambda_nonwet * density_nonwet * density_nonwet *
-                     enthalpy_nonwet +
-                 lambda_wet * density_wet * density_wet * enthalpy_wet) *
-                gravity_operator;
         }  // end of has gravity   
     }
     if (_process_data.has_mass_lumping)
@@ -784,32 +667,18 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                     Mwa(row, column) = 0.0;
                     Mwc(row, row) += Mwc(row, column);
                     Mwc(row, column) = 0.0;
-                    Mwt(row, row) += Mwt(row, column);
-                    Mwt(row, column) = 0.0;
                     Map(row, row) += Map(row, column);
                     Map(row, column) = 0.0;
                     Maa(row, row) += Maa(row, column);
                     Maa(row, column) = 0.0;
                     Mac(row, row) += Mac(row, column);
                     Mac(row, column) = 0.0;
-                    Mat(row, row) += Mat(row, column);
-                    Mat(row, column) = 0.0;
                     Mcp(row, row) += Mcp(row, column);
                     Mcp(row, column) = 0.0;
                     Mca(row, row) += Mca(row, column);
                     Mca(row, column) = 0.0;
                     Mcc(row, row) += Mcc(row, column);
                     Mcc(row, column) = 0.0;
-                    Mct(row, row) += Mct(row, column);
-                    Mct(row, column) = 0.0;
-                    Mep(row, row) += Mep(row, column);
-                    Mep(row, column) = 0.0;
-                    Mea(row, row) += Mea(row, column);
-                    Mea(row, column) = 0.0;
-                    Mec(row, row) += Mec(row, column);
-                    Mec(row, column) = 0.0;
-                    Met(row, row) += Met(row, column);
-                    Met(row, column) = 0.0;
                 }
             }
         }

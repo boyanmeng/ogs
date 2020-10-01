@@ -53,9 +53,7 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
          //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_molar_fraction_air}
          "overall_molar_fraction_air",
          //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_molar_fraction_contaminant}
-         "overall_molar_fraction_contaminant",
-         //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__temperature}
-         "temperature"});
+         "overall_molar_fraction_contaminant"});
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
         process_variables;
     process_variables.push_back(std::move(per_process_variables));
