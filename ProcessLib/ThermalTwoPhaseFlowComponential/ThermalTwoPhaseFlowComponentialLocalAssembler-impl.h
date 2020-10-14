@@ -392,7 +392,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                          _ip_data[ip].mass_operator;
 
         double k_rel_wet = 0., k_rel_nonwet = 0.;
-        if (Sw < .1)
+        if (Sw < 0.)
         {
             k_rel_wet = 0.;
             k_rel_nonwet = 1.;
@@ -404,8 +404,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         }
         else
         {
-            double const Se = (Sw - .1) / (1 - .1);
-            double const m_ = 0.3288590604;
+            double const Se = Sw;
+            double const m_ = 0.75;
             double const v = std::pow(1. - std::pow(Se, 1. / m_), m_);
             k_rel_wet = std::sqrt(Se) * (1 - v) * (1 - v);
             k_rel_nonwet = std::sqrt(1 - Se) * v * v;
