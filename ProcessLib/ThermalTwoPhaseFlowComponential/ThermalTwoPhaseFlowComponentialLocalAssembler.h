@@ -105,7 +105,7 @@ struct IntegrationPointData final
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
-const unsigned NUM_NODAL_DOF = 3;
+const unsigned NUM_NODAL_DOF = 4;
 
 class ThermalTwoPhaseFlowComponentialLocalAssemblerInterface
     : public ProcessLib::LocalAssemblerInterface,
@@ -330,10 +330,12 @@ private:
     static const int overall_mol_frac_air_matrix_index = ShapeFunction::NPOINTS;
     static const int overall_mol_frac_contaminant_matrix_index =
         2 * ShapeFunction::NPOINTS;
+    static const int temperature_matrix_index = 3 * ShapeFunction::NPOINTS;
 
     static const int nonwet_pressure_size = ShapeFunction::NPOINTS;
     static const int overall_mol_frac_air_size = ShapeFunction::NPOINTS;
     static const int overall_mol_frac_contaminant_size = ShapeFunction::NPOINTS;
+    static const int temperature_size = ShapeFunction::NPOINTS;
 };
 
 }  // namespace ThermalTwoPhaseFlowComponential
