@@ -235,7 +235,41 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                 dxwL_dT, 
                 dxaL_dT))
         {
-            OGS_FATAL("Computation of local constitutive relation failed.");
+            Sw = 0.0;
+            x_water_wet = 0.99;
+            x_air_wet = 0.01;
+            if (!_process_data.material->computeConstitutiveRelation(
+                    t,
+                    dt,
+                    pos,
+                    capillary_pressure_model,
+                    error_tolerance,
+                    density_water,
+                    henry_air,
+                    pg_int_pt,
+                    Xa_int_pt,
+                    T_int_pt,
+                    Sw,
+                    x_water_wet,
+                    x_air_wet,
+                    dsw_dpg,
+                    dxwG_dpg,
+                    dxaG_dpg,
+                    dsw_dXa,
+                    dxwG_dXa,
+                    dxaG_dXa,
+                    dsw_dT,
+                    dxwG_dT,
+                    dxaG_dT,
+                    dxwL_dpg,
+                    dxaL_dpg,
+                    dxwL_dXa,
+                    dxaL_dXa,
+                    dxwL_dT,
+                    dxaL_dT))
+            {
+                OGS_FATAL("Computation of local constitutive relation failed.");
+            }
         }
 
         variables[static_cast<int>(MPL::Variable::liquid_saturation)] =
