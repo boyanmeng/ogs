@@ -19,6 +19,7 @@
 #include "MathLib/InterpolationAlgorithms/PiecewiseLinearInterpolation.h"
 #include "NumLib/Function/Interpolation.h"
 #include "ThermalTwoPhaseFlowComponentialProcessData.h"
+#include <iostream>
 
 namespace ProcessLib
 {
@@ -268,6 +269,8 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
                     dxwL_dT,
                     dxaL_dT))
             {
+                std::cout << "pg_int_pt = " << pg_int_pt
+                          << "Xa_int_pt = " << Xa_int_pt << "T_int_pt = " << T_int_pt;
                 OGS_FATAL("Computation of local constitutive relation failed.");
             }
         }
