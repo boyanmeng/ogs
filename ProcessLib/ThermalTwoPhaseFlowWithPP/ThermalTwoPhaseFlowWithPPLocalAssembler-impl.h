@@ -361,14 +361,7 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
                                      permeability * _ip_data[ip].dNdx *
                                      _ip_data[ip].integration_weight;
 
-        Ket.noalias() +=
-            _ip_data[ip].integration_weight * _ip_data[ip].N.transpose() *
-                (d_density_nonwet_d_T * enthalpy_nonwet +
-                 density_nonwet * d_enthalpy_nonwet_d_T) *
-                velocity_nonwet.transpose() * _ip_data[ip].dNdx +
-            _ip_data[ip].integration_weight * _ip_data[ip].N.transpose() *
-                heat_capacity_water * density_water * velocity_wet.transpose() *
-                _ip_data[ip].dNdx;
+        
 
         double const heat_conductivity_unsaturated =
             _process_data.material->calculateUnsatHeatConductivity(
@@ -404,24 +397,12 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         Kep.noalias() +=
             (lambda_nonwet * density_nonwet * enthalpy_nonwet +
              lambda_wet * density_wet * enthalpy_wet) *
-                laplace_operator +
-            (1 - Sw) * porosity * diffusion_coeff_component_gas *
-                mol_density_nonwet * (air_mol_mass * enthalpy_nonwet_gas -
-                                  water_mol_mass * enthalpy_nonwet_vapor) *
-                d_x_gas_nonwet_d_pg * _ip_data[ip].diffusion_operator;
+                laplace_operator;
         Kepc.noalias() +=
-            -lambda_wet * enthalpy_wet * density_wet * laplace_operator +
-            (1 - Sw) * porosity * diffusion_coeff_component_gas *
-                mol_density_nonwet * (air_mol_mass * enthalpy_nonwet_gas -
-                                  water_mol_mass * enthalpy_nonwet_vapor) *
-                d_x_gas_nonwet_d_pc * _ip_data[ip].diffusion_operator;
+            -lambda_wet * enthalpy_wet * density_wet * laplace_operator;
         Ket.noalias() +=
             _ip_data[ip].dNdx.transpose() * heat_conductivity_unsaturated *
-                _ip_data[ip].dNdx * _ip_data[ip].integration_weight +
-            (1 - Sw) * porosity * diffusion_coeff_component_gas *
-                mol_density_nonwet * (air_mol_mass * enthalpy_nonwet_gas -
-                                  water_mol_mass * enthalpy_nonwet_vapor) *
-                d_x_gas_nonwet_d_T * _ip_data[ip].diffusion_operator;
+                _ip_data[ip].dNdx * _ip_data[ip].integration_weight;
 
         if (_process_data.has_gravity)
         {
