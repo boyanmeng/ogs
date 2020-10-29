@@ -196,7 +196,7 @@ double ThermalTwoPhaseFlowWithPPMaterialProperties::getAirEnthalpySimple(
     const double /*pg*/) const
 {
     return heat_capacity_dry_air * (temperature - CelsiusZeroInKelvin) +
-           IdealGasConstant * (temperature - CelsiusZeroInKelvin) / _air_mol_mass;
+           IdealGasConstant * temperature / _air_mol_mass;
 }
 
 double
