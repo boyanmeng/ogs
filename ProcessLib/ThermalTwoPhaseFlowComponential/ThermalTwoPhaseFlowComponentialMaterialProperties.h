@@ -85,20 +85,20 @@ public:
         double const err_tol, 
         double const rho_w,
         double const H_a,
-        double const pg,
+        double const pl,
         double const Xa,
         double const T,
         double& Sw,
         double& x_w_L,
         double& x_a_L,
-        double& dsw_dpg, 
-        double& dxwG_dpg,
-        double& dxaG_dpg,
+        double& dsw_dpl, 
+        double& dxwG_dpl,
+        double& dxaG_dpl,
         double& dsw_dXa,
         double& dxwG_dXa,
         double& dxaG_dXa,
-        double& dxwL_dpg,
-        double& dxaL_dpg,
+        double& dxwL_dpl,
+        double& dxaL_dpl,
         double& dxwL_dXa,
         double& dxaL_dXa);
 
@@ -120,7 +120,7 @@ private:
     void calculateResidual(double const t, double const dt,
                            ParameterLib::SpatialPosition const& x_position,
                            MaterialPropertyLib::Property const& pc_model,       // pass by ref
-        double const rho_w, double const H_a, double const pg,
+        double const rho_w, double const H_a, double const pl,
         double const Xa,
                            double const T, double Sw, double x_w_L,
                            double x_a_L, ResidualVector& res);
@@ -130,7 +130,7 @@ private:
     void calculateJacobian(double const t, double const dt,
                            ParameterLib::SpatialPosition const& x_position,
                            MaterialPropertyLib::Property const& pc_model,        // pass by ref
-        double const rho_w, double const H_a, double const pg, double const Xa,
+        double const rho_w, double const H_a, double const pl, double const Xa,
                            double const T, JacobianMatrix& Jac, double Sw,
                            double x_w_L, double x_a_L);
     // Complementary condition 1
@@ -152,12 +152,13 @@ private:
     void calculateDerivatives(double const t, double const dt,
                               ParameterLib::SpatialPosition const& x_position,
                               MaterialPropertyLib::Property const& pc_model, double const rho_w,
-        double const H_a, double const pg, double const Xa, 
-        double const T, double Sw, double x_w_L,
-                       double x_a_L, double& dsw_dpg,
-        double& dxwG_dpg, double& dxaG_dpg, double& dsw_dXa,
-        double& dxwG_dXa, double& dxaG_dXa, double& dxwL_dpg,
-        double& dxaL_dpg, double& dxwL_dXa, double& dxaL_dXa);
+        double const H_a, double const pl, double const Xa, 
+        double const T,
+                              JacobianMatrix Jac, double Sw, double x_w_L,
+                       double x_a_L, double& dsw_dpl,
+        double& dxwG_dpl, double& dxaG_dpl, double& dsw_dXa,
+        double& dxwG_dXa, double& dxaG_dXa, double& dxwL_dpl,
+        double& dxaL_dpl, double& dxwL_dXa, double& dxaL_dXa);
 };
 
 }  // namespace ProcessLib::ThermalTwoPhaseFlowComponential

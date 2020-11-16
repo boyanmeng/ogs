@@ -133,13 +133,13 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           ParameterLib::SpatialPosition const& x_position,
           MaterialPropertyLib::Property const& pc_model, double const err_tol, double const rho_w,
           double const H_a,
-          double const pg,
+          double const pl,
                                   double const Xa,
-                                  double const T, double& Sw, double& x_w_L, double& x_a_L, double& dsw_dpg, double& dxwG_dpg, double& dxaG_dpg,
-          double& dsw_dXa, double& dxwG_dXa, double& dxaG_dXa, double& dxwL_dpg,
-          double& dxaL_dpg, double& dxwL_dXa, double& dxaL_dXa)
+                                  double const T, double& Sw, double& x_w_L, double& x_a_L, double& dsw_dpl, double& dxwG_dpl, double& dxaG_dpl,
+          double& dsw_dXa, double& dxwG_dXa, double& dxaG_dXa, double& dxwL_dpl,
+          double& dxaL_dpl, double& dxwL_dXa, double& dxaL_dXa)
   {
-      {  // Local Newton solver
+        // Local Newton solver
           using LocalJacobianMatrix =
               Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
           using LocalResidualVector = Eigen::Matrix<double, 3, 1>;
@@ -148,13 +148,13 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
 
           Eigen::PartialPivLU<LocalJacobianMatrix> linear_solver(3);
           auto const update_residual = [&](LocalResidualVector& residual) {
-              calculateResidual(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa,
+              calculateResidual(t, dt, x_position, pc_model, rho_w, H_a, pl, Xa,
                                 T, Sw,
                                 x_w_L, x_a_L, residual);
           };
 
           auto const update_jacobian = [&](LocalJacobianMatrix& jacobian) {
-              calculateJacobian(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa,  T, jacobian, Sw, x_w_L, x_a_L
+              calculateJacobian(t, dt, x_position, pc_model, rho_w, H_a, pl, Xa,  T, jacobian, Sw, x_w_L, x_a_L
                                 );  // for solution dependent Jacobians
           };
 
@@ -185,10 +185,10 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           {
               return false;
           }
-      }
-      calculateDerivatives(t, dt, x_position, pc_model, rho_w, H_a, pg, Xa, T,
-                           Sw, x_w_L, x_a_L, dsw_dpg, dxwG_dpg, dxaG_dpg, dsw_dXa,
-          dxwG_dXa, dxaG_dXa, dxwL_dpg, dxaL_dpg,
+      
+      calculateDerivatives(t, dt, x_position, pc_model, rho_w, H_a, pl, Xa, T, J_loc,
+                           Sw, x_w_L, x_a_L, dsw_dpl, dxwG_dpl, dxaG_dpl, dsw_dXa,
+          dxwG_dXa, dxaG_dXa, dxwL_dpl, dxaL_dpl,
           dxwL_dXa, dxaL_dXa);
       return true;
   }
@@ -198,7 +198,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
       double const H_a,
-      double const pg, double const Xa, double const T,
+      double const pl, double const Xa, double const T,
       double Sw, double x_w_L, double x_a_L, ResidualVector& res)
   {
       MaterialPropertyLib::VariableArray vars;
@@ -206,6 +206,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           Sw;
       double const pc = pc_model.template value<double>(vars, x_position, t, dt);
       // use water density for simplicity
+      double const pg = pl + pc;
       double const p_vap =
           calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
@@ -222,7 +223,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
       double const H_a,
-      double const pg, double const Xa,
+      double const pl, double const Xa,
       double const T,
       JacobianMatrix& Jac, double Sw, double x_w_L, double x_a_L)
   {
@@ -231,6 +232,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           std::clamp(Sw, 0., 1.);
       double const pc =
           pc_model.template value<double>(vars, x_position, t, dt);
+      double const pg = pl + pc;
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
@@ -242,6 +244,7 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
           dt);
       double const dpvap_dpc = calculateDerivativedPgwdPC(pc, T, rho_w);
       double const dpvap_dSw = dpvap_dpc * dpc_dSw;
+      double const dxaG_dpc = -N_w * x_a_L / H_a / pg / pg;
       Jac.setZero();
       if (Sw <= (1 - x_w_L - x_a_L))
       {
@@ -258,12 +261,16 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       }
       else
       {
-          Jac(1, 0) = -x_w_L * dpvap_dSw / pg;
+          Jac(1, 0) = -x_w_L * (dpvap_dSw / pg - p_vap * dpc_dSw / pg / pg) -
+                      dxaG_dpc * dpc_dSw;
           Jac(1, 1) = -p_vap / pg;
           Jac(1, 2) = -N_w / pg / H_a;
       }
 
-      Jac(2, 0) = N_w * (Xa - x_a_L) - N_G * (Xa - x_a_G);
+      Jac(2, 0) =
+          N_w * (Xa - x_a_L) - N_G * (Xa - x_a_G) +
+          (1 - Sw) * ((Xa - x_a_G) / IdealGasConstant / T - N_G * dxaG_dpc) *
+              dpc_dSw;           
       Jac(2, 2) = -(Sw + (1 - Sw) / H_a / IdealGasConstant / T) * N_w;
   }
 
@@ -292,17 +299,18 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const t, double const dt,
       ParameterLib::SpatialPosition const& x_position,
       MaterialPropertyLib::Property const& pc_model, double const rho_w,
-      double const H_a,
-      double const pg, double const Xa, double const T,
-      double Sw, double x_w_L, double x_a_L, double& dsw_dpg, double& dxwG_dpg,
-      double& dxaG_dpg, double& dsw_dXa, double& dxwG_dXa, double& dxaG_dXa,
-      double& dxwL_dpg, double& dxaL_dpg, double& dxwL_dXa, double& dxaL_dXa)
+      double const H_a, double const pl, double const Xa, double const T,
+      JacobianMatrix Jac,
+      double Sw, double x_w_L, double x_a_L, double& dsw_dpl, double& dxwG_dpl,
+      double& dxaG_dpl, double& dsw_dXa, double& dxwG_dXa, double& dxaG_dXa,
+      double& dxwL_dpl, double& dxaL_dpl, double& dxwL_dXa, double& dxaL_dXa)
   {
       MaterialPropertyLib::VariableArray vars;
       vars[static_cast<int>(MaterialPropertyLib::Variable::liquid_saturation)] =
           std::clamp(Sw, 0., 1.);
       double const pc =
           pc_model.template value<double>(vars, x_position, t, dt);
+      double const pg = pl + pc;
       // use water density for simplicity
       double const p_vap = calculateVaporPressureNonwet(pc, T, rho_w);
       double const x_w_G = p_vap / pg * x_w_L;
@@ -311,74 +319,40 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
       double const N_G = pg / IdealGasConstant / T;
       double const x_a_G = N_w / H_a / pg * x_a_L;
       double const dpvap_dT = calculateDerivativedPgwdT(pc, T, rho_w);
-      double const dHa_dT = calculateDerivativedHdT(T, 6.4e-6, 1600);
       double const dpvap_dpc = calculateDerivativedPgwdPC(pc, T, rho_w);
-      double const dpc_dsw = pc_model.template dValue<double>(
+      double const dpc_dSw = pc_model.template dValue<double>(
           vars, MaterialPropertyLib::Variable::liquid_saturation, x_position, t,
           dt);
-      double const coeff_w_1 =
-          -pg * dpvap_dpc * dpc_dsw * x_w_G / p_vap / p_vap;
-      double const coeff_a_3 = H_a * pg / N_L;
-      double const pg_over_pvap = pg / p_vap;
+      double const dpvap_dSw = dpvap_dpc * dpc_dSw;
 
-      if (Sw <= (1 - x_w_L - x_a_L))
+      Eigen::MatrixXd dF_dPV(3, 2), dSV_dPV(3, 2);
+      dF_dPV.setZero();
+
+      if ((1 - Sw) > (1 - x_w_G - x_a_G))
       {
-          dsw_dpg = 0;
-          dxwG_dpg = 0;
-          dxaG_dpg = 0;
-          dsw_dXa = 0;
-          dxwG_dXa = -1;
-          dxaG_dXa = 1;
+          dF_dPV(1, 0) = (p_vap * x_w_L + N_L * x_a_L / H_a) / pg / pg;
       }
-      else if ((1 - Sw) <= (1 - x_w_G - x_a_G))
-      {
-          dsw_dpg = 0;
-          dxwG_dpg = -x_w_G / pg;
-          dxaG_dpg = -x_a_G / pg;
-          dsw_dXa = 0;
-          dxwG_dXa = -1 / pg_over_pvap;
-          dxaG_dXa = 1 / coeff_a_3;
+      dF_dPV(2, 0) = (1 - Sw) * (Xa - x_a_G + N_L * x_a_L / H_a / pg) /
+                     IdealGasConstant / T;
+      dF_dPV(2, 1) = Sw * N_L + (1 - Sw) * N_G;
+
+      dSV_dPV = -Jac.partialPivLu().solve(dF_dPV);
+      dsw_dpl = dSV_dPV(0, 0);
+      dsw_dXa = dSV_dPV(0, 1);
+      dxwL_dpl = dSV_dPV(1, 0);
+      dxwL_dXa = dSV_dPV(1, 1);
+      dxaL_dpl = dSV_dPV(2, 0);
+      dxaL_dXa = dSV_dPV(2, 1);
+
+      dxwG_dpl = (dpvap_dSw * dsw_dpl * x_w_L + p_vap * dxwL_dpl) / pg -
+                 p_vap * x_w_L * (1 + dpc_dSw * dsw_dpl) / pg / pg;
+      dxwG_dXa = (dpvap_dSw * dsw_dXa * x_w_L + p_vap * dxwL_dXa) / pg -
+                 p_vap * x_w_L * dpc_dSw * dsw_dXa / pg / pg;
+      dxaG_dpl = N_L / H_a *
+                 (dxaL_dpl / pg - x_a_L * (1 + dpc_dSw * dsw_dpl) / pg / pg);
+      dxaG_dXa =
+          N_L / H_a * (dxaL_dXa / pg - x_a_L * dpc_dSw * dsw_dXa / pg / pg);
       }
-      else
-      {
-          // derivatives w.r.t. pg, Xa, Xc, T
-          Eigen::Matrix3d K;
-          Eigen::Vector3d bp, ba;
-          K.setZero();
-
-          double const coeff_a_1 = (N_L - N_G) * Xa - N_L * x_a_L + N_G * x_a_G;
-          double const coeff_a_2 = -(H_a * Sw * pg + (1 - Sw) * N_G);
-          double const N_tot = Sw * N_L + (1 - Sw) * N_G;
-          double const dNG_dT = -pg / IdealGasConstant / T / T;              
-
-          K(0, 0) = coeff_a_1;
-          K(0, 2) = coeff_a_2;
-          K(1, 1) = 1;
-          K(1, 2) = 1;
-          K(2, 0) = coeff_w_1;
-          K(2, 1) = pg_over_pvap;
-          K(2, 2) = coeff_a_3;
-
-          bp << H_a * Sw * x_a_G -
-                    (1 - Sw) * (Xa - x_a_G) / IdealGasConstant / T,
-              0, -(x_w_G / p_vap + H_a * x_a_G / N_L);
-
-          ba << -N_tot, 0, 0;
-
-          Eigen::Vector3d x_dpg = K.partialPivLu().solve(bp);
-          Eigen::Vector3d x_dXa = K.partialPivLu().solve(ba);
-          dsw_dpg = x_dpg[0];
-          dxwG_dpg = x_dpg[1]; 
-          dxaG_dpg = x_dpg[2];
-          dsw_dXa = x_dXa[0];
-          dxwG_dXa = x_dXa[1];
-          dxaG_dXa = x_dXa[2];
-      }
-      dxwL_dpg = (x_w_G + pg * dxwG_dpg) / p_vap + coeff_w_1 * dsw_dpg;
-      dxaL_dpg = (x_a_G + pg * dxaG_dpg) * H_a / N_L;
-      dxwL_dXa = pg * dxwG_dXa / p_vap + coeff_w_1 * dsw_dXa;
-      dxaL_dXa = coeff_a_3 * dxaG_dXa;
-  }
       
 }  // namespace ThermalTwoPhaseFlowComponential
 }  // namespace ProcessLib

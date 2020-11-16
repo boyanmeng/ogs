@@ -131,7 +131,7 @@ private:
     //! Newton method. Common values are in the range 0.5 to 0.7 for somewhat
     //! conservative method and seldom become smaller than 0.2 for very
     //! conservative approach.
-    double const _damping;
+    double _damping;
 
     GlobalVector* _r_neq = nullptr;      //!< non-equilibrium initial residuum.
     std::size_t _res_id = 0u;            //!< ID of the residual vector.

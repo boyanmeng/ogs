@@ -319,6 +319,17 @@ NonlinearSolverStatus NonlinearSolver<NonlinearSolverTag::Newton>::solve(
             x_new[process_id] =
                 &NumLib::GlobalVectorProvider::provider.getVector(
                     *x[process_id], _x_new_id);
+
+            auto x_vec = *x[0];
+            auto max_one_over_delta = 0.;
+            double const alpha = 0.5;
+            for (std::size_t i = 0; i < x_vec.size(); i++)
+            {
+                auto tmp = minus_delta_x.get(i) / alpha / x_vec.get(i);
+                max_one_over_delta = std::max(max_one_over_delta, tmp);
+            }
+            _damping = 1. / std::max(1., max_one_over_delta);
+
             LinAlg::axpy(*x_new[process_id], -_damping, minus_delta_x);
 
             if (postIterationCallback)

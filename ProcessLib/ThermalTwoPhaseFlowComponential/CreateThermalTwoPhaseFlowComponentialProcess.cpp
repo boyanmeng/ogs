@@ -48,8 +48,8 @@ std::unique_ptr<Process> createThermalTwoPhaseFlowComponentialProcess(
 
     auto per_process_variables = findProcessVariables(
         variables, pv_config,
-        {//! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__gas_pressure}
-         "gas_pressure",
+        {//! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__liquid_pressure}
+         "liquid_pressure",
          //! \ogs_file_param_special{prj__processes__process__THERMALTWOPHASEFLOW_COMPONENTIAL__process_variables__overall_molar_fraction_air}
          "overall_molar_fraction_air"});
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
