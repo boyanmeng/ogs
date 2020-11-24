@@ -69,7 +69,7 @@ int TwoPhaseFlowWithPPMaterialProperties::getMaterialID(
     }
 
     assert(element_id < _material_ids.size());
-    return _material_ids[element_id];
+    return 0;
 }
 
 double TwoPhaseFlowWithPPMaterialProperties::getLiquidDensity(
