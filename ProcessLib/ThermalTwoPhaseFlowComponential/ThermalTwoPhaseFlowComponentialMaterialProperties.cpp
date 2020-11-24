@@ -55,31 +55,28 @@ ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedHdT(
   ThermalTwoPhaseFlowComponentialMaterialProperties::calculateSaturatedVaporPressure(
       const double T) const
   {
-      return _water_vapor_properties->calculateSaturatedVaporPressure(T);
+      return 1;
   }
   double
   ThermalTwoPhaseFlowComponentialMaterialProperties::calculateVaporPressureNonwet(
       const double pc, const double T, const double mass_density_water) const
   {
-      return _water_vapor_properties->calculateVaporPressureNonwet(
-          pc, T, mass_density_water);
+      return 1;
   }
   double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedPsatdT(
       const double T) const
   {
-      return _water_vapor_properties->calculateDerivativedPsatdT(T);
+      return 0;
   }
   double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedPgwdT(
       const double pc, const double T, const double mass_density_water) const
   {
-      return _water_vapor_properties->calculateDerivativedPgwdT(
-          pc, T, mass_density_water);
+      return 0;
   }
   double ThermalTwoPhaseFlowComponentialMaterialProperties::calculateDerivativedPgwdPC(
       const double pc, const double T, const double mass_density_water) const
   {
-      return _water_vapor_properties->calculateDerivativedPgwdPC(
-          pc, T, mass_density_water);
+      return 0;
   }
   double ThermalTwoPhaseFlowComponentialMaterialProperties::calculatedDensityNonwetdT(
       const double p_air_nonwet, const double p_vapor_nonwet, const double pc,
