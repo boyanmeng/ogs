@@ -147,6 +147,8 @@ void TwoPhaseFlowWithPPLocalAssembler<
                 .template dValue<double>(
                     variables, MPL::Variable::phase_pressure, pos, t, dt);
 
+        variables[static_cast<int>(MPL::Variable::liquid_saturation)] = Sw;
+
         auto const k_rel =
             medium.property(MPL::PropertyType::relative_permeability)
                 .template value<Eigen::Vector2d>(variables, pos, t, dt);

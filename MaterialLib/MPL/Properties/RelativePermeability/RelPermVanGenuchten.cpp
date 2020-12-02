@@ -51,8 +51,10 @@ PropertyDataType RelPermVanGenuchten::value(
 
     double const S_eff = (S_L - S_L_res_) / (S_L_max_ - S_L_res_);
     double const v = 1. - std::pow(1. - std::pow(S_eff, 1. / m_), m_);
-    double const k_rel = std::sqrt(S_eff) * v * v;
-    return std::max(k_rel_min_, k_rel);
+    double const k_rel_LR = std::sqrt(S_eff) * v * v;
+    double const k_rel_GR = std::sqrt(1 - S_eff) * (1 - v) * (1 - v);
+
+    return Eigen::Vector2d{std::max(k_rel_min_, k_rel_LR), k_rel_GR};
 }
 
 PropertyDataType RelPermVanGenuchten::dValue(
