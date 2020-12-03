@@ -492,12 +492,18 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         */
 
         // diffusion coefficients
-        double const diffusion_coeff_wet =
+        double diffusion_coeff_wet =
             liquid_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
-        double const diffusion_coeff_nonwet =
+        //multiply tortuosity factor
+        diffusion_coeff_wet *=
+            std::pow(Sw, 7. / 3) * std::pow(porosity, 1. / 3);
+        double diffusion_coeff_nonwet =
             gas_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
+        // multiply tortuosity factor
+        diffusion_coeff_nonwet *=
+            std::pow(1 - Sw, 7. / 3) * std::pow(porosity, 1. / 3);
 
         // heat capacity
         double const heat_capacity_water =
