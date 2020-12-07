@@ -366,7 +366,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double const henry_air = _process_data.material->calculateHenryConstant(
             T_int_pt, 6.4e-6, 1600);
         double const henry_contaminant = _process_data.material->calculateHenryConstant(
-            T_int_pt, 6.2e-4, 4500);
+            T_int_pt, 1.06157e-3, 4500);
 
         double const x_air_nonwet =
             mol_density_wet / henry_air / pg * x_air_wet;
