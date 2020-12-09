@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<OpenGeoSysProject>
+	<mesh>1D_stst.vtu</mesh>
+    <geometry>1D_diffusion.gml</geometry>
+    <processes>
+        <process>
+            <name>GW23</name>
+            <type>THERMAL_TWOPHASE_COMPONENTIAL</type>
+            <integration_order>2</integration_order>
+            <process_variables>
+                <liquid_pressure> liquid_pressure </liquid_pressure>
+                <overall_molar_fraction_air>overall_molar_fraction_air</overall_molar_fraction_air>
+				<overall_molar_fraction_contaminant>overall_molar_fraction_contaminant</overall_molar_fraction_contaminant>
+				<temperature>temperature</temperature>
+            </process_variables>
+            <jacobian_assembler>
+                <type>CentralDifferences</type>
+                <component_magnitudes>1e5 1e-5 1e-16 300</component_magnitudes>
+                <relative_epsilons>1e-6 1e-6 1e-6 1e-6</relative_epsilons>
+            </jacobian_assembler>
+			<secondary_variables>
+                <secondary_variable internal_name="saturation" output_name="saturation"/>
+                <secondary_variable internal_name="capillary_pressure" output_name="capillary_pressure"/>
+                <secondary_variable internal_name="pressure_nonwetting" output_name="pressure_nonwetting"/>
+                <secondary_variable internal_name="liquid_molar_fraction_air" output_name="liquid_molar_fraction_air"/>
+				<secondary_variable internal_name="gas_molar_fraction_water" output_name="gas_molar_fraction_water"/>
+				<secondary_variable internal_name="liquid_molar_fraction_contaminant" output_name="liquid_molar_fraction_contaminant"/>
+				<secondary_variable internal_name="gas_molar_fraction_contaminant" output_name="gas_molar_fraction_contaminant"/>
+            </secondary_variables>
+			<specific_body_force>-9.81</specific_body_force>
+            <mass_lumping> true </mass_lumping>
+			<!-- <temperature> T_0 </temperature> -->
+			<error_tolerance> 1e-12 </error_tolerance>
+	    </process>
+    </processes>
+    <media>
+      <medium id="0">
+         <phases>
+            <phase>
+               <type>AqueousLiquid</type>
+			   <components>
+                   <component>
+				       <name>wasser</name>
+                       <properties>
+                           <property>
+                               <name>density</name>
+                               <type>Constant</type>
+                               <value>1.0e3</value>
+						   </property>
+                       </properties>
+				   </component>
+				   <component>
+				       <name>air</name>
+                       <properties>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>3.0e-9</value>
+                           </property>
+						   <!-- <property> -->
+                               <!-- <name>henry_constant</name> -->
+                               <!-- <type>Constant</type> -->
+                               <!-- <value>6e-6</value> -->
+                           <!-- </property> -->
+                       </properties>
+				   </component>
+				   <component>
+				       <name>contaminant</name>
+                       <properties>
+                           <property>
+                               <name>molecular_diffusion</name>
+                               <type>Constant</type>
+                               <value>8.0e-10</value>
+                           </property>
+                       </properties>
+				   </component>
+			   </components>
+               <properties>
+                  <property>
+                      <name>viscosity</name>
+                      <type>Constant</type>
+                      <value>1.0e-3</value>
+                  </property>
+<!-- Daq=D_0exp(-E/T), PCE: 8e-10, air: 2e-9			   -->					   
+                  <property>
+                      <name>molecular_diffusion</name>
+                      <type>Constant</type>
+                      <value>9.1e-10</value>
+                  </property>
+               </properties>
+            </phase>
+            <phase>
+               <type>Gas</type>
+			   <components>
+                   <component>
+                       <name>air</name>
+                       <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.028964397787206768</value>
+                           </property>
+<!-- exponential with respect to 1/T						    -->
+                           <!-- <property> -->
+                               <!-- <name>Henry_constant</name> -->
+                               <!-- <type>Constant</type> -->
+                               <!-- <value>1</value> -->
+                           <!-- </property> -->
+						   <property>
+                               <name>heat_capacity </name>
+                               <type>Constant</type>
+                              <value>1040</value>
+                           </property>
+                       </properties>
+                   </component>
+				   <component>
+                       <name>wasser</name>
+                       <properties>
+					       <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.018</value>
+                           </property>
+                           <property>
+                               <name>heat_capacity </name>
+                               <type>Constant</type>
+                              <value>4187</value>
+                           </property>						   
+                       </properties>
+                   </component>
+				   <component>
+                       <name>contaminant</name>
+                       <properties>
+						   <property>
+                              <name>density</name>
+                              <type>IdealGasLaw</type>
+                           </property>
+                           <property>
+                               <name>molar_mass</name>
+                               <type>Constant</type>
+                               <value>0.16583</value>
+                           </property>
+<!-- exponential with respect to 1/T						    -->
+                           <!-- <property> -->
+                               <!-- <name>Henry_constant</name> -->
+                               <!-- <type>Constant</type> -->
+                               <!-- <value>1</value> -->
+                           <!-- </property> -->
+						   <property>
+                              <name>molecular_diffusion</name>
+                              <type>Constant</type>
+                              <value>7e-6</value>
+                           </property>
+						   <property>
+                              <name>heat_capacity </name>
+                              <type>Constant</type>
+                              <value>576</value>                <!-- Wikipedia PCE  -->   
+                           </property>
+                       </properties>
+                   </component>
+			   </components>
+               <properties>
+                  <property>
+                     <name>density</name>
+                     <type>IdealGasLaw</type>
+                  </property>
+<!-- dependence on T and composition	(square root increase with T, composition see Wilke's method)			   -->
+                  <property>
+                     <name>viscosity</name>
+                     <type>Constant</type>
+                     <value>1.851e-5</value>
+                  </property>
+<!-- Fuller's Law, power=1.75, value for water vapor is 2.4e-5						   -->				  
+				  <property>
+                     <name>molecular_diffusion</name>
+                     <type>Constant</type>
+                     <value>8.3e-6</value>
+                  </property>
+               </properties>
+            </phase>
+			<phase>
+               <type>Solid</type>
+               <properties>
+                  <property>
+                     <name>density</name>
+                     <type>Constant</type>
+                     <value>2650</value>
+                  </property>
+                  <property>
+                      <name>heat_capacity </name>
+                      <type>Constant</type>
+                     <value>750</value>
+                  </property>
+               </properties>
+            </phase>
+         </phases>
+         <properties>
+            <property>
+               <name>permeability</name>
+               <type>Constant</type>
+               <value>1.18e-11</value>
+            </property>
+<!-- only allows for regularized vG or curve type, since dpc_dS has to be bounded -->
+            <property>
+               <name>capillary_pressure</name>
+               <!-- <type>CapillaryPressureVanGenuchten</type> -->
+               <!-- <residual_liquid_saturation>0.4</residual_liquid_saturation> -->
+               <!-- <residual_gas_saturation>0.0</residual_gas_saturation> -->
+               <!-- <exponent>0.3288590604</exponent> -->
+               <!-- <p_b>15e+6</p_b> -->
+			   <!-- <maximum_capillary_pressure>1e13</maximum_capillary_pressure> -->
+			   <type>Curve</type>
+               <curve>pc_Sw</curve>
+               <independent_variable>liquid_saturation</independent_variable>
+            </property>
+			<!-- <property> -->
+               <!-- <name>vG_exponent</name> -->
+               <!-- <type>Constant</type> -->
+               <!-- <value>0.75</value> -->
+            <!-- </property> -->
+            <property>
+<!-- cannot use vG type unless source code is modified (returns a number instead of a 2x1 vector) -->
+               <name>relative_permeability</name>
+               <type>RelativePermeabilityVanGenuchten</type>
+               <residual_liquid_saturation>0.0</residual_liquid_saturation>
+               <residual_gas_saturation>0.0</residual_gas_saturation>
+               <exponent>0.8</exponent>
+               <minimum_relative_permeability_liquid>0</minimum_relative_permeability_liquid>
+            </property>
+            <property>
+               <name>porosity</name>
+               <type>Constant</type>
+               <value>0.38</value>
+            </property>
+<!-- square root or curve (2 types)			 -->
+<!-- add to MPL property -->
+			<property>
+               <name>thermal_conductivity</name>
+               <type>Curve</type>
+               <curve>lambda_Sw</curve>
+               <independent_variable>liquid_saturation</independent_variable>
+            </property>	
+         </properties>
+      </medium>
+    </media>		
+    <parameters>
+        <parameter>
+            <name>pl_0</name>
+            <type>MeshNode</type>
+            <field_name>P_L</field_name>
+        </parameter>
+        <parameter>
+            <name>Xa_0</name>
+            <type>MeshNode</type>
+            <field_name>Xa</field_name>
+        </parameter>
+		<parameter>
+            <name>T_0</name>
+            <type>Constant</type>
+            <value>298.15</value>
+        </parameter>
+		<parameter>
+            <name>pl_Dirichlet_bottom</name>
+            <type>Constant</type>
+            <value>150375</value>
+        </parameter>
+		<parameter>
+            <name>pl_Dirichlet_top</name>
+            <type>Constant</type>
+            <value>101325</value>
+        </parameter>
+		<parameter>
+            <name>pl_Neumann_in</name>
+            <type>Constant</type>
+            <value>0.038</value>
+        </parameter>
+		<parameter>
+            <name>Xa_Dirichlet_top</name>
+            <type>Constant</type>
+            <value>0.111881</value>
+        </parameter>
+		<parameter>
+            <name>Xa_Dirichlet_out</name>
+            <type>Constant</type>
+            <value>1.1e-5</value>
+        </parameter>
+		<parameter>
+            <name>Xc_0</name>
+            <type>MeshNode</type>
+            <field_name>Xc_ini</field_name>
+        </parameter>
+		<parameter>
+            <name>Xc_Dirichlet_top</name>
+            <type>Constant</type>
+            <value>0</value>
+        </parameter>
+		<parameter>
+            <name>Xc_Dirichlet_bottom</name>
+            <type>Constant</type>
+            <value>1e-8</value>
+        </parameter>
+        <parameter>
+            <name>heat_input</name>
+            <type>Constant</type>
+            <value>100</value>
+        </parameter>
+    </parameters>
+    <time_loop>
+        <processes>
+            <process ref="GW23">
+                <nonlinear_solver>basic_newton</nonlinear_solver>
+                <convergence_criterion>
+                    <type>PerComponentDeltaX</type>
+                    <norm_type>NORM2</norm_type>
+                    <reltols>1.e-6 1.e-6 1e-6 1e-6</reltols>
+					<!-- <type>DeltaX</type> -->
+                    <!-- <norm_type>NORM2</norm_type> -->
+                    <!-- <abstol>1.e-5</abstol> -->
+                </convergence_criterion>
+                <time_discretization>
+                    <!-- <type>CrankNicolson</type> -->
+                    <!-- <theta>0.5</theta> -->
+					<type>BackwardEuler</type>
+                </time_discretization>
+                <time_stepping>
+                    <type>EvolutionaryPIDcontroller</type>
+                    <t_initial> 0.0 </t_initial>
+                    <t_end> 31536000 </t_end>
+                    <dt_guess> 1e1 </dt_guess>
+                    <dt_min> 1e-6 </dt_min>
+                    <dt_max> 1e5 </dt_max>
+                    <rel_dt_min> 0.01 </rel_dt_min>
+                    <rel_dt_max> 1.5 </rel_dt_max>
+                    <tol> 5 </tol>
+					<!-- <type>FixedTimeStepping</type> -->
+                    <!-- <t_initial>0</t_initial> -->
+                    <!-- <t_end>315360000.0</t_end> -->
+                    <!-- <timesteps> -->
+                        <!-- <pair> -->
+                            <!-- <repeat>10000</repeat> -->
+                            <!-- <delta_t>3600</delta_t> -->
+                        <!-- </pair> -->
+                    <!-- </timesteps> -->
+					<!-- <type>IterationNumberBasedTimeStepping</type> -->
+                    <!-- <t_initial> 0.0 </t_initial> -->
+                    <!-- <t_end> 31536000 </t_end> -->
+                    <!-- <initial_dt> 10 </initial_dt> -->
+                    <!-- <minimum_dt> 1 </minimum_dt> -->
+                    <!-- <maximum_dt> 43200 </maximum_dt>  -->
+                    <!-- <number_iterations> 1 2 3 4 5 6</number_iterations> -->
+                    <!-- <multiplier> 1.5 1.2 1.0 0.7 0.5 0.4</multiplier> -->
+                </time_stepping>
+            </process>
+        </processes>
+        <output>
+            <type>VTK</type>
+            <prefix>1D_diffusion</prefix>
+            <timesteps>
+                <pair>
+                    <repeat> 1 </repeat>
+                    <each_steps> 10 </each_steps>
+                </pair>
+            </timesteps>
+            <output_iteration_results>true</output_iteration_results>
+            <variables>
+                <variable> liquid_pressure </variable>
+                <variable> overall_molar_fraction_air </variable>
+				<variable> overall_molar_fraction_contaminant </variable>
+                <variable> temperature </variable>
+                <variable> saturation </variable>
+                <variable> capillary_pressure </variable>
+                <variable> pressure_nonwetting </variable>
+                <variable> liquid_molar_fraction_air </variable>
+                <variable> gas_molar_fraction_water </variable>
+				<variable> liquid_molar_fraction_contaminant </variable>
+				<variable> gas_molar_fraction_contaminant </variable>
+            </variables>
+			<suffix>_ts_{:timestep}_t_{:time}</suffix>
+        </output>
+    </time_loop>
+    <process_variables>
+        <process_variable>
+            <name>liquid_pressure</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>pl_0</initial_condition>
+            <boundary_conditions>
+                <!-- <boundary_condition> -->
+                    <!-- <mesh>geometry_inlet</mesh> -->
+                    <!-- <type>Neumann</type> -->
+                    <!-- <parameter>pl_Neumann_in</parameter> -->
+                <!-- </boundary_condition> -->
+				<!-- <boundary_condition> -->
+                    <!-- <mesh>geometry_outlet</mesh> -->
+                    <!-- <type>Dirichlet</type> -->
+                    <!-- <parameter>pl_Dirichlet_out</parameter> -->
+                <!-- </boundary_condition> -->
+            </boundary_conditions>
+        </process_variable>
+        <process_variable>
+            <name>overall_molar_fraction_air</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>Xa_0</initial_condition>
+            <boundary_conditions>
+			    <boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>top</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xa_Dirichlet_top</parameter>
+                </boundary_condition>
+				<!-- <boundary_condition> -->
+                    <!-- <mesh>geometry_outlet</mesh> -->
+                    <!-- <type>Dirichlet</type> -->
+                    <!-- <parameter>Xa_Dirichlet_out</parameter> -->
+                <!-- </boundary_condition> -->
+            </boundary_conditions>
+        </process_variable>
+		<process_variable>
+            <name>overall_molar_fraction_contaminant</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>Xc_0</initial_condition>
+            <boundary_conditions>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>top</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xc_Dirichlet_top</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>bottom</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xc_Dirichlet_bottom</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>wt</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>Xc_Dirichlet_bottom</parameter>
+                </boundary_condition>
+            </boundary_conditions>
+        </process_variable>
+		<process_variable>
+            <name>temperature</name>
+            <components>1</components>
+            <order>1</order>
+            <initial_condition>T_0</initial_condition>
+			<!-- <source_terms> -->
+                <!-- <source_term> -->
+                    <!-- <mesh>new_heatsource</mesh> -->
+                    <!-- <type>Line</type> -->
+                    <!-- <parameter>heat_input</parameter> -->
+                <!-- </source_term> -->
+            <!-- </source_terms> -->
+			<boundary_conditions>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>top</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>T_0</parameter>
+                </boundary_condition>
+				<boundary_condition>
+                    <geometrical_set>geometry</geometrical_set>
+                    <geometry>bottom</geometry>
+                    <type>Dirichlet</type>
+                    <parameter>T_0</parameter>
+                </boundary_condition>
+            </boundary_conditions>
+        </process_variable>
+    </process_variables>
+    <nonlinear_solvers>
+        <nonlinear_solver>
+            <name>     basic_newton </name>
+            <type>     Newton       </type>
+            <max_iter> 15          </max_iter>
+            <linear_solver>general_linear_solver</linear_solver>
+        </nonlinear_solver>
+    </nonlinear_solvers>
+    <linear_solvers>
+        <linear_solver>
+            <name>general_linear_solver</name>
+            <lis>-i bicgstab -p ilu -tol 1e-18 -maxiter 10000</lis>
+            <eigen>
+                <!-- <solver_type>SparseLU</solver_type> -->
+				<solver_type>BiCGSTAB</solver_type>
+				<scaling>true</scaling>
+                <precon_type>ILUT</precon_type>
+                <max_iteration_step>10000</max_iteration_step>
+                <error_tolerance>1e-18</error_tolerance>
+            </eigen>
+            <petsc>
+                <prefix>multiphase</prefix>
+                <parameters>-gw_ksp_type cg -gw_pc_type bjacobi -gw_ksp_rtol 1e-16 -gw_ksp_max_it 10000</parameters>
+            </petsc>
+        </linear_solver>
+    </linear_solvers>
+	<curves>
+        <curve>
+            <name>lambda_Sw</name>
+            <coords>0	0.01	0.02	0.03	0.04	0.05	0.06	0.07	0.08	0.09	0.1	0.11	0.12	0.13	0.14	0.15	0.16	0.17	0.18	0.19	0.2	0.21	0.22	0.23	0.24	0.25	0.26	0.27	0.28	0.29	0.3	0.31	0.32	0.33	0.34	0.35	0.36	0.37	0.38	0.39	0.4	0.41	0.42	0.43	0.44	0.45	0.46	0.47	0.48	0.49	0.5	0.51	0.52	0.53	0.54	0.55	0.56	0.57	0.58	0.59	0.6	0.61	0.62	0.63	0.64	0.65	0.66	0.67	0.68	0.69	0.7	0.71	0.72	0.73	0.74	0.75	0.76	0.77	0.78	0.79	0.8	0.81	0.82	0.83	0.84	0.85	0.86	0.87	0.88	0.89	0.9	0.91	0.92	0.93	0.94	0.95	0.96	0.97	0.98	0.99	1
+			</coords>
+			<values>0.5	0.7	0.782842712	0.846410162	0.9	0.947213595	0.989897949	1.029150262	1.065685425	1.1	1.132455532	1.163324958	1.192820323	1.221110255	1.248331477	1.274596669	1.3	1.324621125	1.348528137	1.371779789	1.394427191	1.416515139	1.438083152	1.459166305	1.479795897	1.5	1.519803903	1.539230485	1.558300524	1.577032961	1.595445115	1.613552873	1.63137085	1.648912529	1.666190379	1.683215957	1.7	1.716552506	1.732882801	1.7489996	1.764911064	1.780624847	1.79614814	1.811487705	1.826649916	1.841640786	1.856465997	1.87113092	1.885640646	1.9	1.914213562	1.928285686	1.94222051	1.956021978	1.969693846	1.983239697	1.996662955	2.009966887	2.023154621	2.03622915	2.049193338	2.062049935	2.074801575	2.087450787	2.1	2.11245155	2.124807681	2.137070554	2.14924225	2.161324773	2.173320053	2.185229955	2.197056275	2.208800749	2.220465053	2.232050808	2.243559577	2.254992877	2.266352173	2.277638883	2.288854382	2.3	2.311077028	2.322086716	2.333030278	2.343908891	2.354723699	2.365475811	2.376166304	2.386796226	2.397366596	2.407878403	2.418332609	2.428730152	2.439071943	2.449358869	2.459591794	2.46977156	2.479898987	2.489974874	2.5
+			</values>
+		</curve>
+		<curve>
+            <name>pc_Sw</name>
+            <coords>0   		0.00100000000000000	0.00200000000000000	0.00300000000000000	0.00400000000000000	0.00500000000000000	0.00600000000000000	0.00700000000000000	0.00800000000000000	0.00900000000000000	0.0100000000000000	0.0110000000000000	0.0120000000000000	0.0130000000000000	0.0140000000000000	0.0150000000000000	0.0160000000000000	0.0170000000000000	0.0180000000000000	0.0190000000000000	0.0200000000000000	0.0210000000000000	0.0220000000000000	0.0230000000000000	0.0240000000000000	0.0250000000000000	0.0260000000000000	0.0270000000000000	0.0280000000000000	0.0290000000000000	0.0300000000000000	0.0310000000000000	0.0320000000000000	0.0330000000000000	0.0340000000000000	0.0350000000000000	0.0360000000000000	0.0370000000000000	0.0380000000000000	0.0390000000000000	0.0400000000000000	0.0410000000000000	0.0420000000000000	0.0430000000000000	0.0440000000000000	0.0450000000000000	0.0460000000000000	0.0470000000000000	0.0480000000000000	0.0490000000000000	0.0500000000000000	0.0510000000000000	0.0520000000000000	0.0530000000000000	0.0540000000000000	0.0550000000000000	0.0560000000000000	0.0570000000000000	0.0580000000000000	0.0590000000000000	0.0600000000000000	0.0610000000000000	0.0620000000000000	0.0630000000000000	0.0640000000000000	0.0650000000000000	0.0660000000000000	0.0670000000000000	0.0680000000000000	0.0690000000000000	0.0700000000000000	0.0710000000000000	0.0720000000000000	0.0730000000000000	0.0740000000000000	0.0750000000000000	0.0760000000000000	0.0770000000000000	0.0780000000000000	0.0790000000000000	0.0800000000000000	0.0810000000000000	0.0820000000000000	0.0830000000000000	0.0840000000000000	0.0850000000000000	0.0860000000000000	0.0870000000000000	0.0880000000000000	0.0890000000000000	0.0900000000000000	0.0910000000000000	0.0920000000000000	0.0930000000000000	0.0940000000000000	0.0950000000000000	0.0960000000000000	0.0970000000000000	0.0980000000000000	0.0990000000000000	0.100000000000000	0.101000000000000	0.102000000000000	0.103000000000000	0.104000000000000	0.105000000000000	0.106000000000000	0.107000000000000	0.108000000000000	0.109000000000000	0.110000000000000	0.111000000000000	0.112000000000000	0.113000000000000	0.114000000000000	0.115000000000000	0.116000000000000	0.117000000000000	0.118000000000000	0.119000000000000	0.120000000000000	0.121000000000000	0.122000000000000	0.123000000000000	0.124000000000000	0.125000000000000	0.126000000000000	0.127000000000000	0.128000000000000	0.129000000000000	0.130000000000000	0.131000000000000	0.132000000000000	0.133000000000000	0.134000000000000	0.135000000000000	0.136000000000000	0.137000000000000	0.138000000000000	0.139000000000000	0.140000000000000	0.141000000000000	0.142000000000000	0.143000000000000	0.144000000000000	0.145000000000000	0.146000000000000	0.147000000000000	0.148000000000000	0.149000000000000	0.150000000000000	0.151000000000000	0.152000000000000	0.153000000000000	0.154000000000000	0.155000000000000	0.156000000000000	0.157000000000000	0.158000000000000	0.159000000000000	0.160000000000000	0.161000000000000	0.162000000000000	0.163000000000000	0.164000000000000	0.165000000000000	0.166000000000000	0.167000000000000	0.168000000000000	0.169000000000000	0.170000000000000	0.171000000000000	0.172000000000000	0.173000000000000	0.174000000000000	0.175000000000000	0.176000000000000	0.177000000000000	0.178000000000000	0.179000000000000	0.180000000000000	0.181000000000000	0.182000000000000	0.183000000000000	0.184000000000000	0.185000000000000	0.186000000000000	0.187000000000000	0.188000000000000	0.189000000000000	0.190000000000000	0.191000000000000	0.192000000000000	0.193000000000000	0.194000000000000	0.195000000000000	0.196000000000000	0.197000000000000	0.198000000000000	0.199000000000000	0.200000000000000	0.201000000000000	0.202000000000000	0.203000000000000	0.204000000000000	0.205000000000000	0.206000000000000	0.207000000000000	0.208000000000000	0.209000000000000	0.210000000000000	0.211000000000000	0.212000000000000	0.213000000000000	0.214000000000000	0.215000000000000	0.216000000000000	0.217000000000000	0.218000000000000	0.219000000000000	0.220000000000000	0.221000000000000	0.222000000000000	0.223000000000000	0.224000000000000	0.225000000000000	0.226000000000000	0.227000000000000	0.228000000000000	0.229000000000000	0.230000000000000	0.231000000000000	0.232000000000000	0.233000000000000	0.234000000000000	0.235000000000000	0.236000000000000	0.237000000000000	0.238000000000000	0.239000000000000	0.240000000000000	0.241000000000000	0.242000000000000	0.243000000000000	0.244000000000000	0.245000000000000	0.246000000000000	0.247000000000000	0.248000000000000	0.249000000000000	0.250000000000000	0.251000000000000	0.252000000000000	0.253000000000000	0.254000000000000	0.255000000000000	0.256000000000000	0.257000000000000	0.258000000000000	0.259000000000000	0.260000000000000	0.261000000000000	0.262000000000000	0.263000000000000	0.264000000000000	0.265000000000000	0.266000000000000	0.267000000000000	0.268000000000000	0.269000000000000	0.270000000000000	0.271000000000000	0.272000000000000	0.273000000000000	0.274000000000000	0.275000000000000	0.276000000000000	0.277000000000000	0.278000000000000	0.279000000000000	0.280000000000000	0.281000000000000	0.282000000000000	0.283000000000000	0.284000000000000	0.285000000000000	0.286000000000000	0.287000000000000	0.288000000000000	0.289000000000000	0.290000000000000	0.291000000000000	0.292000000000000	0.293000000000000	0.294000000000000	0.295000000000000	0.296000000000000	0.297000000000000	0.298000000000000	0.299000000000000	0.300000000000000	0.301000000000000	0.302000000000000	0.303000000000000	0.304000000000000	0.305000000000000	0.306000000000000	0.307000000000000	0.308000000000000	0.309000000000000	0.310000000000000	0.311000000000000	0.312000000000000	0.313000000000000	0.314000000000000	0.315000000000000	0.316000000000000	0.317000000000000	0.318000000000000	0.319000000000000	0.320000000000000	0.321000000000000	0.322000000000000	0.323000000000000	0.324000000000000	0.325000000000000	0.326000000000000	0.327000000000000	0.328000000000000	0.329000000000000	0.330000000000000	0.331000000000000	0.332000000000000	0.333000000000000	0.334000000000000	0.335000000000000	0.336000000000000	0.337000000000000	0.338000000000000	0.339000000000000	0.340000000000000	0.341000000000000	0.342000000000000	0.343000000000000	0.344000000000000	0.345000000000000	0.346000000000000	0.347000000000000	0.348000000000000	0.349000000000000	0.350000000000000	0.351000000000000	0.352000000000000	0.353000000000000	0.354000000000000	0.355000000000000	0.356000000000000	0.357000000000000	0.358000000000000	0.359000000000000	0.360000000000000	0.361000000000000	0.362000000000000	0.363000000000000	0.364000000000000	0.365000000000000	0.366000000000000	0.367000000000000	0.368000000000000	0.369000000000000	0.370000000000000	0.371000000000000	0.372000000000000	0.373000000000000	0.374000000000000	0.375000000000000	0.376000000000000	0.377000000000000	0.378000000000000	0.379000000000000	0.380000000000000	0.381000000000000	0.382000000000000	0.383000000000000	0.384000000000000	0.385000000000000	0.386000000000000	0.387000000000000	0.388000000000000	0.389000000000000	0.390000000000000	0.391000000000000	0.392000000000000	0.393000000000000	0.394000000000000	0.395000000000000	0.396000000000000	0.397000000000000	0.398000000000000	0.399000000000000	0.400000000000000	0.401000000000000	0.402000000000000	0.403000000000000	0.404000000000000	0.405000000000000	0.406000000000000	0.407000000000000	0.408000000000000	0.409000000000000	0.410000000000000	0.411000000000000	0.412000000000000	0.413000000000000	0.414000000000000	0.415000000000000	0.416000000000000	0.417000000000000	0.418000000000000	0.419000000000000	0.420000000000000	0.421000000000000	0.422000000000000	0.423000000000000	0.424000000000000	0.425000000000000	0.426000000000000	0.427000000000000	0.428000000000000	0.429000000000000	0.430000000000000	0.431000000000000	0.432000000000000	0.433000000000000	0.434000000000000	0.435000000000000	0.436000000000000	0.437000000000000	0.438000000000000	0.439000000000000	0.440000000000000	0.441000000000000	0.442000000000000	0.443000000000000	0.444000000000000	0.445000000000000	0.446000000000000	0.447000000000000	0.448000000000000	0.449000000000000	0.450000000000000	0.451000000000000	0.452000000000000	0.453000000000000	0.454000000000000	0.455000000000000	0.456000000000000	0.457000000000000	0.458000000000000	0.459000000000000	0.460000000000000	0.461000000000000	0.462000000000000	0.463000000000000	0.464000000000000	0.465000000000000	0.466000000000000	0.467000000000000	0.468000000000000	0.469000000000000	0.470000000000000	0.471000000000000	0.472000000000000	0.473000000000000	0.474000000000000	0.475000000000000	0.476000000000000	0.477000000000000	0.478000000000000	0.479000000000000	0.480000000000000	0.481000000000000	0.482000000000000	0.483000000000000	0.484000000000000	0.485000000000000	0.486000000000000	0.487000000000000	0.488000000000000	0.489000000000000	0.490000000000000	0.491000000000000	0.492000000000000	0.493000000000000	0.494000000000000	0.495000000000000	0.496000000000000	0.497000000000000	0.498000000000000	0.499000000000000	0.500000000000000	0.501000000000000	0.502000000000000	0.503000000000000	0.504000000000000	0.505000000000000	0.506000000000000	0.507000000000000	0.508000000000000	0.509000000000000	0.510000000000000	0.511000000000000	0.512000000000000	0.513000000000000	0.514000000000000	0.515000000000000	0.516000000000000	0.517000000000000	0.518000000000000	0.519000000000000	0.520000000000000	0.521000000000000	0.522000000000000	0.523000000000000	0.524000000000000	0.525000000000000	0.526000000000000	0.527000000000000	0.528000000000000	0.529000000000000	0.530000000000000	0.531000000000000	0.532000000000000	0.533000000000000	0.534000000000000	0.535000000000000	0.536000000000000	0.537000000000000	0.538000000000000	0.539000000000000	0.540000000000000	0.541000000000000	0.542000000000000	0.543000000000000	0.544000000000000	0.545000000000000	0.546000000000000	0.547000000000000	0.548000000000000	0.549000000000000	0.550000000000000	0.551000000000000	0.552000000000000	0.553000000000000	0.554000000000000	0.555000000000000	0.556000000000000	0.557000000000000	0.558000000000000	0.559000000000000	0.560000000000000	0.561000000000000	0.562000000000000	0.563000000000000	0.564000000000000	0.565000000000000	0.566000000000000	0.567000000000000	0.568000000000000	0.569000000000000	0.570000000000000	0.571000000000000	0.572000000000000	0.573000000000000	0.574000000000000	0.575000000000000	0.576000000000000	0.577000000000000	0.578000000000000	0.579000000000000	0.580000000000000	0.581000000000000	0.582000000000000	0.583000000000000	0.584000000000000	0.585000000000000	0.586000000000000	0.587000000000000	0.588000000000000	0.589000000000000	0.590000000000000	0.591000000000000	0.592000000000000	0.593000000000000	0.594000000000000	0.595000000000000	0.596000000000000	0.597000000000000	0.598000000000000	0.599000000000000	0.600000000000000	0.601000000000000	0.602000000000000	0.603000000000000	0.604000000000000	0.605000000000000	0.606000000000000	0.607000000000000	0.608000000000000	0.609000000000000	0.610000000000000	0.611000000000000	0.612000000000000	0.613000000000000	0.614000000000000	0.615000000000000	0.616000000000000	0.617000000000000	0.618000000000000	0.619000000000000	0.620000000000000	0.621000000000000	0.622000000000000	0.623000000000000	0.624000000000000	0.625000000000000	0.626000000000000	0.627000000000000	0.628000000000000	0.629000000000000	0.630000000000000	0.631000000000000	0.632000000000000	0.633000000000000	0.634000000000000	0.635000000000000	0.636000000000000	0.637000000000000	0.638000000000000	0.639000000000000	0.640000000000000	0.641000000000000	0.642000000000000	0.643000000000000	0.644000000000000	0.645000000000000	0.646000000000000	0.647000000000000	0.648000000000000	0.649000000000000	0.650000000000000	0.651000000000000	0.652000000000000	0.653000000000000	0.654000000000000	0.655000000000000	0.656000000000000	0.657000000000000	0.658000000000000	0.659000000000000	0.660000000000000	0.661000000000000	0.662000000000000	0.663000000000000	0.664000000000000	0.665000000000000	0.666000000000000	0.667000000000000	0.668000000000000	0.669000000000000	0.670000000000000	0.671000000000000	0.672000000000000	0.673000000000000	0.674000000000000	0.675000000000000	0.676000000000000	0.677000000000000	0.678000000000000	0.679000000000000	0.680000000000000	0.681000000000000	0.682000000000000	0.683000000000000	0.684000000000000	0.685000000000000	0.686000000000000	0.687000000000000	0.688000000000000	0.689000000000000	0.690000000000000	0.691000000000000	0.692000000000000	0.693000000000000	0.694000000000000	0.695000000000000	0.696000000000000	0.697000000000000	0.698000000000000	0.699000000000000	0.700000000000000	0.701000000000000	0.702000000000000	0.703000000000000	0.704000000000000	0.705000000000000	0.706000000000000	0.707000000000000	0.708000000000000	0.709000000000000	0.710000000000000	0.711000000000000	0.712000000000000	0.713000000000000	0.714000000000000	0.715000000000000	0.716000000000000	0.717000000000000	0.718000000000000	0.719000000000000	0.720000000000000	0.721000000000000	0.722000000000000	0.723000000000000	0.724000000000000	0.725000000000000	0.726000000000000	0.727000000000000	0.728000000000000	0.729000000000000	0.730000000000000	0.731000000000000	0.732000000000000	0.733000000000000	0.734000000000000	0.735000000000000	0.736000000000000	0.737000000000000	0.738000000000000	0.739000000000000	0.740000000000000	0.741000000000000	0.742000000000000	0.743000000000000	0.744000000000000	0.745000000000000	0.746000000000000	0.747000000000000	0.748000000000000	0.749000000000000	0.750000000000000	0.751000000000000	0.752000000000000	0.753000000000000	0.754000000000000	0.755000000000000	0.756000000000000	0.757000000000000	0.758000000000000	0.759000000000000	0.760000000000000	0.761000000000000	0.762000000000000	0.763000000000000	0.764000000000000	0.765000000000000	0.766000000000000	0.767000000000000	0.768000000000000	0.769000000000000	0.770000000000000	0.771000000000000	0.772000000000000	0.773000000000000	0.774000000000000	0.775000000000000	0.776000000000000	0.777000000000000	0.778000000000000	0.779000000000000	0.780000000000000	0.781000000000000	0.782000000000000	0.783000000000000	0.784000000000000	0.785000000000000	0.786000000000000	0.787000000000000	0.788000000000000	0.789000000000000	0.790000000000000	0.791000000000000	0.792000000000000	0.793000000000000	0.794000000000000	0.795000000000000	0.796000000000000	0.797000000000000	0.798000000000000	0.799000000000000	0.800000000000000	0.801000000000000	0.802000000000000	0.803000000000000	0.804000000000000	0.805000000000000	0.806000000000000	0.807000000000000	0.808000000000000	0.809000000000000	0.810000000000000	0.811000000000000	0.812000000000000	0.813000000000000	0.814000000000000	0.815000000000000	0.816000000000000	0.817000000000000	0.818000000000000	0.819000000000000	0.820000000000000	0.821000000000000	0.822000000000000	0.823000000000000	0.824000000000000	0.825000000000000	0.826000000000000	0.827000000000000	0.828000000000000	0.829000000000000	0.830000000000000	0.831000000000000	0.832000000000000	0.833000000000000	0.834000000000000	0.835000000000000	0.836000000000000	0.837000000000000	0.838000000000000	0.839000000000000	0.840000000000000	0.841000000000000	0.842000000000000	0.843000000000000	0.844000000000000	0.845000000000000	0.846000000000000	0.847000000000000	0.848000000000000	0.849000000000000	0.850000000000000	0.851000000000000	0.852000000000000	0.853000000000000	0.854000000000000	0.855000000000000	0.856000000000000	0.857000000000000	0.858000000000000	0.859000000000000	0.860000000000000	0.861000000000000	0.862000000000000	0.863000000000000	0.864000000000000	0.865000000000000	0.866000000000000	0.867000000000000	0.868000000000000	0.869000000000000	0.870000000000000	0.871000000000000	0.872000000000000	0.873000000000000	0.874000000000000	0.875000000000000	0.876000000000000	0.877000000000000	0.878000000000000	0.879000000000000	0.880000000000000	0.881000000000000	0.882000000000000	0.883000000000000	0.884000000000000	0.885000000000000	0.886000000000000	0.887000000000000	0.888000000000000	0.889000000000000	0.890000000000000	0.891000000000000	0.892000000000000	0.893000000000000	0.894000000000000	0.895000000000000	0.896000000000000	0.897000000000000	0.898000000000000	0.899000000000000	0.900000000000000	0.901000000000000	0.902000000000000	0.903000000000000	0.904000000000000	0.905000000000000	0.906000000000000	0.907000000000000	0.908000000000000	0.909000000000000	0.910000000000000	0.911000000000000	0.912000000000000	0.913000000000000	0.914000000000000	0.915000000000000	0.916000000000000	0.917000000000000	0.918000000000000	0.919000000000000	0.920000000000000	0.921000000000000	0.922000000000000	0.923000000000000	0.924000000000000	0.925000000000000	0.926000000000000	0.927000000000000	0.928000000000000	0.929000000000000	0.930000000000000	0.931000000000000	0.932000000000000	0.933000000000000	0.934000000000000	0.935000000000000	0.936000000000000	0.937000000000000	0.938000000000000	0.939000000000000	0.940000000000000	0.941000000000000	0.942000000000000	0.943000000000000	0.944000000000000	0.945000000000000	0.946000000000000	0.947000000000000	0.948000000000000	0.949000000000000	0.950000000000000	0.951000000000000	0.952000000000000	0.953000000000000	0.954000000000000	0.955000000000000	0.956000000000000	0.957000000000000	0.958000000000000	0.959000000000000	0.960000000000000	0.961000000000000	0.962000000000000	0.963000000000000	0.964000000000000	0.965000000000000	0.966000000000000	0.967000000000000	0.968000000000000	0.969000000000000	0.970000000000000	0.971000000000000	0.972000000000000	0.973000000000000	0.974000000000000	0.975000000000000	0.976000000000000	0.977000000000000	0.978000000000000	0.979000000000000	0.980000000000000	0.981000000000000	0.982000000000000	0.983000000000000	0.984000000000000	0.985000000000000	0.986000000000000	0.987000000000000	0.988000000000000	0.989000000000000	0.990000000000000	0.991000000000000	0.992000000000000	0.993000000000000	0.994000000000000	0.995000000000000	0.996000000000000	0.997000000000000	0.998000000000000	0.999000000000000	1</coords>
+            <values>2.91e4 		9193.95364359983	7730.78354292955	6985.16127895662	6500.02968104142	6146.95018696056	5872.65891874853	5650.24397277439	5464.33348600951	5305.37414930685	5167.04983025071	5044.98185318774	4936.01852579913	4837.82105251066	4748.60943062609	4666.99977057073	4591.89638354127	4522.41800481648	4457.84602600896	4397.58733892062	4341.14713101701	4288.10861304319	4238.11767297623	4190.87109403554	4146.10739298817	4103.59961312555	4063.14959478487	4024.58337632074	3987.74746959680	3952.50581893483	3918.73729924837	3886.33364326356	3855.19771298475	3825.24204942628	3796.38764886514	3768.56292470929	3741.70282240476	3715.74806125581	3690.64448206913	3666.34248349258	3642.79653305451	3619.96474140782	3597.80849028583	3576.29210629225	3555.38257395710	3535.04928255767	3515.26380207831	3495.99968440195	3477.23228642151	3458.93861225315	3441.09717214509	3423.68785602042	3406.69181988196	3390.09138355127	3373.86993842070	3358.01186407255	3342.50245276885	3327.32784094308	3312.47494693408	3297.93141429676	3283.68556010481	3269.72632773078	3256.04324364948	3242.62637786284	3229.46630759080	3216.55408391202	3203.88120107363	3191.43956821958	3179.22148331401	3167.21960905966	3155.42695063237	3143.83683507074	3132.44289217670	3121.23903679681	3110.21945236713	3099.37857561580	3088.71108232772	3078.21187408454	3067.87606590161	3057.69897469042	3047.67610848185	3037.80315635117	3028.07597899112	3018.49059988396	3009.04319702783	2999.73009517634	2990.54775855409	2981.49278401363	2972.56189460247	2963.75193351116	2955.05985837592	2946.48273591132	2938.01773685049	2929.66213117219	2921.41328359549	2913.26864932441	2905.22577002623	2897.28227002832	2889.43585271944	2881.68429714272	2874.02545476808	2866.45724643311	2858.97765944199	2851.58474481276	2844.27661466418	2837.05143973358	2829.90744701818	2822.84291753252	2815.85618417527	2808.94562969917	2802.10968477819	2795.34682616637	2788.65557494332	2782.03449484150	2775.48219065073	2768.99730669585	2762.57852538344	2756.22456581403	2749.93418245615	2743.70616387921	2737.53933154183	2731.43253863304	2725.38466896341	2719.39463590370	2713.46138136857	2707.58387484310	2701.76111245001	2695.99211605551	2690.27593241201	2684.61163233571	2678.99830991761	2673.43508176619	2667.92108628023	2662.45548295053	2657.03745168898	2651.66619218384	2646.34092327994	2641.06088238271	2635.82532488499	2630.63352361546	2625.48476830788	2620.37836509010	2615.31363599207	2610.28991847186	2605.30656495915	2600.36294241513	2595.45843190837	2590.59242820588	2585.76433937863	2580.97358642110	2576.21960288410	2571.50183452045	2566.81973894288	2562.17278529374	2557.56045392592	2552.98223609475	2548.43763366010	2543.92615879863	2539.44733372554	2535.00069042553	2530.58577039265	2526.20212437863	2521.84931214936	2517.52690224925	2513.23447177320	2508.97160614573	2504.73789890722	2500.53295150682	2496.35637310189	2492.20778036361	2488.08679728871	2483.99305501690	2479.92619165394	2475.88585210006	2471.87168788360	2467.88335699959	2463.92052375325	2459.98285860804	2456.07003803826	2452.18174438600	2448.31766572219	2444.47749571177	2440.66093348270	2436.86768349880	2433.09745543613	2429.34996406300	2425.62492912326	2421.92207522294	2418.24113172007	2414.58183261751	2410.94391645879	2407.32712622682	2403.73120924536	2400.15591708313	2396.60100546066	2393.06623415945	2389.55136693376	2386.05617142463	2382.58041907624	2379.12388505442	2375.68634816744	2372.26759078867	2368.86739878145	2365.48556142575	2362.12187134685	2358.77612444573	2355.44811983136	2352.13765975457	2348.84454954371	2345.56859754190	2342.30961504580	2339.06741624595	2335.84181816858	2332.63264061888	2329.43970612562	2326.26283988714	2323.10186971867	2319.95662600092	2316.82694162988	2313.71265196789	2310.61359479581	2307.52961026636	2304.46054085856	2301.40623133327	2298.36652868971	2295.34128212308	2292.33034298306	2289.33356473339	2286.35080291229	2283.38191509384	2280.42676085019	2277.48520171469	2274.55710114584	2271.64232449201	2268.74073895700	2265.85221356635	2262.97661913441	2260.11382823211	2257.26371515551	2254.42615589494	2251.60102810494	2248.78821107471	2245.98758569935	2243.19903445160	2240.42244135425	2237.65769195317	2234.90467329081	2232.16327388040	2229.43338368055	2226.71489407055	2224.00769782602	2221.31168909520	2218.62676337566	2215.95281749156	2213.28974957126	2210.63745902555	2207.99584652621	2205.36481398503	2202.74426453331	2200.13410250169	2197.53423340047	2194.94456390028	2192.36500181314	2189.79545607391	2187.23583672210	2184.68605488406	2182.14602275548	2179.61565358426	2177.09486165376	2174.58356226627	2172.08167172691	2169.58910732775	2167.10578733235	2164.63163096043	2162.16655837304	2159.71049065782	2157.26334981465	2154.82505874158	2152.39554122094	2149.97472190579	2147.56252630661	2145.15888077819	2142.76371250681	2140.37694949768	2137.99852056254	2135.62835530751	2133.26638412125	2130.91253816320	2128.56674935212	2126.22895035481	2123.89907457507	2121.57705614279	2119.26282990330	2116.95633140686	2114.65749689842	2112.36626330744	2110.08256823797	2107.80634995893	2105.53754739446	2103.27610011457	2101.02194832580	2098.77503286220	2096.53529517635	2094.30267733057	2092.07712198833	2089.85857240573	2087.64697242316	2085.44226645713	2083.24439949217	2081.05331707295	2078.86896529648	2076.69129080443	2074.52024077563	2072.35576291865	2070.19780546452	2068.04631715960	2065.90124725847	2063.76254551710	2061.63016218595	2059.50404800334	2057.38415418878	2055.27043243660	2053.16283490945	2051.06131423212	2048.96582348529	2046.87631619954	2044.79274634929	2042.71506834695	2040.64323703715	2038.57720769102	2036.51693600058	2034.46237807324	2032.41349042635	2030.37022998186	2028.33255406105	2026.30042037936	2024.27378704126	2022.25261253527	2020.23685572898	2018.22647586418	2016.22143255208	2014.22168576858	2012.22719584963	2010.23792348661	2008.25382972188	2006.27487594427	2004.30102388477	2002.33223561215	2000.36847352878	1998.40970036639	1996.45587918197	1994.50697335372	1992.56294657703	1990.62376286056	1988.68938652230	1986.75978218582	1984.83491477644	1982.91474951752	1980.99925192681	1979.08838781284	1977.18212327134	1975.28042468174	1973.38325870371	1971.49059227375	1969.60239260184	1967.71862716810	1965.83926371955	1963.96427026686	1962.09361508120	1960.22726669107	1958.36519387926	1956.50736567977	1954.65375137480	1952.80432049182	1950.95904280062	1949.11788831041	1947.28082726705	1945.44783015014	1943.61886767035	1941.79391076664	1939.97293060355	1938.15589856862	1936.34278626966	1934.53356553227	1932.72820839720	1930.92668711790	1929.12897415800	1927.33504218885	1925.54486408712	1923.75841293240	1921.97566200485	1920.19658478287	1918.42115494079	1916.64934634662	1914.88113305981	1913.11648932901	1911.35538958995	1909.59780846322	1907.84372075217	1906.09310144083	1904.34592569180	1902.60216884423	1900.86180641177	1899.12481408061	1897.39116770747	1895.66084331769	1893.93381710327	1892.21006542097	1890.48956479048	1888.77229189251	1887.05822356698	1885.34733681123	1883.63960877817	1881.93501677461	1880.23353825941	1878.53515084184	1876.83983227981	1875.14756047824	1873.45831348736	1871.77206950108	1870.08880685534	1868.40850402655	1866.73113962995	1865.05669241809	1863.38514127922	1861.71646523580	1860.05064344298	1858.38765518708	1856.72747988411	1855.07009707833	1853.41548644076	1851.76362776777	1850.11450097968	1848.46808611931	1846.82436335063	1845.18331295739	1843.54491534173	1841.90915102288	1840.27600063580	1838.64544492989	1837.01746476768	1835.39204112352	1833.76915508236	1832.14878783846	1830.53092069415	1828.91553505860	1827.30261244658	1825.69213447729	1824.08408287315	1822.47843945861	1820.87518615897	1819.27430499926	1817.67577810307	1816.07958769139	1814.48571608155	1812.89414568604	1811.30485901144	1809.71783865734	1808.13306731524	1806.55052776749	1804.97020288622	1803.39207563229	1801.81612905429	1800.24234628744	1798.67071055263	1797.10120515539	1795.53381348488	1793.96851901291	1792.40530529293	1790.84415595912	1789.28505472535	1787.72798538427	1786.17293180635	1784.61987793893	1783.06880780531	1781.51970550380	1779.97255520684	1778.42734116005	1776.88404768137	1775.34265916015	1773.80316005625	1772.26553489919	1770.72976828726	1769.19584488669	1767.66374943074	1766.13346671889	1764.60498161600	1763.07827905144	1761.55334401830	1760.03016157255	1758.50871683222	1756.98899497659	1755.47098124539	1753.95466093802	1752.44001941271	1750.92704208578	1749.41571443084	1747.90602197801	1746.39795031317	1744.89148507717	1743.38661196508	1741.88331672545	1740.38158515955	1738.88140312062	1737.38275651314	1735.88563129209	1734.39001346222	1732.89588907735	1731.40324423959	1729.91206509870	1728.42233785132	1726.93404874028	1725.44718405392	1723.96173012534	1722.47767333176	1720.99500009380	1719.51369687479	1718.03375018009	1716.55514655642	1715.07787259117	1713.60191491174	1712.12726018486	1710.65389511592	1709.18180644832	1707.71098096281	1706.24140547682	1704.77306684380	1703.30595195261	1701.84004772682	1700.37534112410	1698.91181913555	1697.44946878510	1695.98827712884	1694.52823125438	1693.06931828023	1691.61152535519	1690.15483965769	1688.69924839517	1687.24473880347	1685.79129814618	1684.33891371407	1682.88757282442	1681.43726282042	1679.98797107058	1678.53968496808	1677.09239193019	1675.64607939761	1674.20073483395	1672.75634572502	1671.31289957830	1669.87038392231	1668.42878630597	1666.98809429808	1665.54829548664	1664.10937747827	1662.67132789765	1661.23413438687	1659.79778460484	1658.36226622674	1656.92756694334	1655.49367446049	1654.06057649845	1652.62826079135	1651.19671508655	1649.76592714408	1648.33588473602	1646.90657564591	1645.47798766817	1644.05010860748	1642.62292627820	1641.19642850376	1639.77060311609	1638.34543795499	1636.92092086756	1635.49703970757	1634.07378233491	1632.65113661493	1631.22909041790	1629.80763161835	1628.38674809453	1626.96642772776	1625.54665840184	1624.12742800244	1622.70872441651	1621.29053553166	1619.87284923555	1618.45565341526	1617.03893595674	1615.62268474413	1614.20688765915	1612.79153258054	1611.37660738338	1609.96209993848	1608.54799811177	1607.13428976370	1605.72096274854	1604.30800491381	1602.89540409963	1601.48314813808	1600.07122485256	1598.65962205716	1597.24832755602	1595.83732914265	1594.42661459932	1593.01617169639	1591.60598819167	1590.19605182972	1588.78635034124	1587.37687144236	1585.96760283401	1584.55853220123	1583.14964721246	1581.74093551891	1580.33238475388	1578.92398253200	1577.51571644862	1576.10757407907	1574.69954297795	1573.29161067846	1571.88376469166	1570.47599250576	1569.06828158542	1567.66061937098	1566.25299327780	1564.84539069543	1563.43779898697	1562.03020548825	1560.62259750711	1559.21496232262	1557.80728718437	1556.39955931163	1554.99176589261	1553.58389408369	1552.17593100861	1550.76786375768	1549.35967938699	1547.95136491757	1546.54290733463	1545.13429358668	1543.72551058473	1542.31654520147	1540.90738427038	1539.49801458490	1538.08842289759	1536.67859591924	1535.26852031799	1533.85818271845	1532.44756970082	1531.03666779997	1529.62546350453	1528.21394325598	1526.80209344773	1525.38990042415	1523.97735047965	1522.56442985769	1521.15112474986	1519.73742129485	1518.32330557751	1516.90876362779	1515.49378141980	1514.07834487071	1512.66243983981	1511.24605212736	1509.82916747363	1508.41177155776	1506.99384999672	1505.57538834421	1504.15637208955	1502.73678665654	1501.31661740237	1499.89584961644	1498.47446851922	1497.05245926106	1495.62980692101	1494.20649650565	1492.78251294779	1491.35784110533	1489.93246575996	1488.50637161589	1487.07954329863	1485.65196535359	1484.22362224489	1482.79449835394	1481.36457797810	1479.93384532937	1478.50228453296	1477.06987962589	1475.63661455560	1474.20247317847	1472.76743925838	1471.33149646526	1469.89462837352	1468.45681846059	1467.01805010536	1465.57830658661	1464.13757108143	1462.69582666360	1461.25305630200	1459.80924285888	1458.36436908826	1456.91841763419	1455.47137102902	1454.02321169163	1452.57392192572	1451.12348391792	1449.67187973600	1448.21909132703	1446.76510051544	1445.30988900113	1443.85343835755	1442.39573002967	1440.93674533200	1439.47646544659	1438.01487142087	1436.55194416564	1435.08766445289	1433.62201291362	1432.15497003566	1430.68651616145	1429.21663148569	1427.74529605312	1426.27248975611	1424.79819233229	1423.32238336212	1421.84504226645	1420.36614830396	1418.88568056864	1417.40361798721	1415.91993931646	1414.43462314059	1412.94764786845	1411.45899173081	1409.96863277750	1408.47654887458	1406.98271770138	1405.48711674756	1403.98972331008	1402.49051449012	1400.98946718994	1399.48655810974	1397.98176374435	1396.47506038000	1394.96642409090	1393.45583073587	1391.94325595481	1390.42867516521	1388.91206355848	1387.39339609631	1385.87264750692	1384.34979228124	1382.82480466901	1381.29765867483	1379.76832805414	1378.23678630909	1376.70300668436	1375.16696216287	1373.62862546147	1372.08796902645	1370.54496502905	1368.99958536087	1367.45180162911	1365.90158515183	1364.34890695303	1362.79373775768	1361.23604798661	1359.67580775138	1358.11298684892	1356.54755475617	1354.97948062454	1353.40873327435	1351.83528118900	1350.25909250920	1348.68013502694	1347.09837617940	1345.51378304274	1343.92632232571	1342.33596036315	1340.74266310939	1339.14639613144	1337.54712460210	1335.94481329285	1334.33942656667	1332.73092837060	1331.11928222827	1329.50445123212	1327.88639803558	1326.26508484497	1324.64047341129	1323.01252502180	1321.38120049139	1319.74646015381	1318.10826385263	1316.46657093205	1314.82134022747	1313.17253005587	1311.52009820591	1309.86400192784	1308.20419792321	1306.54064233425	1304.87329073305	1303.20209811049	1301.52701886488	1299.84800679034	1298.16501506488	1296.47799623824	1294.78690221935	1293.09168426356	1291.39229295951	1289.68867821570	1287.98078924669	1286.26857455897	1284.55198193652	1282.83095842591	1281.10545032107	1279.37540314771	1277.64076164727	1275.90146976046	1274.15747061041	1272.40870648535	1270.65511882087	1268.89664818161	1267.13323424257	1265.36481576990	1263.59133060110	1261.81271562476	1260.02890675968	1258.23983893353	1256.44544606073	1254.64566101994	1252.84041563072	1251.02964062968	1249.21326564586	1247.39121917545	1245.56342855581	1243.72981993867	1241.89031826262	1240.04484722478	1238.19332925159	1236.33568546884	1234.47183567067	1232.60169828782	1230.72519035471	1228.84222747573	1226.95272379038	1225.05659193734	1223.15374301752	1221.24408655585	1219.32753046196	1217.40398098958	1215.47334269468	1213.53551839221	1211.59040911157	1209.63791405052	1207.67793052763	1205.71035393322	1203.73507767863	1201.75199314379	1199.76098962308	1197.76195426934	1195.75477203600	1193.73932561720	1191.71549538587	1189.68315932966	1187.64219298463	1185.59246936662	1183.53385890015	1181.46622934484	1179.38944571912	1177.30337022122	1175.20786214725	1173.10277780630	1170.98797043230	1168.86329009274	1166.72858359379	1164.58369438192	1162.42846244173	1160.26272418980	1158.08631236450	1155.89905591136	1153.70077986405	1151.49130522046	1149.27044881393	1147.03802317920	1144.79383641290	1142.53769202825	1140.26938880376	1137.98872062562	1135.69547632329	1133.38943949823	1131.07038834510	1128.73809546537	1126.39232767255	1124.03284578897	1121.65940443336	1119.27175179896	1116.86962942144	1114.45277193620	1112.02090682439	1109.57375414705	1107.11102626667	1104.63242755542	1102.13765408933	1099.62639332757	1097.09832377587	1094.55311463329	1091.99042542114	1089.40990559313	1086.81119412539	1084.19391908534	1081.55769717787	1078.90213326741	1076.22681987442	1073.53133664459	1070.81524978882	1068.07811149221	1065.31945928983	1062.53881540704	1059.73568606185	1056.90956072675	1054.05991134702	1051.18619151243	1048.28783557896	1045.36425773680	1042.41485102062	1039.43898625779	1036.43601094966	1033.40524808089	1030.34599485089	1027.25752132146	1024.13906897351	1020.98984916563	1017.80904148622	1014.59579199014	1011.34921131011	1008.06837263173	1004.75230952023	1001.40001358558	998.010431971137	994.582464649561	991.114961507774	987.606719200804	984.056477751954	980.462916874213	976.824651984796	973.140229881337	969.408124044429	965.626729526779	961.794357384207	957.909228597939	953.969467430964	949.973094153535	945.918017063988	941.802023720713	937.622771289089	933.377775893127	929.064400845139	924.679843607408	920.221121317045	915.685054678238	911.068249994112	906.367079072185	901.577656691741	896.695815266432	891.717076269129	886.636617905456	881.449238424308	876.149314333308	870.730752638887	865.186936046866	859.510659830214	853.694058782949	847.728522315588	841.604595284655	835.311861554955	828.838806525128	822.172653844469	815.299170228089	808.202430519414	800.864532783112	793.265249989793	785.381600409910	777.187312618119	768.652152180581	759.741064346393	750.413068304965	740.619810403335	730.303640449328	719.395007046225	707.808857329906	695.439541170477	682.153397411905	667.777613338293	652.082825727462	634.754644286165	615.344250237231	593.176064689201	567.157186478169	535.325114175778	493.516179378796	429.533980652831	0
+            </values>
+		</curve>
+    </curves>
+</OpenGeoSysProject>
