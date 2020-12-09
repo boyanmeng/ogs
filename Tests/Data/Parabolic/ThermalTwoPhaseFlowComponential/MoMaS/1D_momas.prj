@@ -178,20 +178,19 @@
                <curve>pc_Sw</curve>
                <independent_variable>liquid_saturation</independent_variable>
             </property>
-			<property>
-               <name>vG_exponent</name>
-               <type>Constant</type>
-               <value>0.32886</value>
-            </property>
+			<!-- <property> -->
+               <!-- <name>vG_exponent</name> -->
+               <!-- <type>Constant</type> -->
+               <!-- <value>0.32886</value> -->
+            <!-- </property> -->
             <property>
 <!-- cannot use vG type unless source code is modified (returns a number instead of a 2x1 vector) -->
                <name>relative_permeability</name>
-               <type>RelPermBrooksCorey</type>
-               <residual_liquid_saturation>0.0</residual_liquid_saturation>
+               <type>RelativePermeabilityVanGenuchten</type>
+               <residual_liquid_saturation>0.4</residual_liquid_saturation>
                <residual_gas_saturation>0.0</residual_gas_saturation>
-               <lambda>2</lambda>
-               <min_relative_permeability_liquid>0</min_relative_permeability_liquid>
-               <min_relative_permeability_gas>1e-9</min_relative_permeability_gas>
+               <exponent>0.32886</exponent>
+               <minimum_relative_permeability_liquid>0</minimum_relative_permeability_liquid>
             </property>
             <property>
                <name>porosity</name>
