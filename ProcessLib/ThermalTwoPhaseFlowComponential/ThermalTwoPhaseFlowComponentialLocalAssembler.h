@@ -16,10 +16,10 @@
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "NumLib/Fem/FiniteElement/TemplateIsoparametric.h"
 #include "NumLib/Fem/ShapeMatrixPolicy.h"
+#include "NumLib/Fem/InitShapeMatrices.h"
 #include "ParameterLib/Parameter.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
 #include "ProcessLib/LocalAssemblerTraits.h"
-#include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "ThermalTwoPhaseFlowComponentialProcessData.h"
 
@@ -180,8 +180,9 @@ public:
         ThermalTwoPhaseFlowComponentialProcessData const& process_data)
         : _element(element),
           _integration_method(integration_order),
-          _shape_matrices(initShapeMatrices<ShapeFunction, ShapeMatricesType,
-                                            IntegrationMethod, GlobalDim>(
+          _shape_matrices(
+              NumLib::initShapeMatrices<ShapeFunction, ShapeMatricesType,
+                                        GlobalDim>(
               element, is_axially_symmetric, _integration_method)),
           _process_data(process_data),
           _saturation(
