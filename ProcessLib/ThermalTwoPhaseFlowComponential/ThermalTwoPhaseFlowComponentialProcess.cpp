@@ -57,22 +57,10 @@ void ThermalTwoPhaseFlowComponentialProcess::initializeConcreteProcess(
             &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::getIntPtSaturation));
 
     _secondary_variables.addSecondaryVariable(
-        "pressure_nonwetting",
+        "pressure_wetting",
         makeExtrapolator(1, getExtrapolator(), _local_assemblers,
                          &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                             getIntPtNonwettingPressure));
-    _secondary_variables.addSecondaryVariable(
-        "capillary_pressure",
-        makeExtrapolator(
-            1, getExtrapolator(), _local_assemblers,
-            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                getIntPtCapillaryPressure));
-    _secondary_variables.addSecondaryVariable(
-        "liquid_molar_fraction_air",
-        makeExtrapolator(
-            1, getExtrapolator(), _local_assemblers,
-            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
-                getIntPtLiquidMolFracAir));
+                             getIntPtWettingPressure));
     _secondary_variables.addSecondaryVariable(
         "liquid_molar_fraction_contaminant",
         makeExtrapolator(
