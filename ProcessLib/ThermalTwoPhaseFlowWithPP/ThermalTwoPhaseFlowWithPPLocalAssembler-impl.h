@@ -338,8 +338,10 @@ void ThermalTwoPhaseFlowWithPPLocalAssembler<
         double const mu_nonwet = two_phase_material_model.getGasViscosity(
             _pressure_wetting[ip], T_int_pt);
         double const lambda_nonwet = k_rel_nonwet / mu_nonwet;
-        double const diffusion_coeff_component_gas =
+        double diffusion_coeff_component_gas =
             _process_data.diffusion_coeff_component_b(t, pos)[0];
+        diffusion_coeff_component_gas *=
+            std::pow(1 - Sw, 7. / 3) * std::pow(porosity, 1. / 3);
 
         // wet
         double const k_rel_wet =
