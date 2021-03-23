@@ -289,8 +289,9 @@ public:
             Sw * mol_density_wet + (1 - Sw) * mol_density_nonwet;
 
         double const henry_contaminant =
-            _process_data.material->calculateHenryConstant(T_int_pt, 1.06157e-3,
-                                                           4500);
+            dissolved_contaminant.property(MPL::PropertyType::henry_constant)
+                .template value<double>(vars, pos, t, dt);
+
         double const p_vapor_nonwet =
             _process_data.material->calculateVaporPressureNonwet(
                 pc_int_pt, T_int_pt, density_water);
