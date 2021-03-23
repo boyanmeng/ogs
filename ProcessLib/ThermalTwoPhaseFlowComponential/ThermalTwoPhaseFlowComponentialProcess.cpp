@@ -12,6 +12,8 @@
 
 #include "ProcessLib/Utils/CreateLocalAssemblers.h"
 #include "ThermalTwoPhaseFlowComponentialLocalAssembler.h"
+#include "ProcessLib/SurfaceFlux/SurfaceFlux.h"
+#include "ProcessLib/SurfaceFlux/SurfaceFluxData.h"
 
 namespace ProcessLib
 {
@@ -118,6 +120,23 @@ void ThermalTwoPhaseFlowComponentialProcess::assembleWithJacobianConcreteProcess
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, dt, x, xdot,
         dxdot_dx, dx_dx, process_id, M, K, b, Jac);
+}
+
+Eigen::Vector3d ThermalTwoPhaseFlowComponentialProcess::getFluxTH2(
+    std::size_t const element_id, int pv_index, MathLib::Point3d const& p,
+    double const t,
+    std::vector<GlobalVector*> const& x) const
+{
+    std::vector<GlobalIndexType> indices_cache;
+    auto const r_c_indices = NumLib::getRowColumnIndices(
+        element_id, *_local_to_global_index_map, indices_cache);
+
+    std::vector<std::vector<GlobalIndexType>> indices_of_all_coupled_processes{
+        x.size(), r_c_indices.rows};
+    auto const local_xs =
+        getCoupledLocalSolutions(x, indices_of_all_coupled_processes);
+
+    return _local_assemblers[element_id]->getFluxTH2(p, pv_index, t, local_xs);
 }
 
 void ThermalTwoPhaseFlowComponentialProcess::preTimestepConcreteProcess(

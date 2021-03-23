@@ -204,6 +204,228 @@ public:
         return _gas_molar_fraction_contaminant;
     }
 
+    Eigen::Vector3d getFluxTH2(
+        MathLib::Point3d const& pnt_local_coords, int const pv_index,
+        double const t, std::vector<double> const& local_x) const override
+    {
+        using MaterialLib::PhysicalConstant::IdealGasConstant;
+        auto const& water_mol_mass =
+            MaterialLib::PhysicalConstant::MolarMass::Water;
+        auto const& air_mol_mass =
+            MaterialLib::PhysicalConstant::MolarMass::Air;
+
+        auto const local_pc = Eigen::Map<const NodalVectorType>(
+            &local_x[capillary_pressure_matrix_index], capillary_pressure_size);
+        auto const local_pg = Eigen::Map<const NodalVectorType>(
+            &local_x[gas_pressure_matrix_index], gas_pressure_size);
+        auto const local_Xc = Eigen::Map<const NodalVectorType>(
+            &local_x[overall_mol_frac_contaminant_matrix_index],
+            overall_mol_frac_contaminant_size);
+        auto const local_T = Eigen::Map<const NodalVectorType>(
+            &local_x[temperature_matrix_index], temperature_size);
+
+        // Eval shape matrices at given point
+        // Note: Axial symmetry is set to false here, because we only need dNdx
+        // here, which is not affected by axial symmetry.
+        auto const shape_matrices =
+            NumLib::computeShapeMatrices<ShapeFunction, ShapeMatricesType,
+                                         GlobalDim>(
+                _element, false /*is_axially_symmetric*/,
+                std::array{pnt_local_coords})[0];
+
+        ParameterLib::SpatialPosition pos;
+        pos.setElementID(_element.getID());
+
+        MPL::VariableArray vars;
+
+        auto const& medium =
+            *_process_data.media_map->getMedium(_element.getID());
+        auto const& liquid_phase = medium.phase("AqueousLiquid");
+        auto const& gas_phase = medium.phase("Gas");
+        auto const& solid_phase = medium.phase("Solid");
+
+        // components
+        auto const& liquid_water = liquid_phase.component("wasser");
+        auto const& dissolved_contaminant =
+            liquid_phase.component("contaminant");
+        auto const& water_vapor = gas_phase.component("wasser");
+        auto const& gaseous_air = gas_phase.component("air");
+        auto const& contaminant_vapor = gas_phase.component("contaminant");
+
+        double pc_int_pt;
+        NumLib::shapeFunctionInterpolate(local_pc, shape_matrices.N, pc_int_pt);
+        double pg_int_pt;
+        NumLib::shapeFunctionInterpolate(local_pg, shape_matrices.N, pg_int_pt);
+        double Xc_int_pt;
+        NumLib::shapeFunctionInterpolate(local_Xc, shape_matrices.N, Xc_int_pt);
+        double T_int_pt;
+        NumLib::shapeFunctionInterpolate(local_T, shape_matrices.N, T_int_pt);
+        vars[static_cast<int>(MaterialPropertyLib::Variable::temperature)] =
+            T_int_pt;
+        vars[static_cast<int>(
+            MaterialPropertyLib::Variable::capillary_pressure)] = pc_int_pt;
+
+        double const dt = std::numeric_limits<double>::quiet_NaN();
+
+        double const density_water =
+            liquid_water.property(MPL::PropertyType::density)
+                .template value<double>(vars, pos, t, dt);
+
+        double const pl = pg_int_pt - pc_int_pt;
+
+        auto& saturation_model = medium.property(MPL::PropertyType::saturation);
+        double const Sw =
+            saturation_model.template value<double>(vars, pos, t, dt);
+        vars[static_cast<int>(
+            MaterialPropertyLib::Variable::liquid_saturation)] = Sw;
+
+        double const ideal_gas_constant_times_T_int_pt =
+            IdealGasConstant * T_int_pt;
+        double const mol_density_water = density_water / water_mol_mass;
+        double const mol_density_wet = mol_density_water;
+        double const mol_density_nonwet =
+            pg_int_pt / ideal_gas_constant_times_T_int_pt;
+        double const mol_density_tot =
+            Sw * mol_density_wet + (1 - Sw) * mol_density_nonwet;
+
+        double const henry_contaminant =
+            _process_data.material->calculateHenryConstant(T_int_pt, 1.06157e-3,
+                                                           4500);
+        double const p_vapor_nonwet =
+            _process_data.material->calculateVaporPressureNonwet(
+                pc_int_pt, T_int_pt, density_water);
+
+        double const k_c = pg_int_pt * henry_contaminant / mol_density_wet;
+        double const k_w = pg_int_pt / p_vapor_nonwet;
+
+        double const ntot_c =
+            Sw * mol_density_wet * k_c + (1 - Sw) * mol_density_nonwet;
+        double const x_contaminant_nonwet =
+            Xc_int_pt * mol_density_tot / ntot_c;
+        double const x_contaminant_wet = k_c * x_contaminant_nonwet;
+        double const x_water_wet = 1 - x_contaminant_wet;
+        double const x_water_nonwet = x_water_wet / k_w;
+        double const x_air_nonwet = 1 - x_water_nonwet - x_contaminant_nonwet;
+
+        double const contaminant_mol_mass =
+            contaminant_vapor.property(MPL::PropertyType::molar_mass)
+                .template value<double>(vars, pos, t, dt);
+        double const density_contaminant_wet =
+            mol_density_wet * contaminant_mol_mass * x_contaminant_wet;
+        double const density_wet = density_water + density_contaminant_wet;
+
+        double const density_water_nonwet =
+            mol_density_nonwet * water_mol_mass * x_water_nonwet;
+        double const density_air_nonwet =
+            mol_density_nonwet * air_mol_mass * x_air_nonwet;
+        double const density_contaminant_nonwet =
+            mol_density_nonwet * contaminant_mol_mass * x_contaminant_nonwet;
+        double const density_nonwet = density_air_nonwet +
+                                      density_water_nonwet +
+                                      density_contaminant_nonwet;
+
+        auto const k_rel =
+            medium.property(MPL::PropertyType::relative_permeability)
+                .template value<Eigen::Vector2d>(vars, pos, t, dt);
+        auto const k_rel_wet = k_rel[0];
+        auto const k_rel_nonwet = k_rel[1];
+
+        auto const mu_nonwet = gas_phase.property(MPL::PropertyType::viscosity)
+                                   .template value<double>(vars, pos, t, dt);
+        double const lambda_nonwet = k_rel_nonwet / mu_nonwet;
+        auto const mu_wet = liquid_phase.property(MPL::PropertyType::viscosity)
+                                .template value<double>(vars, pos, t, dt);
+        double const lambda_wet = k_rel_wet / mu_wet;
+
+        auto const K_int = MPL::formEigenTensor<GlobalDim>(
+            medium.property(MPL::PropertyType::permeability)
+                .template value<double>(vars, pos, t, dt));
+
+        GlobalDimVectorType velocity_nonwet =
+            -lambda_nonwet * K_int * shape_matrices.dNdx * local_pg;
+        GlobalDimVectorType velocity_wet =
+            -lambda_wet * K_int * shape_matrices.dNdx * (local_pg - local_pc);
+        if (_process_data.has_gravity)
+        {
+            auto const& b = _process_data.specific_body_force;
+            velocity_nonwet += lambda_nonwet * K_int * density_nonwet * b;
+            velocity_wet += lambda_wet * K_int * density_wet * b;
+        }
+
+        double const mol_mass_nonwet =
+            x_water_nonwet * water_mol_mass + x_air_nonwet * air_mol_mass +
+            x_contaminant_nonwet * contaminant_mol_mass;
+        double const X_water_nonwet =
+            x_water_nonwet * water_mol_mass / mol_mass_nonwet;
+        double const X_air_nonwet =
+            x_air_nonwet * air_mol_mass / mol_mass_nonwet;
+        double const X_contaminant_nonwet = 1 - X_water_nonwet - X_air_nonwet;
+
+        // heat capacity
+        double const heat_capacity_water =
+            water_vapor.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(vars, pos, t, dt);
+        double const heat_capacity_air =
+            gaseous_air.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(vars, pos, t, dt);
+        double const heat_capacity_contaminant =
+            contaminant_vapor.property(MPL::PropertyType::heat_capacity)
+                .template value<double>(vars, pos, t, dt);
+
+        double const latent_heat_evaporation = 2258000.;
+
+        // enthalpy
+        double const enthalpy_water_nonwet =
+            _process_data.material->getWaterVaporEnthalpySimple(
+                T_int_pt, heat_capacity_water, pg_int_pt,
+                latent_heat_evaporation);
+        double const enthalpy_air_nonwet =
+            _process_data.material->getAirEnthalpySimple(
+                T_int_pt, heat_capacity_air, pg_int_pt);
+        double const enthalpy_contaminant_nonwet =
+            _process_data.material->getContaminantEnthalpySimple(
+                T_int_pt, heat_capacity_contaminant, contaminant_mol_mass,
+                pg_int_pt);
+
+        double const enthalpy_nonwet =
+            X_water_nonwet * enthalpy_water_nonwet +
+            X_air_nonwet * enthalpy_air_nonwet +
+            X_contaminant_nonwet * enthalpy_contaminant_nonwet;
+
+        double const enthalpy_wet =
+            _process_data.material->getLiquidWaterEnthalpySimple(
+                T_int_pt, heat_capacity_water, pl);
+
+        Eigen::Vector3d fluxTH2(0.0, 0.0, 0.0);
+        switch (pv_index)
+        {
+            case 0:
+                fluxTH2.head<GlobalDim>() =
+                    mol_density_wet * x_water_wet * velocity_wet +
+                    mol_density_nonwet * x_water_nonwet * velocity_nonwet;
+                break;
+            case 1:
+                fluxTH2.head<GlobalDim>() =
+                    mol_density_nonwet * x_air_nonwet * velocity_nonwet;
+                break;
+            case 2:
+                fluxTH2.head<GlobalDim>() =
+                    mol_density_wet * x_contaminant_wet * velocity_wet +
+                    mol_density_nonwet * x_contaminant_nonwet * velocity_nonwet;
+                break;
+            case 3:
+                fluxTH2.head<GlobalDim>() =
+                    density_wet * enthalpy_wet * velocity_wet +
+                    density_nonwet * enthalpy_nonwet * velocity_nonwet;
+                break;
+            default:
+            {
+            }
+        }
+
+        return fluxTH2;
+    }
+
 private:
     MeshLib::Element const& _element;
 

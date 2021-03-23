@@ -53,6 +53,12 @@ public:
             curves);
 
     bool isLinear() const override { return false; }
+
+    Eigen::Vector3d getFluxTH2(
+        std::size_t const element_id, int pv_index,
+                            MathLib::Point3d const& p, double const t,
+                            std::vector<GlobalVector*> const& x) const override;
+
 private:
     void initializeConcreteProcess(
         NumLib::LocalToGlobalIndexMap const& dof_table,

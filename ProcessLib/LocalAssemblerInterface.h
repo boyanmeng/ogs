@@ -118,6 +118,15 @@ public:
         return Eigen::Vector3d{};
     }
 
+    virtual Eigen::Vector3d getFluxTH2(
+        MathLib::Point3d const& /*p_local_coords*/,
+        int const /*pv_index*/,
+        double const /*t*/,
+        std::vector<double> const& /*local_x*/) const
+    {
+        return Eigen::Vector3d{};
+    }
+
     /// Fits to staggered scheme.
     virtual Eigen::Vector3d getFlux(
         MathLib::Point3d const& /*p_local_coords*/,

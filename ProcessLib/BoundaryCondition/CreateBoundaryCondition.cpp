@@ -16,6 +16,7 @@
 #include "DirichletBoundaryCondition.h"
 #include "DirichletBoundaryConditionWithinTimeInterval.h"
 #include "HCNonAdvectiveFreeComponentFlowBoundaryCondition.h"
+#include "TH2NonAdvectiveFreeFlowBoundaryCondition.h"
 #include "NeumannBoundaryCondition.h"
 #include "NormalTractionBoundaryCondition.h"
 #include "PhaseFieldIrreversibleDamageOracleBoundaryCondition.h"
@@ -124,6 +125,13 @@ std::unique_ptr<BoundaryCondition> createBoundaryCondition(
     if (type == "HCNonAdvectiveFreeComponentFlowBoundary")
     {
         return createHCNonAdvectiveFreeComponentFlowBoundaryCondition(
+            config.config, config.boundary_mesh, dof_table, variable_id,
+            *config.component_id, integration_order, parameters,
+            bulk_mesh.getDimension(), process, shapefunction_order);
+    }
+    if (type == "TH2NonAdvectiveFreeFlowBoundary")
+    {
+        return createTH2NonAdvectiveFreeFlowBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             *config.component_id, integration_order, parameters,
             bulk_mesh.getDimension(), process, shapefunction_order);

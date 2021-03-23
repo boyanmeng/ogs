@@ -173,6 +173,16 @@ public:
         return Eigen::Vector3d{};
     }
 
+    virtual Eigen::Vector3d getFluxTH2(
+        std::size_t /*element_id*/,
+        int /*pv_index*/,
+        MathLib::Point3d const& /*p*/,
+        double const /*t*/,
+        std::vector<GlobalVector*> const& /*x*/) const
+    {
+        return Eigen::Vector3d{};
+    }
+
     virtual void solveReactionEquation(std::vector<GlobalVector*>& /*x*/,
                                        double const /*t*/, double const /*dt*/)
     {
