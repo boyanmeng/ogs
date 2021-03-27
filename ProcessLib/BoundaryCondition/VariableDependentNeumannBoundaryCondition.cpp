@@ -25,13 +25,8 @@ createVariableDependentNeumannBoundaryCondition(
     DBUG("Constructing VariableDependentNeumann BC from config.");
     //! \ogs_file_param{prj__process_variables__process_variable__boundary_conditions__boundary_condition__type}
     config.checkConfigParameter("type", "VariableDependentNeumann");
-    if (dof_table.getNumberOfVariables() != 2)
-    {
-        OGS_FATAL(
-            "VariableDependentNeumann BC only implemented for 2 "
-            "variable processes.");
-    }
-    assert(variable_id == 0 || variable_id == 1);
+    
+    
 
     if (bc_mesh.getDimension() + 1 != global_dim)
     {
