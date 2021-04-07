@@ -437,13 +437,18 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         double diffusion_coeff_wet =
             liquid_phase.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
-        double diffusion_coeff_nonwet =
-            gas_phase.property(MPL::PropertyType::molecular_diffusion)
+        double diffusion_coeff_vapor_nonwet =
+            water_vapor.property(MPL::PropertyType::molecular_diffusion)
+                .template value<double>(variables, pos, t, dt);
+        double diffusion_coeff_contaminant_nonwet =
+            contaminant_vapor.property(MPL::PropertyType::molecular_diffusion)
                 .template value<double>(variables, pos, t, dt);
         // multiply tortuosity factor
         diffusion_coeff_wet *=
             std::pow(Sw, 7. / 3) * std::pow(porosity, 1. / 3);
-        diffusion_coeff_nonwet *=
+        diffusion_coeff_vapor_nonwet *=
+            std::pow(1 - Sw, 7. / 3) * std::pow(porosity, 1. / 3);
+        diffusion_coeff_contaminant_nonwet *=
             std::pow(1 - Sw, 7. / 3) * std::pow(porosity, 1. / 3);
 
         auto const solute_dispersivity_transverse =
@@ -506,57 +511,59 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
         Kwpc.noalias() +=
             (-mol_density_wet * x_water_wet * lambda_wet) * laplace_operator +
             mol_density_wet * dispersion_operator * dxwL_dpc +
-            porosity * (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
-                dxwG_dpc * _ip_data[ip].diffusion_operator;
+            porosity * (1 - Sw) * mol_density_nonwet *
+                diffusion_coeff_vapor_nonwet * dxwG_dpc *
+                _ip_data[ip].diffusion_operator;
         Kwp.noalias() += (mol_density_wet * x_water_wet * lambda_wet +
                           mol_density_nonwet * x_water_nonwet * lambda_nonwet) *
                              laplace_operator +
                          mol_density_wet * dispersion_operator * dxwL_dpg +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxwG_dpg *
+                             diffusion_coeff_vapor_nonwet * dxwG_dpg *
                              _ip_data[ip].diffusion_operator;
         Kwx.noalias() += mol_density_wet * dispersion_operator * dxwL_dXc +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxwG_dXc *
+                             diffusion_coeff_vapor_nonwet * dxwG_dXc *
                              _ip_data[ip].diffusion_operator;
         Kwt.noalias() += mol_density_wet * dispersion_operator * dxwL_dT +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxwG_dT *
+                             diffusion_coeff_vapor_nonwet * dxwG_dT *
                              _ip_data[ip].diffusion_operator;
         Kapc.noalias() += porosity * (1 - Sw) * mol_density_nonwet *
-                          diffusion_coeff_nonwet * dxaG_dpc *
+                          diffusion_coeff_vapor_nonwet * dxaG_dpc *
                           _ip_data[ip].diffusion_operator;
         Kap.noalias() += (mol_density_nonwet * x_air_nonwet * lambda_nonwet) *
                              laplace_operator +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxaG_dpg *
+                             diffusion_coeff_vapor_nonwet * dxaG_dpg *
                              _ip_data[ip].diffusion_operator;
         Kax.noalias() += porosity * (1 - Sw) * mol_density_nonwet *
-                         diffusion_coeff_nonwet * dxaG_dXc *
+                         diffusion_coeff_vapor_nonwet * dxaG_dXc *
                          _ip_data[ip].diffusion_operator;
         Kat.noalias() += porosity * (1 - Sw) * mol_density_nonwet *
-                         diffusion_coeff_nonwet * dxaG_dT *
+                         diffusion_coeff_vapor_nonwet * dxaG_dT *
                          _ip_data[ip].diffusion_operator;
         Kcpc.noalias() += (-mol_density_wet * x_contaminant_wet * lambda_wet) *
                               laplace_operator +
                           mol_density_wet * dispersion_operator * dxcL_dpc +
                           porosity * (1 - Sw) * mol_density_nonwet *
-                              diffusion_coeff_nonwet * dxcG_dpc *
+                              diffusion_coeff_contaminant_nonwet * dxcG_dpc *
                               _ip_data[ip].diffusion_operator;
         Kcp.noalias() +=
             (mol_density_wet * x_contaminant_wet * lambda_wet +
              mol_density_nonwet * x_contaminant_nonwet * lambda_nonwet) *
                 laplace_operator +
             mol_density_wet * dispersion_operator * dxcL_dpg +
-            porosity * (1 - Sw) * mol_density_nonwet * diffusion_coeff_nonwet *
-                dxcG_dpg * _ip_data[ip].diffusion_operator;
+            porosity * (1 - Sw) * mol_density_nonwet *
+                diffusion_coeff_contaminant_nonwet * dxcG_dpg *
+                _ip_data[ip].diffusion_operator;
         Kcx.noalias() += mol_density_wet * dispersion_operator * dxcL_dXc +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxcG_dXc *
+                             diffusion_coeff_contaminant_nonwet * dxcG_dXc *
                              _ip_data[ip].diffusion_operator;
         Kct.noalias() += mol_density_wet * dispersion_operator * dxcL_dT +
                          porosity * (1 - Sw) * mol_density_nonwet *
-                             diffusion_coeff_nonwet * dxcG_dT *
+                             diffusion_coeff_contaminant_nonwet * dxcG_dT *
                              _ip_data[ip].diffusion_operator;
 
         double const mol_mass_nonwet =
