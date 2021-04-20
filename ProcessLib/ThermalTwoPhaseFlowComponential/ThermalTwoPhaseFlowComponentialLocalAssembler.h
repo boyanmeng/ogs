@@ -69,6 +69,11 @@ public:
         std::vector<GlobalVector*> const& x,
         std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
         std::vector<double>& cache) const = 0;
+    virtual std::vector<double> const& getIntPtRelPermWet(
+        const double t,
+        std::vector<GlobalVector*> const& x,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& dof_table,
+        std::vector<double>& cache) const = 0;
 };
 
 template <typename ShapeFunction, typename IntegrationMethod,
@@ -115,6 +120,8 @@ public:
           _gas_molar_fraction_water(
               std::vector<double>(_integration_method.getNumberOfPoints())),
           _gas_molar_fraction_contaminant(
+              std::vector<double>(_integration_method.getNumberOfPoints())),
+          _krel_wet(
               std::vector<double>(_integration_method.getNumberOfPoints()))
     {
         unsigned const n_integration_points =
@@ -202,6 +209,16 @@ public:
     {
         assert(!_gas_molar_fraction_contaminant.empty());
         return _gas_molar_fraction_contaminant;
+    }
+
+    std::vector<double> const& getIntPtRelPermWet(
+        const double /*t*/,
+        std::vector<GlobalVector*> const& /*x*/,
+        std::vector<NumLib::LocalToGlobalIndexMap const*> const& /*dof_table*/,
+        std::vector<double>& /*cache*/) const override
+    {
+        assert(!_krel_wet.empty());
+        return _krel_wet;
     }
 
     Eigen::Vector3d getFluxTH2(
@@ -444,6 +461,7 @@ private:
     std::vector<double> _liquid_molar_fraction_contaminant;
     std::vector<double> _gas_molar_fraction_water;
     std::vector<double> _gas_molar_fraction_contaminant;
+    std::vector<double> _krel_wet;
 
     static const int capillary_pressure_matrix_index = 0;
     static const int gas_pressure_matrix_index = ShapeFunction::NPOINTS;

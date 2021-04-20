@@ -419,6 +419,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
             medium.property(MPL::PropertyType::relative_permeability)
                 .template value<Eigen::Vector2d>(variables, pos, t, dt);
         auto const k_rel_wet = k_rel[0];
+        _krel_wet[ip] = k_rel_wet;
         auto const k_rel_nonwet = k_rel[1];
 
         auto const mu_nonwet =

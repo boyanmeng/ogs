@@ -81,6 +81,12 @@ void ThermalTwoPhaseFlowComponentialProcess::initializeConcreteProcess(
             1, getExtrapolator(), _local_assemblers,
             &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
                 getIntPtGasMolFracContaminant));
+    _secondary_variables.addSecondaryVariable(
+        "relative_permeability_wet",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &ThermalTwoPhaseFlowComponentialLocalAssemblerInterface::
+                getIntPtRelPermWet));
     
 }
 
