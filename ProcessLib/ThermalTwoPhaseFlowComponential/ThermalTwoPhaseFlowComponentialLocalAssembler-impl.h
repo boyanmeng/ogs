@@ -432,7 +432,7 @@ void ThermalTwoPhaseFlowComponentialLocalAssembler<
 
         auto const K_int = MPL::formEigenTensor<GlobalDim>(
             medium.property(MPL::PropertyType::permeability)
-                .template value<double>(variables, pos, t, dt));
+                .value(variables, pos, t, dt));
 
         // diffusion coefficients
         double diffusion_coeff_wet =

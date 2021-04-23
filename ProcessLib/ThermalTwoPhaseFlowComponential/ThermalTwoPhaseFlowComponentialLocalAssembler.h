@@ -357,7 +357,7 @@ public:
 
         auto const K_int = MPL::formEigenTensor<GlobalDim>(
             medium.property(MPL::PropertyType::permeability)
-                .template value<double>(vars, pos, t, dt));
+                .value(vars, pos, t, dt));
 
         GlobalDimVectorType velocity_nonwet =
             -lambda_nonwet * K_int * shape_matrices.dNdx * local_pg;
